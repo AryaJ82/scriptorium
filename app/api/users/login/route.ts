@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
 import { generateAccessToken, generateRefreshToken } from "@/utils/tokenAuth";
+import { access } from "fs";
 
 export async function GET(request: Request) {
     return NextResponse.json({ message: "Hello from the login API!" });
@@ -15,24 +16,44 @@ export async function POST(request: Request) {
         }
 
         // Check if user exists
-        const existingUser = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
                 username: username
             }
         });
-        if (!existingUser) {
+        if (!user) {
             console.error("Failed to find user");
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
 
-        if (! await comparePassword(password, existingUser.passwordHash)) {
+        if (!(await comparePassword(password, user.passwordHash))) {
             console.error("Failed to match pass hash");
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
-        const accessToken = generateAccessToken({ userId: existingUser.id, userRole: existingUser.role });
-        const refreshToken = generateRefreshToken({ uid: existingUser.id, role: existingUser.role });
+        const accessToken = generateAccessToken({ userId: user.id, userRole: user.role });
+        const refreshToken = generateRefreshToken({ userId: user.id, userRole: user.role });
 
-        return NextResponse.json({ accessToken, refreshToken }, { status: 200 });
+        if (!accessToken || !refreshToken) {
+            throw new Error("Failed to generate tokens");
+        }
+
+        // Return tokens as cookies
+        let response = NextResponse.json({ message: "Login successful", accessToken: accessToken, refreshToken: refreshToken });
+        response.cookies.set("accessToken", accessToken, {
+            httpOnly: true,
+            path: "/",
+            sameSite: "strict",
+            maxAge: 60 * 15 // 15 minutes
+        });
+
+        response.cookies.set("refreshToken", refreshToken, {
+            httpOnly: true,
+            path: "/",
+            sameSite: "strict",
+            maxAge: 60 * 60 * 24 * 7 // 7 days
+        });
+
+        return response;
 
     } catch (error) {
         console.error("Error during user login:", error);

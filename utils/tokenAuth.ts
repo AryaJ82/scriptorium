@@ -20,7 +20,7 @@ export function generateAccessToken(payload: { userId: string, userRole: string 
 * @param {object} payload - The payload to include in the token.
 * @returns {string} - The generated JWT refresh token.
 */
-export function generateRefreshToken(payload: { uid: string, role: string }): string {
+export function generateRefreshToken(payload: { userId: string, userRole: string }) {
     return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
 }
 
@@ -31,11 +31,7 @@ export function generateRefreshToken(payload: { uid: string, role: string }): st
 * @returns {jwt.JwtPayload | string} - The decoded token payload if valid, or null if invalid.
 */
 export function verifyAccessToken(token: string): jwt.JwtPayload | string {
-    try {
-        return jwt.verify(token, JWT_ACCESS_SECRET);
-    } catch (error) {
-        throw error;
-    }
+    return jwt.verify(token, JWT_ACCESS_SECRET);
 }
 
 /**
@@ -44,9 +40,6 @@ export function verifyAccessToken(token: string): jwt.JwtPayload | string {
 * @returns {jwt.JwtPayload | string} - The decoded token payload if valid, or null if invalid.
 */
 export function verifyRefreshToken(token: string): jwt.JwtPayload | string {
-    try {
-        return jwt.verify(token, JWT_REFRESH_SECRET);
-    } catch (error) {
-        throw error;
-    }
+    return jwt.verify(token, JWT_REFRESH_SECRET);
+
 }
