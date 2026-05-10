@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Language {
+  PYTHON
+  JAVASCRIPT
+  CPP
+  JAVA
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id               String          @id @default(cuid())
+  createdAt        DateTime        @default(now())
+  username         String          @unique
+  passwordHash     String
+  email            String          @default("") @unique
+  firstName        String          @default("")
+  lastName         String          @default("")
+  avatarUrl        String          @default("")
+  phoneNumber      String          @default("")
+  role             Role            @default(USER)
+  createdTemplates Template[]      @relation("CreatedTemplates")
+  savedTemplates   Template[]      @relation("SavedTemplates")
+  blogPosts        BlogPost[]      @relation("CreatedBlogPosts")
+  blogUpvotes      BlogPost[]      @relation("UpvotedBlogPosts")
+  blogDownvotes    BlogPost[]      @relation("DownvotedBlogPosts")
+  comments         Comment[]       @relation("CreatedComments")
+  commentUpvotes   Comment[]       @relation("UpvotedComments")
+  commentDownvotes Comment[]       @relation("DownvotedComments")
+  contentReports   ContentReport[] @relation("UserContentReports")
+}
+
+model Template {
+  id                  String     @id @default(cuid())
+  createdAt           DateTime   @default(now())
+  author              User       @relation("CreatedTemplates", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId            String
+  language            Language   @default(PYTHON)
+  code                String     @default("")
+  title               String
+  description         String     @default("")
+  tags                Tag[]      @relation("templateTags")
+  isForked            Boolean    @default(false)
+  parentTemplate      Template?  @relation("forkedTemplate", fields: [parentTemplateId], references: [id], onDelete: SetNull)
+  parentTemplateId    String?
+  descendentTemplates Template[] @relation("forkedTemplate")
+  savers              User[]     @relation("SavedTemplates")
+  replies             BlogPost[] @relation("blogLink")
+}
+
+model Tag {
+  name      String     @id @unique
+  templates Template[] @relation("templateTags")
+  posts     BlogPost[] @relation("blogPostTags")
+}
+
+model BlogPost {
+  id               Int             @id @unique
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
+  title            String
+  description      String
+  author           User            @relation("CreatedBlogPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId         String
+  tags             Tag[]           @relation("blogPostTags")
+  linkedTemplate   Template?       @relation("blogLink", fields: [linkedTemplateId], references: [id], onDelete: Cascade)
+  linkedTemplateId String?
+  comments         Comment[]       @relation("BlogPostReplies")
+  upvoteCount      Int             @default(0)
+  downvoteCount    Int             @default(0)
+  upvotingUsers    User[]          @relation("UpvotedBlogPosts")
+  downvotingUsers  User[]          @relation("DownvotedBlogPosts")
+  isHidden         Boolean         @default(false)
+  contentReports   ContentReport[]
+}
+
+model Comment {
+  id              Int             @id @unique
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+  content         String
+  author          User            @relation("CreatedComments", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId        String
+  blogPost        BlogPost        @relation("BlogPostReplies", fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogPostId      Int
+  upvoteCount     Int             @default(0)
+  downvoteCount   Int             @default(0)
+  upvotingUsers   User[]          @relation("UpvotedComments")
+  downvotingUsers User[]          @relation("DownvotedComments")
+  replies         Comment[]       @relation("CommentReplies")
+  parentComment   Comment?        @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId Int?
+  isHidden        Boolean         @default(false)
+  contentReports  ContentReport[]
+}
+
+model ContentReport {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  author      User      @relation("UserContentReports", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  title       String
+  description String    @default("")
+  post        BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogPostId  Int
+  comment     Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId   Int
+}
