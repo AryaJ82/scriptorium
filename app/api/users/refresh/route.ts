@@ -1,4 +1,3 @@
-import { withAuth } from "@/utils/middlewareAuth";
 import { verifyRefreshToken, generateAccessToken } from "@/utils/tokenAuth";
 import { NextResponse } from "next/server";
 
@@ -13,14 +12,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Invalid refresh token." }, { status: 401 });
         }
 
-        const {userId, userRole} = typeof refreshPayload === "string" ? JSON.parse(refreshPayload) : refreshPayload;
+        const {user_id, user_role} = typeof refreshPayload === "string" ? JSON.parse(refreshPayload) : refreshPayload;
 
-        if (!userId || !userRole) {
+        if (!user_id || !user_role) {
             console.error("Error with parsing the refreshPayload: ", refreshPayload);
             return NextResponse.json({ error: "Invalid token payload." }, { status: 401 });
         }
 
-        const accessToken = generateAccessToken({ userId: userId, userRole: userRole });
+        const accessToken = generateAccessToken({ user_id: user_id, user_role });
         if (!accessToken) {
             throw new Error("Failed to generate access token");
         }

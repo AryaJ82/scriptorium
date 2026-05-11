@@ -37,24 +37,34 @@ export async function PATCH(request: Request) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { email, firstName, lastName, avatarUrl, phoneNumber, } = await request.json();
-            const { user_id, user_role, user } = request;
+            const { user } = request;
             if(!user){
                 throw Error("User not loaded into request while editing profile")
             }
-            
+
             const updatedUser = await prisma.user.update({
-                where: { id: user_id },
+                where: { id: user.id },
                 data: {
                     ...(email && { email }),
                     ...(firstName && { firstName }),
                     ...(lastName && { lastName }),
                     ...(avatarUrl && { avatarUrl }),
                     ...(phoneNumber && { phoneNumber })
+                },
+                select:{
+                    id: true,
+                    username: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    avatarUrl: true,
+                    phoneNumber: true,
                 }
             });
             return NextResponse.json({ user: updatedUser }, { status: 200 });
         } catch (error) {
-            return NextResponse.json({ error: `Invalid request body during profile editing: ${error}` }, { status: 400 });
+            console.error("Error during profile update:", error);
+            return NextResponse.json({ error: "Invalid request body during profile editing" }, { status: 400 });
         }
     })(request);
 }

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
 import { generateAccessToken, generateRefreshToken } from "@/utils/tokenAuth";
-import { access } from "fs";
 
 export async function GET(request: Request) {
     return NextResponse.json({ message: "Hello from the login API!" });
@@ -30,8 +29,8 @@ export async function POST(request: Request) {
             console.error("Failed to match pass hash");
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
-        const accessToken = generateAccessToken({ userId: user.id, userRole: user.role });
-        const refreshToken = generateRefreshToken({ userId: user.id, userRole: user.role });
+        const accessToken = generateAccessToken({ user_id: user.id, user_role: user.role });
+        const refreshToken = generateRefreshToken({ user_id: user.id, user_role: user.role });
 
         if (!accessToken || !refreshToken) {
             throw new Error("Failed to generate tokens");
@@ -57,6 +56,6 @@ export async function POST(request: Request) {
 
     } catch (error) {
         console.error("Error during user login:", error);
-        return NextResponse.json({ error: "An error occurred while processing the request" }, { status: 500 });
+        return NextResponse.json({ error: "An error occurred while logging in" }, { status: 500 });
     }
 }

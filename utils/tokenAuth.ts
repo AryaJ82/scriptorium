@@ -10,7 +10,7 @@ const ACCESS_TOKEN_EXPIRY = "1h";
  * @param {object} payload - The payload to include in the token.
  * @returns {string} - The generated JWT access token.
  */
-export function generateAccessToken(payload: { userId: string, userRole: string }) {
+export function generateAccessToken(payload: { user_id: string, user_role: string }) {
     return jwt.sign(payload, JWT_ACCESS_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
 }
 
@@ -20,7 +20,7 @@ export function generateAccessToken(payload: { userId: string, userRole: string 
 * @param {object} payload - The payload to include in the token.
 * @returns {string} - The generated JWT refresh token.
 */
-export function generateRefreshToken(payload: { userId: string, userRole: string }) {
+export function generateRefreshToken(payload: { user_id: string, user_role: string }) {
     return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
 }
 

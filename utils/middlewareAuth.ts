@@ -4,9 +4,7 @@ import type { JwtPayload } from "jsonwebtoken"
 import prisma from '@/utils/client';
 
 interface AuthenticatedRequest extends Request {
-    user_id: string;
-    user_role: string;
-    user: Awaited<ReturnType<typeof prisma.user.findUnique>>; // Is this a bad idea?
+    user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
 }
 export type { AuthenticatedRequest };
 
@@ -70,7 +68,7 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
                 );
             }
 
-            Object.assign(request, { user_id: user.id, user_role: user.role, user });
+            Object.assign(request, { user });
             return handler(request as AuthenticatedRequest);
 
         } catch (error) {
