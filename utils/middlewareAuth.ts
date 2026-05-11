@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyAccessToken } from "@/utils/tokenAuth";
 import type { JwtPayload } from "jsonwebtoken"
 import prisma from '@/utils/client';
+import { access } from "fs";
 
 /**
  * Middleware to protect API routes with token verification and role-based access.
@@ -21,7 +22,13 @@ export function withAuth(handler: Function): (request: Request) => Promise<Respo
             }
 
             const accessToken = authHeader.split(' ')[1];
-            console.log("Access token from header:", accessToken);
+            if(!accessToken) {
+                console.error("Failed to parse access token from auth header:", authHeader);
+                return NextResponse.json(
+                    { error: "Unauthorized: failed to parse access token" },
+                    { status: 401 },
+                );
+            }
             const authPayload = verifyAccessToken(accessToken);
             if (!authPayload) {
                 return NextResponse.json(
