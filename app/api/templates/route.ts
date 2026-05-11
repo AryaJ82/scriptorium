@@ -5,7 +5,15 @@ import prisma from "@/utils/client";
 // import type { Language } frm "../execution/route";
 import { Language } from "@/app/generated/prisma/enums";
 
-
+interface TemplateQueryParams extends URLSearchParams {
+    title?: string;
+    language?: string;
+    tags?: string;
+    content?: string;
+    author?: string;
+    page?: string;
+    pageSize?: string;
+}
 interface TemplatePOSTBody {
     title: string;
     code?: string;
@@ -13,6 +21,87 @@ interface TemplatePOSTBody {
     description?: string;
     tags?: string[];
     forkedSourceId?: string;
+}
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        let error = verifyGETParams(searchParams as TemplateQueryParams);
+        if (error) {
+            return error;
+        }
+        const { title, tags, content, author, page, pageSize } = searchParams as TemplateQueryParams;
+
+
+        const pageNum      = parseInt(page);
+        const pageSizeNum  = parseInt(pageSize);
+        const tagList      = tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+
+        const where: Prisma.TemplateWhereInput = {
+            ...(title && {
+                title: { contains: title },
+            }),
+            ...(content && {
+                code: { contains: content },
+            }),
+            ...(author && {
+                author: {
+                    is: { username: { equals: author } },
+                },
+            }),
+            ...(tagList.length > 0 && {
+                AND: tagList.map((tag) => ({
+                    tags: { some: { name: tag } },
+                })),
+            }),
+        };
+
+       const [totalSize, templates] = await prisma.$transaction([
+            prisma.template.count({ where }),
+            prisma.template.findMany({
+                where,
+                skip: (pageNum - 1) * pageSizeNum,
+                take: pageSizeNum,
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    language: true,
+                    code: true,
+                    isForked: true,
+                    createdAt: true,
+                    tags: {
+                        select: { name: true },
+                    },
+                    author: {
+                        select: {
+                            username: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                            avatar: true,
+                            role: true,
+                            createdAt: true,
+                        },
+                    },
+                },
+            }),
+        ]);
+
+        return NextResponse.json({
+            templates,
+            pagination: {
+                totalSize,
+                totalPages: Math.ceil(totalSize / pageSizeNum),
+                page: pageNum,
+                pageSize: pageSizeNum,
+            },
+        }, { status: 200 });
+
+    } catch (error) {
+        console.error("Error fetching templates", error);
+        return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
+    }
 }
 
 export async function POST(request: Request) {
@@ -94,6 +183,38 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: "Internal server error when deleting code template" }, { status: 500 });
         }
     })(request);
+}
+
+
+function verifyGETParams(params: TemplateQueryParams) {
+    const { title, tags, content, author, page, pageSize } = params;
+
+    // --- Validation ---
+    if (tags && !Array.isArray(tags)) {
+        return NextResponse.json({ error: "Tags should be an array of strings" }, { status: 400 });
+    } else if (tags) {
+        for (const tag of tags) {
+            if (typeof tag !== "string" || tag.trim() === "") {
+                return NextResponse.json({ error: "Each tag should be a non-empty string" }, { status: 400 });
+            }
+        }
+    }
+
+    if (page && isNaN(parseInt(page))) {
+        return NextResponse.json({ status: 400, error: "Page should be a number" }, { status: 400 });
+    }
+    if (pageSize && (!page || isNaN(parseInt(pageSize)))) {
+        return NextResponse.json({ status: 400, error: "Page size should be a number" });
+    }
+    if (content && typeof content !== "string") {
+        return NextResponse.json({ status: 400, error: "Content should be a string" });
+    }
+    if (author && typeof author !== "string") {
+        return NextResponse.json({ status: 400, error: "Author should be a string" });
+    }
+    if (!page || !pageSize) {
+        return NextResponse.json({ error: "Please provide page and page size" }, { status: 400 });
+    }
 }
 
 async function verifyPOSTParams(body: TemplatePOSTBody) {
