@@ -2,14 +2,20 @@ import { NextResponse } from "next/server";
 import { verifyAccessToken } from "@/utils/tokenAuth";
 import type { JwtPayload } from "jsonwebtoken"
 import prisma from '@/utils/client';
-import { access } from "fs";
+
+interface AuthenticatedRequest extends Request {
+    user_id: string;
+    user_role: string;
+    user: Awaited<ReturnType<typeof prisma.user.findUnique>>; // Is this a bad idea?
+}
+export type { AuthenticatedRequest };
 
 /**
  * Middleware to protect API routes with token verification and role-based access.
  * @param {function} handler - The API route handler to wrap.
  * @returns {function} - A new handler function with token verification and role-based access.
  */
-export function withAuth(handler: Function): (request: Request) => Promise<Response> {
+export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}> | undefined>)): (request: Request) => (Promise<NextResponse<{}> | undefined>) {
     return async (request: Request) => {
         try {
             const authHeader = request.headers.get("Authorization");
@@ -22,7 +28,7 @@ export function withAuth(handler: Function): (request: Request) => Promise<Respo
             }
 
             const accessToken = authHeader.split(' ')[1];
-            if(!accessToken) {
+            if (!accessToken) {
                 console.error("Failed to parse access token from auth header:", authHeader);
                 return NextResponse.json(
                     { error: "Unauthorized: failed to parse access token" },
@@ -56,16 +62,16 @@ export function withAuth(handler: Function): (request: Request) => Promise<Respo
                 );
             }
 
-            
+
             if (request.url.includes("/api/admin") && user.role !== "ADMIN") {
                 return NextResponse.json(
                     { error: "Forbidden" },
                     { status: 403 }
                 );
             }
-            
-            Object.assign(request, { user });
-            return handler(request);
+
+            Object.assign(request, { user_id: user.id, user_role: user.role, user });
+            return handler(request as AuthenticatedRequest);
 
         } catch (error) {
             console.error("Error in withAuth middleware:", error);
