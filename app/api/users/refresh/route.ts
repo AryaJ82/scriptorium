@@ -1,4 +1,5 @@
 import { verifyRefreshToken, generateAccessToken } from "@/utils/tokenAuth";
+import { log } from "console";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -7,6 +8,8 @@ export async function POST(request: Request) {
         if (!refreshToken) {
             return NextResponse.json({ error: "Refresh token is required." }, { status: 400 });
         }
+        console.log(refreshToken);
+        
         const refreshPayload = verifyRefreshToken(refreshToken);
         if (!refreshPayload) {
             return NextResponse.json({ error: "Invalid refresh token." }, { status: 401 });

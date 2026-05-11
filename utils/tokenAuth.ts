@@ -34,7 +34,7 @@ export function verifyAccessToken(token: string): jwt.JwtPayload | string {
     try {
         return jwt.verify(token, JWT_ACCESS_SECRET);
     } catch (error) {
-        throw error;
+        return "";
     }
 }
 
@@ -47,6 +47,6 @@ export function verifyRefreshToken(token: string): jwt.JwtPayload | string {
     try {
         return jwt.verify(token, JWT_REFRESH_SECRET);
     } catch (error) {
-        throw error;
+        return "";
     }
 }

@@ -18,7 +18,6 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
         try {
             const authHeader = request.headers.get("Authorization");
             if (!authHeader || !authHeader.startsWith("Bearer")) {
-                console.error("Failed Authheader:", authHeader);
                 return NextResponse.json(
                     { error: "Unauthorized: failed authheader check" },
                     { status: 401 },
@@ -42,9 +41,9 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
             }
             const payload = typeof authPayload === "string" ? JSON.parse(authPayload) : authPayload as JwtPayload;
 
-            const { userId } = payload;
+            const { user_id } = payload;
 
-            if (!userId) {
+            if (!user_id) {
                 console.error("Error with parsing the authPayload: ", authPayload);
 
                 return NextResponse.json(
@@ -52,7 +51,7 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
                     { status: 401 },
                 );
             }
-            const user = await prisma.user.findUnique({ where: { id: userId } });
+            const user = await prisma.user.findUnique({ where: { id: user_id } });
             if (!user) {
                 return NextResponse.json(
                     { error: 'User not found' },
