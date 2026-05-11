@@ -30,7 +30,7 @@ model User {
   createdAt        DateTime        @default(now())
   username         String          @unique
   passwordHash     String
-  email            String          @default("") @unique
+  email            String          @default("")
   firstName        String          @default("")
   lastName         String          @default("")
   avatarUrl        String          @default("")
