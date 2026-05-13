@@ -5,22 +5,10 @@ import prisma from "@/utils/client";
 // import type { Language } frm "../execution/route";
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
+import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
+import type { TemplateGETQuery } from "@/utils/templateSearch";
+import { log } from "console";
 
-type ValidSortFields = 'title' | 'createdAt' | 'language';
-const validSortFields = ['title', 'createdAt', 'language']
-type ValidSortOrder = 'asc' | 'desc';
-const validSortOrders = ['asc', 'desc'];
-interface TemplateGETQuery {
-    title?: string;
-    language?: Language;
-    tags?: string[];
-    content?: string;
-    author?: string;
-    page?: string;
-    pageSize?: string;
-    sortBy?: ValidSortFields;
-    sortOrder?: ValidSortOrder;
-}
 interface TemplatePOSTBody {
     title: string;
     code?: string;
@@ -42,7 +30,7 @@ interface TemplatePATCHBody {
 export async function GET(request: Request) {
     try {
         const { searchParams } = (new URL(request.url));
-        const queryParams = Object.fromEntries(searchParams) as TemplateGETQuery;
+        const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
         console.log(queryParams);
 
 
@@ -50,11 +38,11 @@ export async function GET(request: Request) {
         if (error) {
             return error;
         }
-        const { title, language, tags, content, author, page, pageSize, sortBy, sortOrder } = queryParams;
+        const { title, language, tag, content, author, page, pageSize, sortBy, sortOrder } = queryParams;
 
         const pageNum = page ? parseInt(page) : 1;
         const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
-        const tagList = tags ? tags.map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
+        // const tagList = tags ? tags.map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
 
         const where: Prisma.TemplateWhereInput = {
             ...(title && {
@@ -74,69 +62,27 @@ export async function GET(request: Request) {
                     is: { username: { equals: author } },
                 },
             }),
-            ...(tagList.length > 0 && {
-                AND: tagList.map((tag) => ({
-                    tags: { some: { name: { equals: tag } } },
-                })),
-            }),
-        };
-
-        const orderBy: Prisma.TemplateOrderByWithRelationInput = {};
-        if (sortBy) {
-            if (validSortFields.includes(sortBy)) {
-                orderBy[sortBy] = sortOrder === 'desc' ? 'desc' : 'asc';
-            }
-        } else {
-            orderBy.createdAt = 'desc'; // Default sort
-        }
-
-        const [totalSize, templates] = await prisma.$transaction([
-            prisma.template.count({ where }),
-            prisma.template.findMany({
-                where,
-                orderBy,
-                skip: (pageNum - 1) * pageSizeNum,
-                take: pageSizeNum,
-                select: {
-                    id: true,
-                    title: true,
-                    description: true,
-                    language: true,
-                    code: true,
-                    isForked: true,
-                    createdAt: true,
-                    tags: {
-                        select: { name: true },
-                    },
-                    author: {
-                        select: {
-                            username: true,
-                            firstName: true,
-                            lastName: true,
-                            email: true,
-                            avatarUrl: true,
-                            role: true,
-                            createdAt: true,
-                        },
-                    },
+            ...(tag && {
+                tags: {
+                    some: { name: { equals: tag } },
                 },
             }),
-        ]);
+            // ...(tagList.length > 0 && {
+            //     AND: tagList.map((tag) => ({
+            //         tags: { some: { name: { equals: tag } } },
+            //     })),
+        // }),
+    };
 
-        return NextResponse.json({
-            templates,
-            pagination: {
-                totalSize,
-                totalPages: Math.ceil(totalSize / pageSizeNum),
-                page: pageNum,
-                pageSize: pageSizeNum,
-            },
-        }, { status: 200 });
+    const orderBy: Prisma.TemplateOrderByWithRelationInput = {};
+    orderBy[sortBy ? sortBy : "createdAt"] = (sortOrder === 'desc') ? 'desc' : 'asc';
 
-    } catch (error) {
-        console.error("Error fetching templates", error);
-        return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
-    }
+    return await templateSearch(where, orderBy, pageNum, pageSizeNum);
+
+} catch (error) {
+    console.error("Error fetching templates", error);
+    return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
+}
 }
 
 export async function POST(request: Request) {
@@ -315,41 +261,6 @@ export async function DELETE(request: Request) {
     })(request);
 }
 
-
-function verifyGETParams(params: TemplateGETQuery) {
-    const { title, language, tags, content, author, page, pageSize, sortBy, sortOrder } = params;
-
-    if (title && typeof title !== "string") {
-        return NextResponse.json({ error: "Title should be a string" }, { status: 400 });
-    }
-    if (language && typeof language !== "string") {
-        return NextResponse.json({ error: "Language should be a string" }, { status: 400 });
-    }
-    if (language && !(language in Language)) {
-        return NextResponse.json({ error: "Invalid language" }, { status: 400 });
-    }
-    if (tags && typeof tags !== "string") {
-        return NextResponse.json({ error: "Tags should be a comma-separated string" }, { status: 400 });
-    }
-    if (content && typeof content !== "string") {
-        return NextResponse.json({ error: "Content should be a string" }, { status: 400 });
-    }
-    if (author && typeof author !== "string") {
-        return NextResponse.json({ error: "Author should be a string" }, { status: 400 });
-    }
-    if (page && (isNaN(parseInt(page)) || parseInt(page) < 1)) {
-        return NextResponse.json({ error: "Page should be a positive number" }, { status: 400 });
-    }
-    if (pageSize && (isNaN(parseInt(pageSize)) || parseInt(pageSize) < 1 || parseInt(pageSize) > 100)) {
-        return NextResponse.json({ error: "Page size should be a number between 1 and 100" }, { status: 400 });
-    }
-    if (sortBy && !validSortFields.includes(sortBy)) {
-        return NextResponse.json({ error: "SortBy should be a valid sort field" }, { status: 400 });
-    }
-    if (sortOrder && !validSortOrders.includes(sortOrder)) {
-        return NextResponse.json({ error: "SortOrder should be 'asc' or 'desc'" }, { status: 400 });
-    }
-}
 
 async function verifyPOSTParams(body: TemplatePOSTBody) {
     const { title, code, description, language, tags, forkedSourceId } = body;

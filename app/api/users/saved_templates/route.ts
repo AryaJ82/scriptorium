@@ -3,23 +3,8 @@ import { NextResponse } from "next/server"
 import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
-
-
-type ValidSortFields = 'title' | 'createdAt' | 'language';
-const validSortFields = ['title', 'createdAt', 'language']
-type ValidSortOrder = 'asc' | 'desc';
-const validSortOrders = ['asc', 'desc'];
-interface TemplateGETQuery {
-    title?: string;
-    language?: Language;
-    tags?: string[];
-    content?: string;
-    author?: string;
-    page?: string;
-    pageSize?: string;
-    sortBy?: ValidSortFields;
-    sortOrder?: ValidSortOrder;
-}
+import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
+import type { TemplateGETQuery } from "@/utils/templateSearch";
 
 
 export async function GET(request: Request) {
@@ -30,20 +15,18 @@ export async function GET(request: Request) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
             const { searchParams } = (new URL(request.url));
-            const queryParams = Object.fromEntries(searchParams) as TemplateGETQuery;
+            const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
             console.log(queryParams);
-
 
             let error = verifyGETParams(queryParams);
             if (error) {
                 return error;
             }
-            const { title, language, tags, content, author, page, pageSize, sortBy, sortOrder } = queryParams;
-
+            const { title, language, tag, content, author, page, pageSize, sortBy, sortOrder } = queryParams;
 
             const pageNum = page ? parseInt(page) : 1;
             const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
-            const tagList = tags ? tags.map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
+            // const tagList = tags ? tags.map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
 
             const where: Prisma.TemplateWhereInput = {
                 // Scope to only this user's saved templates
@@ -51,81 +34,39 @@ export async function GET(request: Request) {
                     some: { id: user.id },
                 },
                 ...(title && {
-                    title: { contains: title, mode: 'insensitive' },
+                    title: { contains: title },
                 }),
                 ...(language && {
                     language: { equals: language as Language },
                 }),
                 ...(content && {
                     OR: [
-                        { description: { contains: content, mode: 'insensitive' } },
-                        { code: { contains: content, mode: 'insensitive' } },
+                        { description: { contains: content } },
+                        { code: { contains: content } },
                     ],
                 }),
                 ...(author && {
                     author: {
-                        is: { username: { equals: author, mode: 'insensitive' } },
+                        is: { username: { equals: author } },
                     },
                 }),
-                ...(tagList.length > 0 && {
-                    AND: tagList.map((tag) => ({
-                        tags: { some: { name: { equals: tag, mode: 'insensitive' } } },
-                    })),
+                ...(tag && {
+                    tags: {
+                        some: { name: { equals: tag } },
+                    },
                 }),
+                // ...(tagList.length > 0 && {
+                //     AND: tagList.map((tag) => ({
+                //         tags: { some: { name: { equals: tag } } },
+                //     })),
+                // }),
             };
 
             const orderBy: Prisma.TemplateOrderByWithRelationInput = {};
-            if (sortBy) {
-                const validSortFields = ['title', 'createdAt', 'language'];
-                if (validSortFields.includes(sortBy)) {
-                    orderBy[sortBy] = sortOrder === 'desc' ? 'desc' : 'asc';
-                }
-            } else {
-                orderBy.createdAt = 'desc';
-            }
+            orderBy[sortBy ? sortBy : "createdAt"] = (sortOrder === 'desc') ? 'desc' : 'asc';
 
-            const [totalSize, templates] = await prisma.$transaction([
-                prisma.template.count({ where }),
-                prisma.template.findMany({
-                    where,
-                    orderBy,
-                    skip: (pageNum - 1) * pageSizeNum,
-                    take: pageSizeNum,
-                    select: {
-                        id: true,
-                        title: true,
-                        description: true,
-                        language: true,
-                        code: true,
-                        isForked: true,
-                        createdAt: true,
-                        tags: {
-                            select: { name: true },
-                        },
-                        author: {
-                            select: {
-                                username: true,
-                                firstName: true,
-                                lastName: true,
-                                email: true,
-                                avatarUrl: true,
-                                role: true,
-                                createdAt: true,
-                            },
-                        },
-                    },
-                }),
-            ]);
+            return await templateSearch(where, orderBy, pageNum, pageSizeNum);
 
-            return NextResponse.json({
-                templates,
-                pagination: {
-                    totalSize,
-                    totalPages: Math.ceil(totalSize / pageSizeNum),
-                    page: pageNum,
-                    pageSize: pageSizeNum,
-                },
-            }, { status: 200 });
         } catch (error) {
             console.error("Error fetching saved templates", error);
             return NextResponse.json({ error: "An error occurred while fetching the saved templates" }, { status: 500 });
@@ -156,7 +97,7 @@ export async function PATCH(request: Request) {
             }
 
             // save by default, unsave if unsave is true
-            let prop = unsave ? { disconnect: { id: template_id } } : { connect: { id: template_id } };
+            let prop = (unsave as boolean) ? { disconnect: { id: template_id } } : { connect: { id: template_id } };
 
             const updatedUser = await prisma.user.update({
                 where: { id: user.id },
