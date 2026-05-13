@@ -31,18 +31,18 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = (new URL(request.url));
         const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
-        console.log(queryParams);
-
 
         let error = verifyGETParams(queryParams);
         if (error) {
             return error;
         }
-        const { title, language, tag, content, author, page, pageSize, sortBy, sortOrder } = queryParams;
+        const { title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
+        // Get tags as array of strings from comma separation tags=tag1,tag2,...
+        const tagList = normalizeTags(tags?.split(','));
+        
 
         const pageNum = page ? parseInt(page) : 1;
         const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
-        // const tagList = tags ? tags.map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
 
         const where: Prisma.TemplateWhereInput = {
             ...(title && {
@@ -62,16 +62,16 @@ export async function GET(request: Request) {
                     is: { username: { equals: author } },
                 },
             }),
-            ...(tag && {
-                tags: {
-                    some: { name: { equals: tag } },
-                },
-            }),
-            // ...(tagList.length > 0 && {
-            //     AND: tagList.map((tag) => ({
-            //         tags: { some: { name: { equals: tag } } },
-            //     })),
-        // }),
+            // ...(tags && {
+            //     tags: {
+            //         some: { name: { equals: tags } },
+            //     },
+            // }),
+            ...(tagList.length > 0 && {
+                AND: tagList.map((tag) => ({
+                    tags: { some: { name: { equals: tag } } },
+                })),
+        }),
     };
 
     const orderBy: Prisma.TemplateOrderByWithRelationInput = {};

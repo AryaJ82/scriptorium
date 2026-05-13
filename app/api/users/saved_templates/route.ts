@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
-import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
+import { templateSearch, verifyGETParams, normalizeTags } from "@/utils/templateSearch";
 import type { TemplateGETQuery } from "@/utils/templateSearch";
 
 
@@ -22,11 +22,11 @@ export async function GET(request: Request) {
             if (error) {
                 return error;
             }
-            const { title, language, tag, content, author, page, pageSize, sortBy, sortOrder } = queryParams;
+            const { title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
+            const tagList = normalizeTags(tags?.split(','));
 
             const pageNum = page ? parseInt(page) : 1;
             const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
-            // const tagList = tags ? tags.map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
 
             const where: Prisma.TemplateWhereInput = {
                 // Scope to only this user's saved templates
@@ -50,16 +50,16 @@ export async function GET(request: Request) {
                         is: { username: { equals: author } },
                     },
                 }),
-                ...(tag && {
-                    tags: {
-                        some: { name: { equals: tag } },
-                    },
-                }),
-                // ...(tagList.length > 0 && {
-                //     AND: tagList.map((tag) => ({
-                //         tags: { some: { name: { equals: tag } } },
-                //     })),
+                // ...(tag && {
+                //     tags: {
+                //         some: { name: { equals: tag } },
+                //     },
                 // }),
+                ...(tagList.length > 0 && {
+                    AND: tagList.map((tag) => ({
+                        tags: { some: { name: { equals: tag } } },
+                    })),
+                }),
             };
 
             const orderBy: Prisma.TemplateOrderByWithRelationInput = {};

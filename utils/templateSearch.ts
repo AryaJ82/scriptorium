@@ -8,7 +8,7 @@ type ValidSortOrder = 'asc' | 'desc';
 interface TemplateGETQuery {
     title?: string;
     language?: string;
-    tag?: string;
+    tags?: string;
     content?: string;
     author?: string;
     page?: string;
@@ -18,7 +18,7 @@ interface TemplateGETQuery {
 }
 
 export type { TemplateGETQuery, ValidSortFields, ValidSortOrder };
-export { verifyGETParams } from "./templateValidation";
+export { verifyGETParams, normalizeTags } from "./templateValidation";
 
 
 export async function templateSearch(where: Prisma.TemplateWhereInput, orderBy: Prisma.TemplateOrderByWithRelationInput, pageNum: number, pageSizeNum: number) {

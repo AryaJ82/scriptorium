@@ -66,7 +66,7 @@ export function normalizeTags(tags: string[] | undefined): string[] {
 }
 
 export function verifyGETParams(params: TemplateGETQuery) {
-    const { title, language, tag, content, author, page, pageSize, sortBy, sortOrder } = params;
+    const { title, language, tags, content, author, page, pageSize, sortBy, sortOrder } = params;
 
     if (title !== undefined && !isOptionalString(title, 255)) {
         return NextResponse.json({ error: "Title should be a string with at most 255 characters" }, { status: 400 });
@@ -76,9 +76,9 @@ export function verifyGETParams(params: TemplateGETQuery) {
         return NextResponse.json({ error: "Invalid language" }, { status: 400 });
     }
 
-    if (tag !== undefined) {
-        if (!isString(tag) || tag.trim() === "" || tag.length > 50) {
-            return NextResponse.json({ error: "Tag should be a non-empty string with at most 50 characters" }, { status: 400 });
+    if (tags !== undefined) {
+        if (!isString(tags) || tags.trim() === "" || tags.length > 50) {
+            return NextResponse.json({ error: "Tags should be a non-empty string with at most 50 characters" }, { status: 400 });
         }
     }
 
