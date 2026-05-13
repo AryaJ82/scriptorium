@@ -293,11 +293,8 @@ async function verifyPOSTParams(body: TemplatePOSTBody) {
         return NextResponse.json({ error: "Unsupported language" }, { status: 400 });
     }
 
-    if (description && typeof description !== "string") {
+    if (description && (typeof description !== "string" || description.length > 2000)) {
         return NextResponse.json({ error: "Description should be a string" }, { status: 400 });
-    }
-    if (description && description.length > 1000) {
-        return NextResponse.json({ error: "Description must be less than 1000 characters" }, { status: 400 });
     }
 
     if (forkedSourceId && typeof forkedSourceId !== "string") {

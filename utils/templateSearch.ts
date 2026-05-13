@@ -79,19 +79,16 @@ export function verifyGETParams(params: TemplateGETQuery) {
     if (title && typeof title !== "string") {
         return NextResponse.json({ error: "Title should be a string" }, { status: 400 });
     }
-    if (language && typeof language !== "string") {
-        return NextResponse.json({ error: "Language should be a string" }, { status: 400 });
-    }
     if (language && !(language in Language)) {
         return NextResponse.json({ error: "Invalid language" }, { status: 400 });
     }
-    if (tag && typeof tag !== "string") {
+    if (tag && typeof (tag !== "string" || tag.length > 50)) {
         return NextResponse.json({ error: "Tags should be a string" }, { status: 400 });
     }
-    if (content && typeof content !== "string") {
+    if (content && (typeof content !== "string" || content.length > 1000)) {
         return NextResponse.json({ error: "Content should be a string" }, { status: 400 });
     }
-    if (author && typeof author !== "string") {
+    if (author && (typeof author !== "string" || author.length > 100)) {
         return NextResponse.json({ error: "Author should be a string" }, { status: 400 });
     }
     if (page && (isNaN(parseInt(page)) || parseInt(page) < 1)) {
