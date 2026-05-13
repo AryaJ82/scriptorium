@@ -6,8 +6,8 @@ import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
+import { normalizeTags, verifyPATCHParams, verifyPOSTParams } from "@/utils/templateValidation";
 import type { TemplateGETQuery } from "@/utils/templateSearch";
-import { log } from "console";
 
 interface TemplatePOSTBody {
     title: string;
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
                 title: { contains: title },
             }),
             ...(language && {
-                language: { equals: language.toUpperCase() as Language },
+                language: { equals: language as Language },
             }),
             ...(content && {
                 OR: [
@@ -94,15 +94,12 @@ export async function POST(request: Request) {
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-            let error = await verifyPOSTParams(body);
-            if (error) {
-                return error;
+            const postValidationError = await verifyPOSTParams(body);
+            if (postValidationError) {
+                return NextResponse.json({ error: postValidationError.message }, { status: postValidationError.status ?? 400 });
             }
 
-            // Validate and process tags
-            const processedTags = tags?.map((tag) => tag.toLowerCase().trim()).filter(Boolean) || [];
-            const uniqueTags = Array.from(new Set(processedTags)); // Remove duplicates
-
+            const uniqueTags = normalizeTags(tags);
             const tagConnectOrCreate = uniqueTags.map((tag) => ({
                 where: { name: tag },
                 create: { name: tag },
@@ -154,9 +151,9 @@ export async function PATCH(request: Request) {
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-
-            if (!template_id) {
-                return NextResponse.json({ error: "template_id is required" }, { status: 400 });
+            const patchValidationError = await verifyPATCHParams(body);
+            if (patchValidationError) {
+                return NextResponse.json({ error: patchValidationError.message }, { status: patchValidationError.status ?? 400 });
             }
 
             // --- Authorization ---
@@ -169,10 +166,10 @@ export async function PATCH(request: Request) {
             }
 
             // --- Tag handling ---
-            const tagConnectOrCreate = tags?.map((tag) => ({
-                where: { name: tag.toLowerCase().trim() },
-                create: { name: tag.toLowerCase().trim() },
-            }));
+            const tagConnectOrCreate = tags !== undefined ? normalizeTags(tags).map((tag) => ({
+                where: { name: tag },
+                create: { name: tag },
+            })) : undefined;
 
             const updatedTemplate = await prisma.template.update({
                 where: { id: template_id },
@@ -181,9 +178,8 @@ export async function PATCH(request: Request) {
                     ...(code && { code }),
                     ...(language && { language }),
                     ...(description && { description }),
-                    ...(tagConnectOrCreate && {
+                    ...(tagConnectOrCreate !== undefined && {
                         tags: {
-                            // Disconnect all existing tags and reconnect with the new set
                             set: [],
                             connectOrCreate: tagConnectOrCreate,
                         },
@@ -262,49 +258,3 @@ export async function DELETE(request: Request) {
 }
 
 
-async function verifyPOSTParams(body: TemplatePOSTBody) {
-    const { title, code, description, language, tags, forkedSourceId } = body;
-
-    if (!title || typeof title !== "string" || title.trim() === "") {
-        return NextResponse.json({ error: "Please provide a valid title" }, { status: 400 });
-    }
-    if (title.length > 255) {
-        return NextResponse.json({ error: "Title must be less than 255 characters" }, { status: 400 });
-    }
-
-    if (code && typeof code !== "string") {
-        return NextResponse.json({ error: "Code should be a string" }, { status: 400 });
-    }
-
-    if (tags && !Array.isArray(tags)) {
-        return NextResponse.json({ error: "Tags should be an array of strings" }, { status: 400 });
-    } else if (tags) {
-        for (const tag of tags) {
-            if (typeof tag !== "string" || tag.trim() === "") {
-                return NextResponse.json({ error: "Each tag should be a non-empty string" }, { status: 400 });
-            }
-            if (tag.length > 50) {
-                return NextResponse.json({ error: "Each tag must be less than 50 characters" }, { status: 400 });
-            }
-        }
-    }
-
-    if (!language || !(language in Language)) {
-        return NextResponse.json({ error: "Unsupported language" }, { status: 400 });
-    }
-
-    if (description && (typeof description !== "string" || description.length > 2000)) {
-        return NextResponse.json({ error: "Description should be a string" }, { status: 400 });
-    }
-
-    if (forkedSourceId && typeof forkedSourceId !== "string") {
-        return NextResponse.json({ error: "forkedSourceId should be a string if provided" }, { status: 400 });
-    } else if (forkedSourceId) {
-        const sourceTemplate = await prisma.template.findUnique({ where: { id: forkedSourceId } });
-        if (!sourceTemplate) {
-            return NextResponse.json({ error: "No template found to fork from with the provided forkedSourceId" }, { status: 400 });
-        }
-    }
-
-    return null;
-}

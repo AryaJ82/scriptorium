@@ -541,3 +541,342 @@ describe("6. Saved Templates via GET /api/users/saved_templates", () => {
     expect(body.templates.length).toBeLessThanOrEqual(1);
   });
 });
+
+// ─── 7. Multi-tag search ──────────────────────────────────────────────────────
+//
+// Tag query encoding convention tested here:
+//   repeated param  →  ?tags=recursion&tags=advanced
+//   comma-separated →  ?tags=recursion,advanced
+// Both forms are exercised so the suite passes regardless of which convention
+// the server expects. Adjust / remove the form that doesn't apply to your API.
+//
+// Template inventory relevant to this suite (created in suite 3):
+//   users[0].templates[0]  Python Hello World          tags: python, hello_world, for
+//   users[0].templates[1]  JavaScript Hello World      tags: javascript, hello_world, for
+//   users[0].templates[2]  Python Recursive Fibonacci  tags: python, recursion, advanced
+//   users[1].templates[0]  Java Hello World            tags: java, hello_world, oop
+//   users[1].templates[1]  C++ Hello World             tags: cpp, hello_world, include
+//   users[1].templates[2]  Java Recursive Fibonacci    tags: java, recursion, advanced
+ 
+/**
+ * Build a query string that sends multiple tags.
+ * Tries the repeated-param form: ?tags=a&tags=b
+ */
+function multiTagQuery(tags) {
+  return tags.map((t) => `tags=${encodeURIComponent(t)}`).join("&");
+}
+ 
+describe("7. Multi-tag Search", () => {
+  // ── 7a. GET /api/templates with multiple tags ──────────────────────────────
+ 
+  describe("7a. GET /api/templates — multiple tags", () => {
+    test("tags=[hello_world, for] → only templates that have BOTH tags (repeated-param form)", async () => {
+      const res = await get(
+        `/api/templates?${multiTagQuery(["hello_world", "for"])}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      // Every result must carry both tags
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("hello_world");
+        expect(names).toContain("for");
+      });
+ 
+      // The two "Hello World + for" templates must appear
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[0].templates[0].id); // Python Hello World
+      expect(ids).toContain(users[0].templates[1].id); // JavaScript Hello World
+    });
+ 
+    test("tags=[hello_world, for] → only templates that have BOTH tags (comma-separated form)", async () => {
+      const res = await get(
+        `/api/templates?tags=${encodeURIComponent("hello_world,for")}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("hello_world");
+        expect(names).toContain("for");
+      });
+    });
+ 
+    test("tags=[recursion, advanced] → returns Python and Java Fibonacci templates", async () => {
+      const res = await get(
+        `/api/templates?${multiTagQuery(["recursion", "advanced"])}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("recursion");
+        expect(names).toContain("advanced");
+      });
+ 
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[0].templates[2].id); // Python Recursive Fibonacci
+      expect(ids).toContain(users[1].templates[2].id); // Java Recursive Fibonacci
+    });
+ 
+    test("tags=[python, recursion, advanced] → only the Python Fibonacci template", async () => {
+      const res = await get(
+        `/api/templates?${multiTagQuery(["python", "recursion", "advanced"])}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("python");
+        expect(names).toContain("recursion");
+        expect(names).toContain("advanced");
+      });
+ 
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[0].templates[2].id); // Python Recursive Fibonacci
+ 
+      // Java Fibonacci has recursion+advanced but NOT python — must NOT appear
+      expect(ids).not.toContain(users[1].templates[2].id);
+    });
+ 
+    test("tags=[java, recursion, advanced] → only the Java Fibonacci template", async () => {
+      const res = await get(
+        `/api/templates?${multiTagQuery(["java", "recursion", "advanced"])}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("java");
+        expect(names).toContain("recursion");
+        expect(names).toContain("advanced");
+      });
+ 
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[1].templates[2].id); // Java Recursive Fibonacci
+      expect(ids).not.toContain(users[0].templates[2].id); // Python Fibonacci — no "java" tag
+    });
+ 
+    test("tags=[hello_world, oop] → only the Java Hello World template", async () => {
+      const res = await get(
+        `/api/templates?${multiTagQuery(["hello_world", "oop"])}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("hello_world");
+        expect(names).toContain("oop");
+      });
+ 
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[1].templates[0].id); // Java Hello World
+      // Python/JS hello_world templates don't have "oop"
+      expect(ids).not.toContain(users[0].templates[0].id);
+      expect(ids).not.toContain(users[0].templates[1].id);
+    });
+ 
+    test("tags=[hello_world, include] → only the C++ Hello World template", async () => {
+      const res = await get(
+        `/api/templates?${multiTagQuery(["hello_world", "include"])}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("hello_world");
+        expect(names).toContain("include");
+      });
+ 
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[1].templates[1].id); // C++ Hello World
+    });
+ 
+    test("tags=[recursion, hello_world] → no templates share both tags → empty results", async () => {
+      const res = await get(
+        `/api/templates?${multiTagQuery(["recursion", "hello_world"])}&pageSize=20`
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+ 
+      // No template in our set carries both recursion AND hello_world
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        // If the API returns results, each must genuinely have both tags
+        expect(names).toContain("recursion");
+        expect(names).toContain("hello_world");
+      });
+    });
+  });
+ 
+  // ── 7b. GET /api/users/saved_templates with multiple tags ──────────────────
+ 
+  describe("7b. GET /api/users/saved_templates — multiple tags", () => {
+    // Prerequisite: user[0] saves the Java Fibonacci template so it appears in their saved list
+    beforeAll(async () => {
+      const javaFib = users[1].templates[2]; // Java Recursive Fibonacci
+      if (javaFib) {
+        await patch(
+          "/api/templates",
+          { template_id: javaFib.id },
+          authHeader(users[0].access_token)
+        );
+      }
+    });
+ 
+    test("tags=[recursion, advanced] → user[0]'s saved list returns Java Fibonacci", async () => {
+      const res = await get(
+        `/api/users/saved_templates?${multiTagQuery(["recursion", "advanced"])}`,
+        authHeader(users[0].access_token)
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("recursion");
+        expect(names).toContain("advanced");
+      });
+ 
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[1].templates[2].id); // Java Fibonacci
+    });
+ 
+    test("tags=[hello_world, for] → user[0]'s saved list does NOT include Java Hello World (no 'for' tag)", async () => {
+      const res = await get(
+        `/api/users/saved_templates?${multiTagQuery(["hello_world", "for"])}`,
+        authHeader(users[0].access_token)
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+ 
+      // Java Hello World has hello_world but NOT for — must not appear
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).not.toContain(users[1].templates[0].id);
+ 
+      // Every returned template must have both tags
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("hello_world");
+        expect(names).toContain("for");
+      });
+    });
+ 
+    test("tags=[python, hello_world, for] → user[1]'s saved list returns Python Hello World", async () => {
+      const res = await get(
+        `/api/users/saved_templates?${multiTagQuery(["python", "hello_world", "for"])}`,
+        authHeader(users[1].access_token)
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+      expect(body.templates.length).toBeGreaterThan(0);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("python");
+        expect(names).toContain("hello_world");
+        expect(names).toContain("for");
+      });
+ 
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).toContain(users[0].templates[0].id); // Python Hello World
+    });
+ 
+    test("tags=[java, hello_world] → user[1]'s saved list → no match (saved Python, not Java Hello World)", async () => {
+      const res = await get(
+        `/api/users/saved_templates?${multiTagQuery(["java", "hello_world"])}`,
+        authHeader(users[1].access_token)
+      );
+ 
+      expect(res.status).toBe(200);
+ 
+      const body = await res.json();
+      expect(Array.isArray(body.templates)).toBe(true);
+ 
+      // Python Hello World has hello_world but NOT java — shouldn't appear
+      const ids = body.templates.map((t) => t.id);
+      expect(ids).not.toContain(users[0].templates[0].id);
+ 
+      body.templates.forEach((t) => {
+        const names = t.tags.map((tag) => tag.name);
+        expect(names).toContain("java");
+        expect(names).toContain("hello_world");
+      });
+    });
+ 
+    test("tags=[recursion, hello_world] → both saved lists → empty results (no template has both)", async () => {
+      const [res0, res1] = await Promise.all([
+        get(
+          `/api/users/saved_templates?${multiTagQuery(["recursion", "hello_world"])}`,
+          authHeader(users[0].access_token)
+        ),
+        get(
+          `/api/users/saved_templates?${multiTagQuery(["recursion", "hello_world"])}`,
+          authHeader(users[1].access_token)
+        ),
+      ]);
+ 
+      expect(res0.status).toBe(200);
+      expect(res1.status).toBe(200);
+ 
+      const [body0, body1] = await Promise.all([res0.json(), res1.json()]);
+ 
+      // Any result returned must legitimately carry both tags
+      [body0, body1].forEach((body) => {
+        body.templates.forEach((t) => {
+          const names = t.tags.map((tag) => tag.name);
+          expect(names).toContain("recursion");
+          expect(names).toContain("hello_world");
+        });
+      });
+    });
+  });
+});
+ 
