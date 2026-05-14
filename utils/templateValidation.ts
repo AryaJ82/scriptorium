@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
-import {validSortFields, validSortOrders}  from "@/utils/interfaces";
+import { validSortFields, validSortOrders } from "@/utils/interfaces";
 import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody, ValidationError } from "@/utils/interfaces";
-export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";;
+export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";
 
 
 

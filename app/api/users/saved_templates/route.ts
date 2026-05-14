@@ -68,7 +68,8 @@ export async function GET(request: Request) {
             const orderBy: Prisma.TemplateOrderByWithRelationInput = {};
             orderBy[sortBy ? sortBy : "createdAt"] = (sortOrder === 'desc') ? 'desc' : 'asc';
 
-            return await templateSearch(where, orderBy, pageNum, pageSizeNum);
+            const searchResult = await templateSearch(where, orderBy, pageNum, pageSizeNum);
+            return NextResponse.json(searchResult, { status: 200 });
 
         } catch (error) {
             console.error("Error fetching saved templates", error);

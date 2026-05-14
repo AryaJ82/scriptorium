@@ -1,7 +1,6 @@
 
 import { NextResponse } from "next/server";
-import { Prisma } from "@/app/generated/prisma/client";
-import prisma from "@/utils/client"
+import prisma from "@/utils/client";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
@@ -10,8 +9,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
             return NextResponse.json({ error: "Template id is required" }, { status: 400 });
         }
 
-        const template = prisma.template.findMany({
-            where: { id: id },
+        const template = await prisma.template.findUnique({
+            where: { id },
             select: {
                 id: true,
                 title: true,
@@ -43,8 +42,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
                         author: true,
                         title: true,
                         createdAt: true,
-                    }
-                }//TODO: Potentially more fields, such as blog replies.. ( separate query?)
+                    },
+                },//TODO: Potentially more fields, such as blog replies.. ( separate query?)
             },
         });
 
