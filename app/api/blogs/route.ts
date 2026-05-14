@@ -16,7 +16,7 @@ export async function GET(request: Request) {
         if (error) {
             return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
         }
-        const { post_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
+        const { post_id, linked_template_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
         // Get tags as array of strings from comma separation tags=tag1,tag2,...
         const tagList = normalizeTags(tags?.split(','));
 
@@ -30,6 +30,11 @@ export async function GET(request: Request) {
             }),
             ...(title && {
                 title: { contains: title },
+            }),
+            ...(linked_template_id && {
+                linkedTemplate: {
+                    is: { id: linked_template_id.trim() }
+                }
             }),
             ...(description && {
                 description: { contains: description, },
@@ -46,7 +51,7 @@ export async function GET(request: Request) {
             }),
         };
 
-const orderBy = {
+        const orderBy = {
             [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
         } as Prisma.BlogPostOrderByWithRelationInput;
 
@@ -269,43 +274,8 @@ export async function DELETE(request: Request) {
 
 
 
-async function verifyPOSTParams(params: BlogPOSTBody) {
-    const { title, description, linked_template_id, tags } = params;
-
-    if (linked_template_id !== undefined) {
-        if (!isString(linked_template_id) || linked_template_id.trim() === "") {
-            return createError("linked_template_id should be a non-empty string if provided");
-        }
-        const sourceTemplate = await prisma.template.findUnique({ where: { id: linked_template_id } });
-        if (!sourceTemplate) {
-            return createError("No template found for the provided linked_template_id", 400);
-        }
-    }
-
-    if (!isString(title) || title.trim() === "") {
-        return createError("Please provide a valid title");
-    }
-    if (title.length > 255) {
-        return createError("Title must be less than 255 characters");
-    }
-
-
-    if (!isString(description) || description.trim() === "") {
-        return createError("Please provide a valid description");
-    }
-    if (description.length > 10000) {
-        return createError("description must be less than 10000 characters");
-    }
-
-    const tagsValidation = validateTags(tags);
-    if (tagsValidation) {
-        return tagsValidation;
-    }
-    return null;
-}
-
 export function verifyGETParams(params: BlogGETQuery) {
-    const { post_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = params;
+    const { post_id, linked_template_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = params;
 
     if (post_id !== undefined && !isPositiveIntegerString(post_id)) {
         return createError("post_id should be a positive integer");
@@ -313,6 +283,10 @@ export function verifyGETParams(params: BlogGETQuery) {
 
     if (title !== undefined && !isOptionalString(title, 255)) {
         return createError("Title should be a string with at most 255 characters");
+    }
+
+    if (linked_template_id !== undefined && !isOptionalString(linked_template_id, 255)) {
+        return createError("linked_template_id should be a string with at most 30 characters");
     }
 
     if (tags !== undefined) {
@@ -354,6 +328,41 @@ export function verifyGETParams(params: BlogGETQuery) {
     return null;
 }
 
+
+async function verifyPOSTParams(params: BlogPOSTBody) {
+    const { title, description, linked_template_id, tags } = params;
+
+    if (linked_template_id !== undefined) {
+        if (!isString(linked_template_id) || linked_template_id.trim() === "") {
+            return createError("linked_template_id should be a non-empty string if provided");
+        }
+        const sourceTemplate = await prisma.template.findUnique({ where: { id: linked_template_id } });
+        if (!sourceTemplate) {
+            return createError("No template found for the provided linked_template_id", 400);
+        }
+    }
+
+    if (!isString(title) || title.trim() === "") {
+        return createError("Please provide a valid title");
+    }
+    if (title.length > 255) {
+        return createError("Title must be less than 255 characters");
+    }
+
+
+    if (!isString(description) || description.trim() === "") {
+        return createError("Please provide a valid description");
+    }
+    if (description.length > 10000) {
+        return createError("description must be less than 10000 characters");
+    }
+
+    const tagsValidation = validateTags(tags);
+    if (tagsValidation) {
+        return tagsValidation;
+    }
+    return null;
+}
 
 async function verifyPATCHParams(body: BlogPATCHBody): Promise<ValidationError | null> {
     const { post_id, title, description, tags } = body;

@@ -59,8 +59,9 @@ export async function GET(request: Request) {
             }),
         };
 
-        const orderBy: Prisma.TemplateOrderByWithRelationInput = {};
-        orderBy[sortBy ? sortBy : "createdAt"] = (sortOrder === 'desc') ? 'desc' : 'asc';
+        const orderBy = {
+            [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
+        } as Prisma.BlogPostOrderByWithRelationInput;
 
         return await templateSearch(where, orderBy, pageNum, pageSizeNum);
 
