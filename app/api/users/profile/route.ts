@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/utils/middlewareAuth";
 import prisma from "@/utils/client";
-import type {AuthenticatedRequest} from "@/utils/middlewareAuth";
+import type { AuthenticatedRequest } from "@/utils/middlewareAuth";
 
 export async function GET(request: Request) {
     try {
@@ -36,10 +36,10 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
-            const { email, firstName, lastName, avatarUrl, phoneNumber, } = await request.json();
+            const { email, firstName, lastName, avatarUrl, phoneNumber } = await request.json();
             const { user } = request;
-            if(!user){
-                throw Error("User not loaded into request while editing profile")
+            if (!user) {
+                throw Error("User not loaded into request while editing profile");
             }
 
             const updatedUser = await prisma.user.update({
@@ -49,9 +49,9 @@ export async function PATCH(request: Request) {
                     ...(firstName && { firstName }),
                     ...(lastName && { lastName }),
                     ...(avatarUrl && { avatarUrl }),
-                    ...(phoneNumber && { phoneNumber })
+                    ...(phoneNumber && { phoneNumber }),
                 },
-                select:{
+                select: {
                     id: true,
                     username: true,
                     firstName: true,
@@ -59,7 +59,7 @@ export async function PATCH(request: Request) {
                     email: true,
                     avatarUrl: true,
                     phoneNumber: true,
-                }
+                },
             });
             return NextResponse.json({ user: updatedUser }, { status: 200 });
         } catch (error) {
