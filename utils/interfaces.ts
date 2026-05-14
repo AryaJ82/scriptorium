@@ -63,6 +63,7 @@ export interface TemplatePATCHBody {
 export interface BlogGETQuery {
     post_id?: string;
     title?: string;
+    linked_template_id?: string;
     description?: string;
     tags?: string;
     author?: string;
