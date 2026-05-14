@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         const { searchParams } = (new URL(request.url));
         const queryParams = Object.fromEntries(searchParams) as unknown as BlogGETQuery;
 
-        let error = await verifyGETParams(queryParams);
+        let error = verifyGETParams(queryParams);
         if (error) {
             return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
         }
