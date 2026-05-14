@@ -19,7 +19,7 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
             const authHeader = request.headers.get("Authorization");
             if (!authHeader || !authHeader.startsWith("Bearer")) {
                 return NextResponse.json(
-                    { error: "Unauthorized: failed authheader check" },
+                    { error: "Unauthorized: missing access token" },
                     { status: 401 },
                 );
             }
