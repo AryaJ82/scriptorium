@@ -8,8 +8,7 @@ export async function POST(request: Request) {
         if (!refreshToken) {
             return NextResponse.json({ error: "Refresh token is required." }, { status: 400 });
         }
-        console.log(refreshToken);
-        
+
         const refreshPayload = verifyRefreshToken(refreshToken);
         if (!refreshPayload) {
             return NextResponse.json({ error: "Invalid refresh token." }, { status: 401 });
@@ -27,7 +26,15 @@ export async function POST(request: Request) {
             throw new Error("Failed to generate access token");
         }
 
-        return NextResponse.json({ accessToken });
+        const response = NextResponse.json({ accessToken });
+        response.cookies.set("accessToken", accessToken, {
+            httpOnly: true,
+            path: "/",
+            sameSite: "strict",
+            maxAge: 60 * 60,
+        });
+
+        return response;
     } catch (error) {
         console.error("Error during token refresh:", error);
         return NextResponse.json({ error: "An error occurred while processing the request" }, { status: 500 });
