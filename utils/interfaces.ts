@@ -8,7 +8,12 @@ export type ValidationError = {
 };
 
 export type ValidSortFields = 'title' | 'createdAt' | 'language';
+export type BlogSortFields = 'title' | 'createdAt';
 export type ValidSortOrder = 'asc' | 'desc';
+
+export const validSortFields = ["title", "createdAt", "language"] as const;
+export const validBlogSortFields = ["title", "createdAt"] as const;
+export const validSortOrders = ["asc", "desc"] as const;
 
 // ------------------- Execution
 
@@ -55,6 +60,17 @@ export interface TemplatePATCHBody {
 
 //-------------- Blogs
 
+export interface BlogGETQuery {
+    post_id?: string;
+    title?: string;
+    description?: string;
+    tags?: string;
+    author?: string;
+    page?: string;
+    pageSize?: string;
+    sortBy?: BlogSortFields;
+    sortOrder?: ValidSortOrder;
+}
 export interface BlogPOSTBody {
     title: string;
     description: string;

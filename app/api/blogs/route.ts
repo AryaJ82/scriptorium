@@ -2,13 +2,100 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
-import { normalizeTags, validateTags } from "@/utils/templateValidation";
-import type { ValidationError, BlogPOSTBody, BlogPATCHBody } from "@/utils/interfaces";
-import { isPositiveIntegerString } from "@/utils/templateValidation";
+import { normalizeTags, validateTags, isPositiveIntegerString, isOptionalString } from "@/utils/templateValidation";
+import type { ValidationError, BlogPOSTBody, BlogPATCHBody, BlogGETQuery } from "@/utils/interfaces";
+import { validBlogSortFields, validSortOrders } from "@/utils/interfaces";
+import { Prisma } from "@/app/generated/prisma/client";
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = (new URL(request.url));
+        const queryParams = Object.fromEntries(searchParams) as unknown as BlogGETQuery;
+
+        let error = await verifyGETParams(queryParams);
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+        }
+        const { post_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
+        // Get tags as array of strings from comma separation tags=tag1,tag2,...
+        const tagList = normalizeTags(tags?.split(','));
 
 
-export async function GET(request: Request){
-    
+        const pageNum = page ? parseInt(page) : 1;
+        const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
+
+        const where: Prisma.BlogPostWhereInput = {
+            ...(post_id && {
+                id: Number(post_id)
+            }),
+            ...(title && {
+                title: { contains: title },
+            }),
+            ...(description && {
+                description: { contains: description, },
+            }),
+            ...(author && {
+                author: {
+                    is: { username: { equals: author } },
+                },
+            }),
+            ...(tagList.length > 0 && {
+                AND: tagList.map((tag) => ({
+                    tags: { some: { name: { equals: tag } } },
+                })),
+            }),
+        };
+
+const orderBy = {
+            [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
+        } as Prisma.BlogPostOrderByWithRelationInput;
+
+        const [totalSize, templates] = await prisma.$transaction([
+            prisma.blogPost.count({ where }),
+            prisma.blogPost.findMany({
+                where,
+                orderBy,
+                skip: (pageNum - 1) * pageSizeNum,
+                take: pageSizeNum,
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    tags: {
+                        select: { name: true },
+                    },
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                            avatarUrl: true,
+                            role: true,
+                            createdAt: true,
+                        },
+                    },
+                },
+            }),
+        ]);
+
+        return NextResponse.json({
+            templates,
+            pagination: {
+                totalSize,
+                totalPages: Math.ceil(totalSize / pageSizeNum),
+                page: pageNum,
+                pageSize: pageSizeNum,
+            },
+        }, { status: 200 });
+
+    } catch (error) {
+        console.error("Error fetching templates", error);
+        return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
+    }
 }
 
 export async function POST(request: Request) {
@@ -46,7 +133,7 @@ export async function POST(request: Request) {
                         linkedTemplate: { connect: { id: linked_template_id } }
                     })
                 },
-                include: {
+                select: {
                     id: true,
                     tags: true,
                     author: {
@@ -153,7 +240,7 @@ export async function DELETE(request: Request) {
         try {
             const { post_id } = await request.json();
             if (!post_id || !isPositiveIntegerString(post_id)) {
-                return NextResponse.json({ error: "template_id is required and must be a string" }, { status: 400 });
+                return NextResponse.json({ error: "post_id is required and must be a positive integer string" }, { status: 400 });
             }
             const id = Number(post_id);
             const { user } = request;
@@ -181,6 +268,7 @@ export async function DELETE(request: Request) {
 }
 
 
+
 async function verifyPOSTParams(params: BlogPOSTBody) {
     const { title, description, linked_template_id, tags } = params;
 
@@ -190,7 +278,7 @@ async function verifyPOSTParams(params: BlogPOSTBody) {
         }
         const sourceTemplate = await prisma.template.findUnique({ where: { id: linked_template_id } });
         if (!sourceTemplate) {
-            return createError("No template found to fork from with the provided forkedSourceId", 400);
+            return createError("No template found for the provided linked_template_id", 400);
         }
     }
 
@@ -210,9 +298,59 @@ async function verifyPOSTParams(params: BlogPOSTBody) {
     }
 
     const tagsValidation = validateTags(tags);
-    if (!tagsValidation) {
+    if (tagsValidation) {
         return tagsValidation;
     }
+    return null;
+}
+
+export function verifyGETParams(params: BlogGETQuery) {
+    const { post_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = params;
+
+    if (post_id !== undefined && !isPositiveIntegerString(post_id)) {
+        return createError("post_id should be a positive integer");
+    }
+
+    if (title !== undefined && !isOptionalString(title, 255)) {
+        return createError("Title should be a string with at most 255 characters");
+    }
+
+    if (tags !== undefined) {
+        if (!isString(tags) || tags.trim() === "" || tags.length > 50) {
+            return createError("Tags should be a non-empty string with at most 50 characters");
+        }
+    }
+
+    if (description !== undefined && !isOptionalString(description, 1000)) {
+        return createError("Description should be a string with at most 1000 characters");
+    }
+
+    if (author !== undefined && !isOptionalString(author, 100)) {
+        return createError("Author should be a string with at most 100 characters");
+    }
+
+    if (page !== undefined && !isPositiveIntegerString(page)) {
+        return createError("Page should be a positive integer");
+    }
+
+    if (pageSize !== undefined) {
+        if (!isPositiveIntegerString(pageSize)) {
+            return createError("Page size should be a positive integer");
+        }
+        const pageSizeNumber = Number(pageSize);
+        if (pageSizeNumber > 100) {
+            return createError("Page size should be a number between 1 and 100");
+        }
+    }
+
+    if (sortBy !== undefined && !validBlogSortFields.includes(sortBy as typeof validBlogSortFields[number])) {
+        return createError("SortBy should be a valid sort field");
+    }
+
+    if (sortOrder !== undefined && !validSortOrders.includes(sortOrder as typeof validSortOrders[number])) {
+        return createError("SortOrder should be 'asc' or 'desc'");
+    }
+
     return null;
 }
 
@@ -221,7 +359,7 @@ async function verifyPATCHParams(body: BlogPATCHBody): Promise<ValidationError |
     const { post_id, title, description, tags } = body;
 
     if (post_id === undefined || !isPositiveIntegerString(post_id)) {
-        return createError("post_id is required and must be a non-empty string");
+        return createError("post_id is required and must be a positive integer string");
     }
 
     if (title === undefined && description === undefined && tags === undefined) {
@@ -243,9 +381,9 @@ async function verifyPATCHParams(body: BlogPATCHBody): Promise<ValidationError |
         }
     }
 
-    const tagsValidation = validateTags(tags);
-    if (!tagsValidation) {
-        return tagsValidation;
+    const error = validateTags(tags);
+    if (error) {
+        return error;
     }
 
     return null;

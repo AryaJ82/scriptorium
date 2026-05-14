@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
+import {validSortFields, validSortOrders}  from "@/utils/interfaces";
 import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody, ValidationError } from "@/utils/interfaces";
 export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";;
 
 
 
 
-const validSortFields = ["title", "createdAt", "language"] as const;
-const validSortOrders = ["asc", "desc"] as const;
 
 
 
@@ -20,7 +19,7 @@ function isString(value: unknown): value is string {
     return typeof value === "string";
 }
 
-function isOptionalString(value: unknown, maxLength: number): boolean {
+export function isOptionalString(value: unknown, maxLength: number): boolean {
     return value === undefined || (isString(value) && value.length <= maxLength);
 }
 
@@ -79,52 +78,52 @@ export function normalizeTags(tags: string[] | undefined): string[] {
 export function verifyGETParams(params: TemplateGETQuery) {
     const { title, template_id, language, tags, content, author, page, pageSize, sortBy, sortOrder } = params;
 
-    if (template_id !== undefined && !isOptionalString(title, 255)) {
-        return NextResponse.json({ error: "Title should be a string with at most 255 characters" }, { status: 400 });
+    if (template_id !== undefined && !isOptionalString(template_id, 255)) {
+        return createError("Template ID should be a string with at most 255 characters");
     }
 
     if (title !== undefined && !isOptionalString(title, 255)) {
-        return NextResponse.json({ error: "Title should be a string with at most 255 characters" }, { status: 400 });
+        return createError("Title should be a string with at most 255 characters");
     }
 
     if (language !== undefined && !isValidLanguage(language)) {
-        return NextResponse.json({ error: "Invalid language" }, { status: 400 });
+        return createError("Invalid language" );
     }
 
     if (tags !== undefined) {
         if (!isString(tags) || tags.trim() === "" || tags.length > 50) {
-            return NextResponse.json({ error: "Tags should be a non-empty string with at most 50 characters" }, { status: 400 });
+            return createError("Tags should be a non-empty string with at most 50 characters");
         }
     }
 
     if (content !== undefined && !isOptionalString(content, 1000)) {
-        return NextResponse.json({ error: "Content should be a string with at most 1000 characters" }, { status: 400 });
+        return createError("Content should be a string with at most 1000 characters");
     }
 
     if (author !== undefined && !isOptionalString(author, 100)) {
-        return NextResponse.json({ error: "Author should be a string with at most 100 characters" }, { status: 400 });
+        return createError("Author should be a string with at most 100 characters");
     }
 
     if (page !== undefined && !isPositiveIntegerString(page)) {
-        return NextResponse.json({ error: "Page should be a positive integer" }, { status: 400 });
+        return createError("Page should be a positive integer");
     }
 
     if (pageSize !== undefined) {
         if (!isPositiveIntegerString(pageSize)) {
-            return NextResponse.json({ error: "Page size should be a positive integer" }, { status: 400 });
+            return createError("Page size should be a positive integer");
         }
         const pageSizeNumber = Number(pageSize);
         if (pageSizeNumber > 100) {
-            return NextResponse.json({ error: "Page size should be a number between 1 and 100" }, { status: 400 });
+            return createError("Page size should be a number between 1 and 100");
         }
     }
 
     if (sortBy !== undefined && !validSortFields.includes(sortBy as typeof validSortFields[number])) {
-        return NextResponse.json({ error: "SortBy should be a valid sort field" }, { status: 400 });
+        return createError("SortBy should be a valid sort field");
     }
 
     if (sortOrder !== undefined && !validSortOrders.includes(sortOrder as typeof validSortOrders[number])) {
-        return NextResponse.json({ error: "SortOrder should be 'asc' or 'desc'" }, { status: 400 });
+        return createError("SortOrder should be 'asc' or 'desc'");
     }
 
     return null;
@@ -154,9 +153,9 @@ export async function verifyPOSTParams(body: TemplatePOSTBody): Promise<Validati
         }
     }
 
-    const tagsValidation = validateTags(tags);
-    if (!tagsValidation) {
-        return tagsValidation;
+    const error = validateTags(tags);
+    if (error) {
+        return error;
     }
 
     if (forkedSourceId !== undefined) {
@@ -206,9 +205,9 @@ export async function verifyPATCHParams(body: TemplatePATCHBody): Promise<Valida
         }
     }
 
-    const tagsValidation = validateTags(tags);
-    if (!tagsValidation) {
-        return tagsValidation;
+    const error = validateTags(tags);
+    if (error) {
+        return error;
     }
 
     return null;

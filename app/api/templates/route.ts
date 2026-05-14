@@ -6,7 +6,7 @@ import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
 import { normalizeTags, verifyPATCHParams, verifyPOSTParams } from "@/utils/templateValidation";
-import { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/templateValidation";
+import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/templateValidation";
 
 
 export async function GET(request: Request) {
@@ -16,9 +16,9 @@ export async function GET(request: Request) {
 
         let error = verifyGETParams(queryParams);
         if (error) {
-            return error;
+            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
         }
-        const { title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
+        const { template_id, title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
         // Get tags as array of strings from comma separation tags=tag1,tag2,...
         const tagList = normalizeTags(tags?.split(','));
 
@@ -27,6 +27,9 @@ export async function GET(request: Request) {
         const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
 
         const where: Prisma.TemplateWhereInput = {
+            ...(template_id && {
+                id: template_id
+            }),
             ...(title && {
                 title: { contains: title },
             }),

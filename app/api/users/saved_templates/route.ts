@@ -4,7 +4,7 @@ import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams, normalizeTags } from "@/utils/templateSearch";
-import { TemplateGETQuery } from "@/utils/templateValidation";
+import type { TemplateGETQuery } from "@/utils/templateValidation";
 
 
 
@@ -17,13 +17,12 @@ export async function GET(request: Request) {
             }
             const { searchParams } = (new URL(request.url));
             const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
-            console.log(queryParams);
 
             let error = verifyGETParams(queryParams);
             if (error) {
-                return error;
+                return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
             }
-            const { title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
+            const { template_id, title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
             const tagList = normalizeTags(tags?.split(','));
 
             const pageNum = page ? parseInt(page) : 1;
@@ -31,6 +30,9 @@ export async function GET(request: Request) {
 
             const where: Prisma.TemplateWhereInput = {
                 // Scope to only this user's saved templates
+                ...(template_id && {
+                    id: template_id
+                }),
                 savers: { // Template.savers User[] @relation(...) is a model field
                     some: { id: user.id },
                 },
