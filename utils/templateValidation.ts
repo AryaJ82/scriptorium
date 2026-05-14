@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
-import type { TemplateGETQuery } from "./templateSearch";
+import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody, ValidationError } from "@/utils/interfaces";
+export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";;
+
+
+
 
 const validSortFields = ["title", "createdAt", "language"] as const;
 const validSortOrders = ["asc", "desc"] as const;
 
-type ValidationError = {
-    message: string;
-    status?: number;
-};
 
-type TagsValidationResult = { valid: true } | ValidationError;
-
-function isValidationError(result: TagsValidationResult): result is ValidationError {
-    return (result as ValidationError).message !== undefined;
-}
 
 function createError(message: string, status = 400): ValidationError {
     return { message, status };
@@ -29,7 +24,7 @@ function isOptionalString(value: unknown, maxLength: number): boolean {
     return value === undefined || (isString(value) && value.length <= maxLength);
 }
 
-function isPositiveIntegerString(value: unknown): boolean {
+export function isPositiveIntegerString(value: unknown): boolean {
     return isString(value) && /^\d+$/.test(value) && Number(value) >= 1;
 }
 
@@ -37,18 +32,34 @@ function isValidLanguage(language: unknown): language is Language {
     return isString(language) && Object.values(Language).includes(language as Language);
 }
 
-function validateTagValue(tag: unknown): string | ValidationError {
+function validateTagValue(tag: unknown): ValidationError | null {
     if (!isString(tag) || tag.trim() === "") {
         return createError("Each tag should be a non-empty string");
     }
-    const normalizedTag = tag.trim().toLowerCase();
+    const normalizedTag = tag.trim();
     if (normalizedTag.length > 50) {
         return createError("Each tag must be less than 50 characters");
     }
     if (/\s/.test(normalizedTag) || /[,&]/.test(normalizedTag)) {
         return createError("Invalid character in tag");
     }
-    return normalizedTag;
+    return null;
+}
+
+export function validateTags(tags: unknown): ValidationError | null {
+    if (tags === undefined) {
+        return null;
+    }
+    if (!Array.isArray(tags)) {
+        return createError("Tags should be an array of strings");
+    }
+    for (const tag of tags) {
+        const validated = validateTagValue(tag);
+        if (!validated) {
+            return validated;
+        }
+    }
+    return null;
 }
 
 export function normalizeTags(tags: string[] | undefined): string[] {
@@ -66,7 +77,11 @@ export function normalizeTags(tags: string[] | undefined): string[] {
 }
 
 export function verifyGETParams(params: TemplateGETQuery) {
-    const { title, language, tags, content, author, page, pageSize, sortBy, sortOrder } = params;
+    const { title, template_id, language, tags, content, author, page, pageSize, sortBy, sortOrder } = params;
+
+    if (template_id !== undefined && !isOptionalString(title, 255)) {
+        return NextResponse.json({ error: "Title should be a string with at most 255 characters" }, { status: 400 });
+    }
 
     if (title !== undefined && !isOptionalString(title, 255)) {
         return NextResponse.json({ error: "Title should be a string with at most 255 characters" }, { status: 400 });
@@ -140,7 +155,7 @@ export async function verifyPOSTParams(body: TemplatePOSTBody): Promise<Validati
     }
 
     const tagsValidation = validateTags(tags);
-    if (isValidationError(tagsValidation)) {
+    if (!tagsValidation) {
         return tagsValidation;
     }
 
@@ -192,43 +207,9 @@ export async function verifyPATCHParams(body: TemplatePATCHBody): Promise<Valida
     }
 
     const tagsValidation = validateTags(tags);
-    if (isValidationError(tagsValidation)) {
+    if (!tagsValidation) {
         return tagsValidation;
     }
 
     return null;
-}
-
-function validateTags(tags: unknown): { valid: true } | ValidationError {
-    if (tags === undefined) {
-        return { valid: true };
-    }
-    if (!Array.isArray(tags)) {
-        return createError("Tags should be an array of strings");
-    }
-    for (const tag of tags) {
-        const validated = validateTagValue(tag);
-        if (typeof validated !== "string") {
-            return validated;
-        }
-    }
-    return { valid: true };
-}
-
-export interface TemplatePOSTBody {
-    title: string;
-    code?: string;
-    language: Language;
-    description?: string;
-    tags?: string[];
-    forkedSourceId?: string;
-}
-
-export interface TemplatePATCHBody {
-    template_id: string;
-    title?: string;
-    code?: string;
-    language?: Language;
-    description?: string;
-    tags?: string[];
 }

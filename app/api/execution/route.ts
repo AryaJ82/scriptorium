@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from "path";
 import Docker from 'dockerode';
 import { PassThrough } from 'stream';
+import type {ExecutionRequest} from '@/utils/interfaces'
 
 const docker = new Docker();
 
@@ -28,12 +29,6 @@ const LANG_CONFIG = {
 
 export async function GET(request: Request) {
     return NextResponse.json({ message: "Hello from the execution API!" });
-}
-
-interface ExecutionRequest {
-    language: Language;
-    code: string;
-    stdin?: string;       // provide upfront stdin (non-interactive)
 }
 
 export async function POST(request: Request) {

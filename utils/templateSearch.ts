@@ -2,22 +2,6 @@ import { NextResponse } from "next/server"
 import prisma from "@/utils/client"
 import { Prisma } from "@/app/generated/prisma/client";
 
-type ValidSortFields = 'title' | 'createdAt' | 'language';
-type ValidSortOrder = 'asc' | 'desc';
-
-interface TemplateGETQuery {
-    title?: string;
-    language?: string;
-    tags?: string;
-    content?: string;
-    author?: string;
-    page?: string;
-    pageSize?: string;
-    sortBy?: ValidSortFields;
-    sortOrder?: ValidSortOrder;
-}
-
-export type { TemplateGETQuery, ValidSortFields, ValidSortOrder };
 export { verifyGETParams, normalizeTags } from "./templateValidation";
 
 

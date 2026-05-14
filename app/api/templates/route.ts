@@ -2,30 +2,12 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
-// import type { Language } frm "../execution/route";
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
 import { normalizeTags, verifyPATCHParams, verifyPOSTParams } from "@/utils/templateValidation";
-import type { TemplateGETQuery } from "@/utils/templateSearch";
+import { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/templateValidation";
 
-interface TemplatePOSTBody {
-    title: string;
-    code?: string;
-    language: Language;
-    description?: string;
-    tags?: string[];
-    forkedSourceId?: string;
-}
-
-interface TemplatePATCHBody {
-    template_id: string;
-    title?: string;
-    code?: string;
-    language?: Language;
-    description?: string;
-    tags?: string[];
-}
 
 export async function GET(request: Request) {
     try {
@@ -39,7 +21,7 @@ export async function GET(request: Request) {
         const { title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
         // Get tags as array of strings from comma separation tags=tag1,tag2,...
         const tagList = normalizeTags(tags?.split(','));
-        
+
 
         const pageNum = page ? parseInt(page) : 1;
         const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
@@ -71,18 +53,18 @@ export async function GET(request: Request) {
                 AND: tagList.map((tag) => ({
                     tags: { some: { name: { equals: tag } } },
                 })),
-        }),
-    };
+            }),
+        };
 
-    const orderBy: Prisma.TemplateOrderByWithRelationInput = {};
-    orderBy[sortBy ? sortBy : "createdAt"] = (sortOrder === 'desc') ? 'desc' : 'asc';
+        const orderBy: Prisma.TemplateOrderByWithRelationInput = {};
+        orderBy[sortBy ? sortBy : "createdAt"] = (sortOrder === 'desc') ? 'desc' : 'asc';
 
-    return await templateSearch(where, orderBy, pageNum, pageSizeNum);
+        return await templateSearch(where, orderBy, pageNum, pageSizeNum);
 
-} catch (error) {
-    console.error("Error fetching templates", error);
-    return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
-}
+    } catch (error) {
+        console.error("Error fetching templates", error);
+        return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
+    }
 }
 
 export async function POST(request: Request) {
@@ -193,6 +175,7 @@ export async function PATCH(request: Request) {
                     code: true,
                     isForked: true,
                     createdAt: true,
+                    updatedAt: true,
                     tags: {
                         select: { name: true },
                     },
