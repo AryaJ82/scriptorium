@@ -1,5 +1,4 @@
 import { verifyRefreshToken, generateAccessToken } from "@/utils/tokenAuth";
-import { log } from "console";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
