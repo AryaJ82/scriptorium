@@ -1,6 +1,6 @@
 import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
-import { validSortFields, validSortOrders } from "@/utils/interfaces";
+import { validTemplateSortFields, validSortOrders } from "@/utils/interfaces";
 import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody, ValidationError } from "@/utils/interfaces";
 export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";
 
@@ -117,7 +117,7 @@ export function verifyGETParams(params: TemplateGETQuery) {
         }
     }
 
-    if (sortBy !== undefined && !validSortFields.includes(sortBy as typeof validSortFields[number])) {
+    if (sortBy !== undefined && !validTemplateSortFields.includes(sortBy as typeof validTemplateSortFields[number])) {
         return createError("SortBy should be a valid sort field");
     }
 

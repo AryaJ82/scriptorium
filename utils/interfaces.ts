@@ -7,12 +7,14 @@ export type ValidationError = {
     status?: number;
 };
 
-export type ValidSortFields = 'title' | 'createdAt' | 'language';
-export type BlogSortFields = 'title' | 'createdAt';
+// ---------------------- Sorting Requests
+
+export type ValidSortFields = 'title' | 'createdAt' | 'language' | 'upvoteCount' | 'downvoteCount';
+export type BlogSortFields = 'title' | 'createdAt' | 'upvoteCount' | 'downvoteCount';
 export type ValidSortOrder = 'asc' | 'desc';
 
-export const validSortFields = ["title", "createdAt", "language"] as const;
-export const validBlogSortFields = ["title", "createdAt"] as const;
+export const validTemplateSortFields = ["title", "createdAt", "language", 'upvoteCount', 'downvoteCount'] as const;
+export const validBlogSortFields = ["title", "createdAt", 'upvoteCount', 'downvoteCount'] as const;
 export const validSortOrders = ["asc", "desc"] as const;
 
 // ------------------- Execution
