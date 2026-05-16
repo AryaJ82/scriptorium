@@ -4,7 +4,7 @@ import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams, normalizeTags } from "@/utils/templateSearch";
-import type { TemplateGETQuery } from "@/utils/templateValidation";
+import type { TemplateGETQuery } from "@/utils/inputValidation/templateValidation";
 
 
 
