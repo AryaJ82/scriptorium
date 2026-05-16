@@ -3,10 +3,8 @@ import { verifyAccessToken } from "@/utils/tokenAuth";
 import type { JwtPayload } from "jsonwebtoken"
 import prisma from '@/utils/client';
 
-interface AuthenticatedRequest extends Request {
-    user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
-}
-export type { AuthenticatedRequest };
+import type { AuthenticatedRequest } from "./interfaces";
+export type { AuthenticatedRequest } from "./interfaces";
 
 /**
  * Middleware to protect API routes with token verification and role-based access.

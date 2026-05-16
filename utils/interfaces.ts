@@ -1,4 +1,5 @@
 import { Language } from "@/app/generated/prisma/enums";
+import prisma from "./client";
 export { Language } from "@/app/generated/prisma/enums";
 
 // -------------------- General
@@ -7,6 +8,9 @@ export type ValidationError = {
     status?: number;
 };
 
+export interface AuthenticatedRequest extends Request {
+    user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
+}
 // ---------------------- Sorting Requests
 
 export type ValidSortFields = 'title' | 'createdAt' | 'language' | 'upvoteCount' | 'downvoteCount';
