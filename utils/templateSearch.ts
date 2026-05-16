@@ -1,7 +1,7 @@
 import prisma from "@/utils/client";
 import { Prisma } from "@/app/generated/prisma/client";
 
-export { verifyGETParams, normalizeTags } from "./templateValidation";
+export { verifyGETParams, normalizeTags } from "./inputValidation/templateValidation";
 
 export async function templateSearch(where: Prisma.TemplateWhereInput, orderBy: Prisma.TemplateOrderByWithRelationInput, pageNum: number, pageSizeNum: number) {
     const [totalSize, templates] = await prisma.$transaction([

@@ -1,6 +1,6 @@
 import { Language } from "@/app/generated/prisma/enums";
-import prisma from "./client";
 export { Language } from "@/app/generated/prisma/enums";
+import prisma from "./client";
 
 // -------------------- General
 export type ValidationError = {
@@ -11,7 +11,7 @@ export type ValidationError = {
 export interface AuthenticatedRequest extends Request {
     user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
 }
-// ---------------------- Sorting Requests
+// ---------------------- Sorting Fields
 
 export type ValidSortFields = 'title' | 'createdAt' | 'language' | 'upvoteCount' | 'downvoteCount';
 export type BlogSortFields = 'title' | 'createdAt' | 'upvoteCount' | 'downvoteCount';
@@ -55,7 +55,6 @@ export interface TemplatePOSTBody {
 }
 
 export interface TemplatePATCHBody {
-    template_id: string;
     title?: string;
     code?: string;
     language?: Language;
