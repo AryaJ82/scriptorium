@@ -73,7 +73,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
                 return NextResponse.json({ error: "post not found" }, { status: 404 });
             }
             if (post.authorId !== user.id) {
-                return NextResponse.json({ error: "Frobidden" }, { status: 403 });
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
             }
 
             // --- Tag handling ---
@@ -104,8 +104,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
             return NextResponse.json({ template: updatedPost }, { status: 200 });
         } catch (error) {
-            console.error("Error when updating code template:", error);
-            return NextResponse.json({ error: "Internal server error when updating code template" }, { status: 500 });
+            console.error("Error when updating blog post:", error);
+            return NextResponse.json({ error: "Internal server error when updating blog post" }, { status: 500 });
         }
     })(request);
 }

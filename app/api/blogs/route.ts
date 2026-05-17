@@ -87,6 +87,56 @@ export async function GET(request: Request) {
     }
 }
 
+
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+    return withAuth(async (request: AuthenticatedRequest) => {
+        try {
+            const { user } = request;
+            if (!user) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
+
+            const { id } = params;
+            const comment_id = Number(id);
+            if (!id || isNaN(comment_id) || comment_id < 0) {
+                return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
+            }
+
+            const { content } = await request.json();
+            if (!content || typeof content !== "string" || content.trim() === "") {
+                return NextResponse.json({ error: "Invalid comment content." }, { status: 400 });
+            }
+
+            const comment = await prisma.comment.findUnique({ where: { id: comment_id } });
+            if (!comment) {
+                return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+            }
+            if (comment.authorId !== user.id) {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            }
+
+            const updatedComment = await prisma.comment.update({
+                where: { id: comment_id },
+                data: {
+                    ...(content && { content }),
+                },
+                include: {
+                    author: true,
+                    tags: {
+                        select: { name: true },
+                    },
+                },
+            });
+
+            return NextResponse.json({ template: updatedComment }, { status: 200 });
+        } catch (error) {
+            console.error("Error when updating comment:", error);
+            return NextResponse.json({ error: "Internal server error when updating comment" }, { status: 500 });
+        }
+    })(request);
+}
+
+
 export async function POST(request: Request) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
