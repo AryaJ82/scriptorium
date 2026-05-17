@@ -84,7 +84,6 @@ export interface BlogPOSTBody {
 }
 
 export interface BlogPATCHBody {
-    post_id: string;
     title?: string;
     description?: string;
     tags?: string[];
