@@ -11,26 +11,14 @@ export async function templateSearch(where: Prisma.TemplateWhereInput, orderBy: 
             orderBy,
             skip: (pageNum - 1) * pageSizeNum,
             take: pageSizeNum,
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                language: true,
-                code: true,
-                isForked: true,
-                createdAt: true,
-                tags: {
-                    select: { name: true },
-                },
-                author: {
+            include: {
+                tags: { select: { name: true }, },
+                author: true,
+                parentTemplate: {
                     select: {
                         id: true,
-                        username: true,
-                        firstName: true,
-                        lastName: true,
-                        email: true,
-                        avatarUrl: true,
-                        role: true,
+                        author: true,
+                        title: true,
                         createdAt: true,
                     },
                 },

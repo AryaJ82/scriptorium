@@ -62,7 +62,6 @@ export interface TemplatePATCHBody {
     tags?: string[];
 }
 
-
 //-------------- Blogs
 
 export interface BlogGETQuery {

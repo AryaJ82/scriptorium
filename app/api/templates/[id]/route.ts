@@ -14,31 +14,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
         }
 
         const template = await prisma.template.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                language: true,
-                code: true,
-                isForked: true,
-                parentTemplateId: true,
-                upvoteCount: true,
-                downvoteCount: true,
-                createdAt: true,
-                updatedAt: true,
-                tags: {
-                    select: { name: true },
-                },
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatarUrl: true,
-                        role: true,
-                        createdAt: true,
-                    },
-                },
+            where: { id: id },
+            include: {
+                author: true,
+                tags: { select: { name: true }, },
                 parentTemplate: {
                     select: {
                         id: true,
@@ -46,7 +25,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
                         title: true,
                         createdAt: true,
                     },
-                },//TODO: Potentially more fields, such as blog replies.. ( separate query?)
+                },
+                replies: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                    },
+                },
             },
         });
 
@@ -78,15 +64,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
             }
             const { title, code, language, description, tags } = body;
 
-            // --- Authorization ---
             const { id } = params;
-            if (!isValidCUID(id)){
+            if (!isValidCUID(id)) {
                 return NextResponse.json({ error: "Invalid template id" }, { status: 400 });
             }
             const template = await prisma.template.findUnique({ where: { id: id } });
             if (!template) {
                 return NextResponse.json({ error: "Template not found" }, { status: 404 });
-            } else  if (template.authorId !== user.id) {
+            } else if (template.authorId !== user.id) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
@@ -110,27 +95,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
                         },
                     }),
                 },
-                select: {
-                    id: true,
-                    title: true,
-                    description: true,
-                    language: true,
-                    code: true,
-                    isForked: true,
-                    createdAt: true,
-                    updatedAt: true,
+                include: {
                     tags: {
                         select: { name: true },
                     },
                     author: {
                         select: {
+                            id: true,
                             username: true,
-                            firstName: true,
-                            lastName: true,
-                            email: true,
-                            avatarUrl: true,
-                            role: true,
-                            createdAt: true,
                         },
                     },
                 },
@@ -153,7 +125,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
-            const {id } = params;
+            const { id } = params;
             if (!isValidCUID(id)) {
                 return NextResponse.json({ error: "template_id is required and must be a string" }, { status: 400 });
             }

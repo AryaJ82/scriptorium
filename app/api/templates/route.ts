@@ -47,11 +47,6 @@ export async function GET(request: Request) {
                     is: { username: { equals: author } },
                 },
             }),
-            // ...(tags && {
-            //     tags: {
-            //         some: { name: { equals: tags } },
-            //     },
-            // }),
             ...(tagList.length > 0 && {
                 AND: tagList.map((tag) => ({
                     tags: { some: { name: { equals: tag } } },
