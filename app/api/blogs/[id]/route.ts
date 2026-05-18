@@ -6,9 +6,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/client"
 
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params;
+        const { id } = await params;
         if (!id || isNaN(Number(id))) {
             return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
         }
@@ -47,7 +47,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
@@ -55,7 +55,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
-            const { id } = params;
+            const { id } = await params;
             const post_id = Number(id);
             if (!id || isNaN(post_id) || post_id < 0) {
                 return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });

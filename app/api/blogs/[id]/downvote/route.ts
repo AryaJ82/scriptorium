@@ -5,7 +5,7 @@ import prisma from "@/utils/client"
 
 
 // Increment downvote count for a blog
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
@@ -13,7 +13,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
-            const { id } = params;
+            const { id } = await params;
             const blog_id = Number(id);
             if (!id || isNaN(blog_id) || blog_id < 0) {
                 return NextResponse.json({ error: "Invalid Blog id." }, { status: 400 });

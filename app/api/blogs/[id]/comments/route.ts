@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
-            const { id } = params;
+            const { id } = await params;
             const { content, parent_comment_id } = await request.json();
             const { user } = request;
             if (!user) {

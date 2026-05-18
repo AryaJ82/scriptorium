@@ -4,9 +4,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/client"
 
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params;
+        const { id } = await params;
         if (!id || isNaN(Number(id))) {
             return NextResponse.json({ error: "Invalid Comment id." }, { status: 400 });
         }

@@ -30,7 +30,7 @@ export function isPositiveIntegerString(value: unknown): boolean {
 
 // CUID v1: starts with 'c', 25 chars total, lowercase alphanumeric
 const cuidV1 = /^c[a-z0-9]{24}$/;
-export function isValidCUID(value: unknown): boolean {
+export function isValidCUID(value: unknown): boolean { 
   return isString(value) && cuidV1.test(value);
 }
 

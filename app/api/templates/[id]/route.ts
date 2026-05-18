@@ -6,9 +6,9 @@ import { normalizeTags, verifyPATCHParams } from "@/utils/inputValidation/templa
 import type { TemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params;
+        const { id } = await params;
         if (!isValidCUID(id)) {
             return NextResponse.json({ error: "Invalid template cuid" }, { status: 400 });
         }
@@ -49,7 +49,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
@@ -64,7 +64,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
             }
             const { title, code, language, description, tags } = body;
 
-            const { id } = params;
+            const { id } = await params;
             if (!isValidCUID(id)) {
                 return NextResponse.json({ error: "Invalid template id" }, { status: 400 });
             }
@@ -117,7 +117,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 }
 
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
@@ -125,7 +125,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
-            const { id } = params;
+            const { id } = await params;
             if (!isValidCUID(id)) {
                 return NextResponse.json({ error: "template_id is required and must be a string" }, { status: 400 });
             }
