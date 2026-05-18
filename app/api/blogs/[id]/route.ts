@@ -102,7 +102,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
                 },
             });
 
-            return NextResponse.json({ template: updatedPost }, { status: 200 });
+            return NextResponse.json({ blog: updatedPost }, { status: 200 });
         } catch (error) {
             console.error("Error when updating blog post:", error);
             return NextResponse.json({ error: "Internal server error when updating blog post" }, { status: 500 });
@@ -111,10 +111,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
-            const { id } = params;
+            const { id } = await params;
             const post_id = Number(id);
             if (!id || isNaN(post_id) || post_id < 0) {
                 return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
