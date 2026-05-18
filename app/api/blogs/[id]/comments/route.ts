@@ -12,7 +12,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-            if (!content || typeof content !== "string" || content.trim() === "") {
+            if (!content || typeof content !== "string" || content.trim() === "" || content.length > 10000) {
                 return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
             }
 
