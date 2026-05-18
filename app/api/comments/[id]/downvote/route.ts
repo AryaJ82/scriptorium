@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/client"
 
 
-// Increment upvote count for a comment
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+// Increment downvote count for a comment
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
