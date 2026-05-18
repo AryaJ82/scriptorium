@@ -55,7 +55,7 @@ export async function GET(request: Request) {
             [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
         } as Prisma.BlogPostOrderByWithRelationInput;
 
-        const [totalSize, templates] = await prisma.$transaction([
+        const [totalSize, blogs] = await prisma.$transaction([
             prisma.blogPost.count({ where }),
             prisma.blogPost.findMany({
                 where,
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
         ]);
 
         return NextResponse.json({
-            templates,
+            blogs,
             pagination: {
                 totalSize,
                 totalPages: Math.ceil(totalSize / pageSizeNum),
