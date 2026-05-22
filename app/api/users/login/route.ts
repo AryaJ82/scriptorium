@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
 import { generateAccessToken, generateRefreshToken } from "@/utils/tokenAuth";
+import {verifyUsername, verifyPassword} from "@/utils/inputValidation/generalValidation"
 
 export async function GET(request: Request) {
     return NextResponse.json({ message: "Hello from the login API!" });
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     const { username, password } = await request.json();
     try {
-        if (!username || !password) {
+        if (!verifyUsername(username) || !verifyPassword(password)) {
             return NextResponse.json({ error: "Username, and password are required" }, { status: 400 });
         }
 

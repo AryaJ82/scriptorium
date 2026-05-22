@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from '@/utils/client';
 import { hashPassword } from "@/utils/passwordAuth";
+import {verifyUsername, verifyPassword} from "@/utils/inputValidation/generalValidation"
 
 export async function GET(request: Request) {
     return NextResponse.json({ message: "Hello from the registration API!" });
@@ -47,27 +48,3 @@ export async function POST(request: Request) {
     }
 }
 
-function verifyPassword(password: string): boolean {
-    // At least 8 characters, 1 uppercase, 1 lowercase, 1 digit, 1 special character
-    if(!password || password.length < 8 || password.length > 100) {
-        return false;
-    } else if (!/[A-Z]/.test(password)) {
-        return false;
-    } else if (!/[a-z]/.test(password)) {
-        return false;
-    } else if (!/[0-9]/.test(password)) {
-        return false;
-    } else if (!/[@$!%*?&]/.test(password)) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
-function verifyUsername(username: string): boolean {
-    if(!username || username.length < 3 || username.length > 20) {
-        return false;
-    } else {
-        return true;
-    }
-}

@@ -34,6 +34,32 @@ export function isValidCUID(value: unknown): boolean {
   return isString(value) && cuidV1.test(value);
 }
 
+//// ------------------------------------- Username and password
+
+function verifyPassword(password: unknown): boolean {
+    // At least 8 characters, 1 uppercase, 1 lowercase, 1 digit, 1 special character
+    if(!password || typeof password !== "string" || password.length < 8 || password.length > 100) {
+        return false;
+    } else if (!/[A-Z]/.test(password)) {
+        return false;
+    } else if (!/[a-z]/.test(password)) {
+        return false;
+    } else if (!/[0-9]/.test(password)) {
+        return false;
+    } else if (!/[@$!%*?&]/.test(password)) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+function verifyUsername(username: unknown): boolean {
+    if(!username || typeof username !== "string" || username.length < 3 || username.length > 20) {
+        return false;
+    } else {
+        return true;
+    }
+}
 
 ///// ----------------------------------- Tags
 
