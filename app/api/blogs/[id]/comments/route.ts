@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/utils/client";
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
+import { limitedAuthorSelect } from "@/utils/interfaces";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
@@ -46,7 +47,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                     }),
                 },
                 select: {
-                    author: true,
+                    author: limitedAuthorSelect,
                     content: true,
                     createdAt: true,
                     blogPostId: true,

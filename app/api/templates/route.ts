@@ -7,6 +7,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
 import { normalizeTags, verifyPOSTParams } from "@/utils/inputValidation/templateValidation";
 import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/inputValidation/templateValidation";
+import { limitedAuthorSelect } from "@/utils/interfaces";
 
 
 export async function GET(request: Request) {
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
                         select: {
                             id: true,
                             title: true,
-                            author: { select: { username: true } },
+                            author: limitedAuthorSelect,
                         },
                     },
                 },

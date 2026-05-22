@@ -6,6 +6,7 @@ import prisma from "@/utils/client";
 import type { BlogPOSTBody, BlogGETQuery } from "@/utils/inputValidation/blogValidation";
 import { normalizeTags, verifyGETParams, verifyPOSTParams } from "@/utils/inputValidation/blogValidation";
 import { Prisma } from "@/app/generated/prisma/client";
+import { limitedAuthorSelect } from "@/utils/interfaces";
 
 export async function GET(request: Request) {
     try {
@@ -66,7 +67,7 @@ export async function GET(request: Request) {
                     tags: {
                         select: { name: true },
                     },
-                    author: true,
+                    author: limitedAuthorSelect,
                 },
             }),
         ]);
@@ -121,7 +122,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
                     ...(content && { content }),
                 },
                 include: {
-                    author: true,
+                    author: limitedAuthorSelect,
                     tags: {
                         select: { name: true },
                     },
@@ -175,12 +176,7 @@ export async function POST(request: Request) {
                 select: {
                     id: true,
                     tags: true,
-                    author: {
-                        select: {
-                            id: true,
-                            username: true,
-                        },
-                    },
+                    author: limitedAuthorSelect,
                     linkedTemplate: {
                         select: {
                             id: true,

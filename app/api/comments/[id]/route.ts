@@ -2,6 +2,7 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse } from "next/server";
 import prisma from "@/utils/client"
+import { limitedAuthorSelect } from "@/utils/interfaces";
 
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,12 +15,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const comment = await prisma.comment.findUnique({
             where: { id: Number(id) },
             include: {
-                author: true,
+                author: limitedAuthorSelect,
                 parentComment: true,
                 blogPost: {
                     select: {
                         id: true,
-                        author: true,
+                        author: limitedAuthorSelect,
                         title: true,
                         createdAt: true,
                     }

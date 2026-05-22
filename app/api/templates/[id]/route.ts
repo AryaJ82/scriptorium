@@ -5,6 +5,7 @@ import prisma from "@/utils/client";
 import { normalizeTags, verifyPATCHParams } from "@/utils/inputValidation/templateValidation";
 import type { TemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
+import { limitedAuthorSelect } from "@/utils/interfaces";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -16,12 +17,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const template = await prisma.template.findUnique({
             where: { id: id },
             include: {
-                author: true,
+                author: limitedAuthorSelect,
                 tags: { select: { name: true }, },
                 parentTemplate: {
                     select: {
                         id: true,
-                        author: true,
+                        author: limitedAuthorSelect,
                         title: true,
                         createdAt: true,
                     },
@@ -99,12 +100,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
                     tags: {
                         select: { name: true },
                     },
-                    author: {
-                        select: {
-                            id: true,
-                            username: true,
-                        },
-                    },
+                    author: limitedAuthorSelect,
                 },
             });
 

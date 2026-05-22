@@ -1,5 +1,6 @@
 import prisma from "@/utils/client";
 import { Prisma } from "@/app/generated/prisma/client";
+import { limitedAuthorSelect } from "./interfaces";
 
 export { verifyGETParams, normalizeTags } from "./inputValidation/templateValidation";
 
@@ -13,11 +14,11 @@ export async function templateSearch(where: Prisma.TemplateWhereInput, orderBy: 
             take: pageSizeNum,
             include: {
                 tags: { select: { name: true }, },
-                author: true,
+                author: limitedAuthorSelect,
                 parentTemplate: {
                     select: {
                         id: true,
-                        author: true,
+                        author: limitedAuthorSelect,
                         title: true,
                         createdAt: true,
                     },

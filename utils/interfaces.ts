@@ -1,6 +1,7 @@
 import { Language } from "@/app/generated/prisma/enums";
 export { Language } from "@/app/generated/prisma/enums";
 import prisma from "./client";
+import { Prisma } from "@/app/generated/prisma/client";
 
 // -------------------- General
 export type ValidationError = {
@@ -20,6 +21,18 @@ export type ValidSortOrder = 'asc' | 'desc';
 export const validTemplateSortFields = ["title", "createdAt", "language", 'upvoteCount', 'downvoteCount'] as const;
 export const validBlogSortFields = ["title", "createdAt", 'upvoteCount', 'downvoteCount'] as const;
 export const validSortOrders = ["asc", "desc"] as const;
+
+// ---------------------
+
+// Select which does not return the password hash from the author table
+export const limitedAuthorSelect = {
+    select: {
+        id: true,
+        username: true,
+        avatarUrl: true,
+        role: true,
+    }
+};
 
 // ------------------- Execution
 

@@ -4,6 +4,7 @@ import { normalizeTags, verifyPATCHParams } from "@/utils/inputValidation/blogVa
 import type { BlogPATCHBody } from "@/utils/inputValidation/blogValidation";
 import { NextResponse } from "next/server";
 import prisma from "@/utils/client"
+import { limitedAuthorSelect } from "@/utils/interfaces";
 
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,19 +17,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const post = await prisma.blogPost.findUnique({
             where: { id: Number(id) },
             include: {
-                author: true,
+                author: limitedAuthorSelect,
                 tags: { select: { name: true }, },
                 linkedTemplate: {
                     select: {
                         id: true,
-                        author: true,
+                        author: limitedAuthorSelect,
                         title: true,
                         createdAt: true,
                     }
                 },
                 comments: {
                     include: {
-                        author: { select: { username: true }, },
+                        author: limitedAuthorSelect,
                     }
                 }
             },
@@ -95,7 +96,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
                     }),
                 },
                 include: {
-                    author: true,
+                    author: limitedAuthorSelect,
                     tags: {
                         select: { name: true },
                     },
