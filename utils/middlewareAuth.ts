@@ -11,7 +11,7 @@ export type { AuthenticatedRequest } from "./interfaces";
  * @param {function} handler - The API route handler to wrap.
  * @returns {function} - A new handler function with token verification and role-based access.
  */
-export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}> | undefined>)): (request: Request) => (Promise<NextResponse<{}> | undefined>) {
+export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}>>)): (request: Request) => (Promise<NextResponse<{}>>) {
     return async (request: Request) => {
         try {
             const authHeader = request.headers.get("Authorization");
