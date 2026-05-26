@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import { NextResponse } from "next/server";
 
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "whateverstring";
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "someotherstring";
@@ -10,7 +11,10 @@ const ACCESS_TOKEN_EXPIRY = "1h";
  * @param {object} payload - The payload to include in the token.
  * @returns {string} - The generated JWT access token.
  */
-export function generateAccessToken(payload: { user_id: string, user_role: string }) {
+function generateAccessToken(payload: { user_id: string, user_role: string }) {
+    if (!payload.user_id || !payload.user_role || typeof payload.user_id !== "string" || typeof payload.user_role !== "string") {
+        throw Error("Invalid payload");
+    }
     return jwt.sign(payload, JWT_ACCESS_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
 }
 
@@ -20,8 +24,31 @@ export function generateAccessToken(payload: { user_id: string, user_role: strin
 * @param {object} payload - The payload to include in the token.
 * @returns {string} - The generated JWT refresh token.
 */
-export function generateRefreshToken(payload: { user_id: string, user_role: string }) {
+function generateRefreshToken(payload: { user_id: string, user_role: string }) {
+    if (!payload.user_id || !payload.user_role || typeof payload.user_id !== "string" || typeof payload.user_role !== "string") {
+        throw Error("Invalid payload");
+    }
     return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+}
+
+export function setAccessCookie(response: NextResponse, payload: { user_id: string, user_role: string }) {
+    const accessToken = generateAccessToken(payload);
+    response.cookies.set("accessToken", accessToken, {
+        httpOnly: true,
+        path: "/",
+        sameSite: "strict",
+        maxAge: 60 * 60 // 60 minutes
+    });
+}
+
+export function setRefreshCookie(response: NextResponse, payload: { user_id: string, user_role: string }) {
+    const refreshToken = generateRefreshToken(payload);
+    response.cookies.set("refreshToken", refreshToken, {
+        httpOnly: true,
+        path: "/api/users/refresh",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+    });
 }
 
 

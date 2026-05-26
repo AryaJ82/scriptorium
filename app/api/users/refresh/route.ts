@@ -1,10 +1,10 @@
-import { verifyRefreshToken, generateAccessToken } from "@/utils/tokenAuth";
+import { verifyRefreshToken, setAccessCookie } from "@/utils/tokenAuth";
 import { NextResponse, NextRequest } from "next/server";
+import prisma from "@/utils/client";
 
 export async function POST(request: NextRequest) {
     try {
         const refreshToken = request.cookies.get('refreshToken')?.value ?? null;
-
         if (!refreshToken) {
             return NextResponse.json({ error: "Refresh token is required." }, { status: 400 });
         }
@@ -15,24 +15,19 @@ export async function POST(request: NextRequest) {
         }
 
         const { user_id, user_role } = typeof refreshPayload === "string" ? JSON.parse(refreshPayload) : refreshPayload;
-
         if (!user_id || !user_role) {
             console.error("Error with parsing the refreshPayload: ", refreshPayload);
             return NextResponse.json({ error: "Invalid refresh token." }, { status: 401 });
         }
 
-        const accessToken = generateAccessToken({ user_id: user_id, user_role });
-        if (!accessToken) {
-            throw new Error("Failed to generate access token");
+        const user = await prisma.user.findUnique({ where: { id: user_id } });
+        if (!user) {
+            console.error("Failed to find user");
+            return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
 
         const response = NextResponse.json({ message: "Token refresh succesful" }, { status: 200 });
-        response.cookies.set("accessToken", accessToken, {
-            httpOnly: true,
-            path: "/",
-            sameSite: "strict",
-            maxAge: 60 * 60,
-        });
+        setAccessCookie(response, { user_id: user_id, user_role })
 
         return response;
     } catch (error) {

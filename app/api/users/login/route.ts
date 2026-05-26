@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
-import { generateAccessToken, generateRefreshToken } from "@/utils/tokenAuth";
+import { setAccessCookie, setRefreshCookie } from "@/utils/tokenAuth";
 import { verifyUsername, verifyPassword } from "@/utils/inputValidation/generalValidation"
 
 export async function GET(request: NextRequest) {
@@ -30,28 +30,10 @@ export async function POST(request: NextRequest) {
             console.error("Failed to match pass hash");
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
-        const accessToken = generateAccessToken({ user_id: user.id, user_role: user.role });
-        const refreshToken = generateRefreshToken({ user_id: user.id, user_role: user.role });
 
-        if (!accessToken || !refreshToken) {
-            throw new Error("Failed to generate tokens");
-        }
-
-        // Return tokens as cookies
-        let response = NextResponse.json({ message: "Login successful" }, { status: 200 });
-        response.cookies.set("accessToken", accessToken, {
-            httpOnly: true,
-            path: "/",
-            sameSite: "strict",
-            maxAge: 60 * 60 // 60 minutes
-        });
-
-        response.cookies.set("refreshToken", refreshToken, {
-            httpOnly: true,
-            path: "/api/users/refresh",
-            sameSite: "strict",
-            maxAge: 60 * 60 * 24 * 7 // 7 days
-        });
+        const response = NextResponse.json({ message: "Login successful" }, { status: 200 });
+        setAccessCookie(response, { user_id: user.id, user_role: user.role });
+        setRefreshCookie(response, { user_id: user.id, user_role: user.role });
 
         return response;
 
