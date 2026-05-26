@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { withAuth } from "@/utils/middlewareAuth";
 import prisma from "@/utils/client";
 import type { AuthenticatedRequest } from "@/utils/middlewareAuth";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
         // TODO: make this a query || username
         const { user_id } = await request.json();
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { email, firstName, lastName, avatarUrl, phoneNumber } = await request.json();

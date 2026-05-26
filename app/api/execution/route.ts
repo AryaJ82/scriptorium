@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import os from "os";
 import fs from 'fs';
 import path from "path";
@@ -27,11 +27,11 @@ const LANG_CONFIG = {
 };
 
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Hello from the execution API!" });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     const body: ExecutionRequest = await request.json();
     const { language, code, stdin } = body;
 

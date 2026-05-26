@@ -1,13 +1,13 @@
 
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { normalizeTags, verifyPATCHParams } from "@/utils/inputValidation/templateValidation";
 import type { TemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         if (!isValidCUID(id)) {
@@ -50,7 +50,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
@@ -113,7 +113,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;

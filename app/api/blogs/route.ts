@@ -1,6 +1,6 @@
 
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
 import type { BlogPOSTBody, BlogGETQuery } from "@/utils/inputValidation/blogValidation";
@@ -8,7 +8,7 @@ import { normalizeTags, verifyGETParams, verifyPOSTParams } from "@/utils/inputV
 import { Prisma } from "@/app/generated/prisma/client";
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
         const { searchParams } = (new URL(request.url));
         const queryParams = Object.fromEntries(searchParams) as unknown as BlogGETQuery;
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const body: BlogPOSTBody = await request.json();

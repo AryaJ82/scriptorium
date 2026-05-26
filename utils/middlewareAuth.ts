@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { verifyAccessToken } from "@/utils/tokenAuth";
 import type { JwtPayload } from "jsonwebtoken"
 import prisma from '@/utils/client';
@@ -11,20 +11,13 @@ export type { AuthenticatedRequest } from "./interfaces";
  * @param {function} handler - The API route handler to wrap.
  * @returns {function} - A new handler function with token verification and role-based access.
  */
-export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}>>)): (request: Request) => (Promise<NextResponse<{}>>) {
-    return async (request: Request) => {
+export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}>>)): (request: NextRequest) => (Promise<NextResponse<{}>>) {
+    return async (request: NextRequest) => {
+        console.log(request);
+        
         try {
-            const authHeader = request.headers.get("Authorization");
-            if (!authHeader || !authHeader.startsWith("Bearer")) {
-                return NextResponse.json(
-                    { error: "Unauthorized: missing access token" },
-                    { status: 401 },
-                );
-            }
-
-            const accessToken = authHeader.split(' ')[1];
+            const accessToken = request.cookies.get('accessToken')?.value ?? null;
             if (!accessToken) {
-                console.error("Failed to parse access token from auth header:", authHeader);
                 return NextResponse.json(
                     { error: "Unauthorized: failed to parse access token" },
                     { status: 401 },
@@ -32,8 +25,9 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
             }
             const authPayload = verifyAccessToken(accessToken);
             if (!authPayload) {
+                console.error("AccessToken failed verification");
                 return NextResponse.json(
-                    { error: "Unauthorized: AccessToken failed verification" },
+                    { error: "Unauthorized"},
                     { status: 401 },
                 );
             }

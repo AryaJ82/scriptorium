@@ -1,5 +1,5 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth"
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
@@ -8,7 +8,7 @@ import type { TemplateGETQuery } from "@/utils/inputValidation/templateValidatio
 
 
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
 }
 
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;

@@ -1,6 +1,6 @@
 
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
@@ -10,7 +10,7 @@ import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/inputValidation
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
         const { searchParams } = (new URL(request.url));
         const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const body: TemplatePOSTBody = await request.json();

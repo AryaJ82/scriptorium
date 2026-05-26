@@ -1,10 +1,10 @@
 
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { id } = await params;

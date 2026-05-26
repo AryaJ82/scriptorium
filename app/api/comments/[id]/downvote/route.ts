@@ -1,11 +1,11 @@
 
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 
 
 // Increment downvote count for a comment
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;

@@ -1,8 +1,8 @@
 import { withAuth } from "@/utils/middlewareAuth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-export async function GET(request: Request) {
-    return withAuth(async (request: Request) => {
+export async function GET(request: NextRequest) {
+    return withAuth(async (request: NextRequest) => {
         try {
             // Note: JTI not implemented because It's not required and I'm too burnt out to be bothered
             const response = NextResponse.json({ message: "Logout successful" });

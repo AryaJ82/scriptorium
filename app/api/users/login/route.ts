@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
 import { generateAccessToken, generateRefreshToken } from "@/utils/tokenAuth";
 import {verifyUsername, verifyPassword} from "@/utils/inputValidation/generalValidation"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Hello from the login API!" });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     const { username, password } = await request.json();
     try {
         if (!verifyUsername(username) || !verifyPassword(password)) {

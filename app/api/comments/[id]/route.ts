@@ -1,11 +1,11 @@
 
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         if (!id || isNaN(Number(id))) {
@@ -41,7 +41,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { id } = await params;

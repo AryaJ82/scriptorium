@@ -1,7 +1,7 @@
 import { verifyRefreshToken, generateAccessToken } from "@/utils/tokenAuth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
         const { refreshToken } = await request.json();
         if (!refreshToken) {
