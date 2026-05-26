@@ -33,13 +33,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             const report = await prisma.contentReport.create({
                 data: {
                     author: { connect: { id: user.id } },
-                    blogPost: { connect: { id: blogPost.id } },
-                    content: content,
+                    post: { connect: { id: blogPost.id } },
+                    description: content,
                     title: title.trim(),
                 },
                 include: {
                     author: limitedAuthorSelect,
-                    blogPost: true,
+                    post: true,
                 },
             });
 

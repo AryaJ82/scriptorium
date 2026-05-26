@@ -24,24 +24,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             if (!id || isNaN(Number(id))) {
                 return NextResponse.json({ error: "Comment id is required" }, { status: 400 });
             }
-            const comment = await prisma.blogPost.findUnique({ where: { id: Number(id) }, });
+            const comment = await prisma.comment.findUnique({ where: { id: Number(id) }, });
             if (!comment) {
                 return NextResponse.json({ error: "Comment not found" }, { status: 404 });
             }
-
 
             const report = await prisma.contentReport.create({
                 data: {
                     author: { connect: { id: user.id } },
                     comment: { connect: { id: comment.id } },
-                    content: content,
+                    description: content,
                     title: title.trim(),
                 },
-                select: {
+                include: {
                     author: limitedAuthorSelect,
-                    content: true,
-                    createdAt: true,
-                    commentId: true,
+                    comment: true,
                 },
             });
 
