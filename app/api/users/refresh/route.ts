@@ -3,7 +3,8 @@ import { NextResponse, NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
     try {
-        const { refreshToken } = await request.json();
+        const refreshToken = request.cookies.get('refreshToken')?.value ?? null;
+
         if (!refreshToken) {
             return NextResponse.json({ error: "Refresh token is required." }, { status: 400 });
         }
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
         if (!user_id || !user_role) {
             console.error("Error with parsing the refreshPayload: ", refreshPayload);
-            return NextResponse.json({ error: "Invalid token payload." }, { status: 401 });
+            return NextResponse.json({ error: "Invalid refresh token." }, { status: 401 });
         }
 
         const accessToken = generateAccessToken({ user_id: user_id, user_role });

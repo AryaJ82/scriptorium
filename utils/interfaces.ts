@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { Language } from "@/app/generated/prisma/enums";
 export { Language } from "@/app/generated/prisma/enums";
 import prisma from "./client";
@@ -9,7 +10,7 @@ export type ValidationError = {
     status?: number;
 };
 
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends NextRequest {
     user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
 }
 // ---------------------- Sorting Fields

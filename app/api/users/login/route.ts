@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
         response.cookies.set("refreshToken", refreshToken, {
             httpOnly: true,
-            path: "/",
+            path: "/api/users/refresh",
             sameSite: "strict",
             maxAge: 60 * 60 * 24 * 7 // 7 days
         });
