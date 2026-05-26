@@ -13,7 +13,6 @@ export type { AuthenticatedRequest } from "./interfaces";
  */
 export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}>>)): (request: NextRequest) => (Promise<NextResponse<{}>>) {
     return async (request: NextRequest) => {
-        console.log(request);
         
         try {
             const accessToken = request.cookies.get('accessToken')?.value ?? null;

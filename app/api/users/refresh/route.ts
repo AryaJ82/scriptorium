@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Invalid refresh token." }, { status: 401 });
         }
 
-        const {user_id, user_role} = typeof refreshPayload === "string" ? JSON.parse(refreshPayload) : refreshPayload;
+        const { user_id, user_role } = typeof refreshPayload === "string" ? JSON.parse(refreshPayload) : refreshPayload;
 
         if (!user_id || !user_role) {
             console.error("Error with parsing the refreshPayload: ", refreshPayload);
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
             throw new Error("Failed to generate access token");
         }
 
-        const response = NextResponse.json({ accessToken });
+        const response = NextResponse.json({ message: "Token refresh succesful" }, { status: 200 });
         response.cookies.set("accessToken", accessToken, {
             httpOnly: true,
             path: "/",

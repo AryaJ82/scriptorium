@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
 import { generateAccessToken, generateRefreshToken } from "@/utils/tokenAuth";
-import {verifyUsername, verifyPassword} from "@/utils/inputValidation/generalValidation"
+import { verifyUsername, verifyPassword } from "@/utils/inputValidation/generalValidation"
 
 export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Hello from the login API!" });
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Return tokens as cookies
-        let response = NextResponse.json({ message: "Login successful", accessToken: accessToken, refreshToken: refreshToken });
+        let response = NextResponse.json({ message: "Login successful" }, { status: 200 });
         response.cookies.set("accessToken", accessToken, {
             httpOnly: true,
             path: "/",
