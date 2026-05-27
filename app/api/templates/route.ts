@@ -12,8 +12,9 @@ import { limitedAuthorSelect } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = (new URL(request.url));
-        const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
+        // const { searchParams } = (new URL(request.url));
+        // const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
+        const queryParams = request.nextUrl.searchParams as TemplateGETQuery;
 
         let error = verifyGETParams(queryParams);
         if (error) {
