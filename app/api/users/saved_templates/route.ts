@@ -4,7 +4,8 @@ import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams, normalizeTags } from "@/utils/templateSearch";
-import type { TemplateGETQuery } from "@/utils/inputValidation/templateValidation";
+import type { TemplateGETQuery, SavedTemplateTogglePATCHBody } from "@/utils/interfaces";
+import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 
 
 
@@ -84,11 +85,12 @@ export async function PATCH(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
-            const { template_id, unsave } = await request.json();
+            const body: SavedTemplateTogglePATCHBody = await request.json();
+            const { template_id, unsave } = body;
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-            if (!template_id) {
+            if (!isValidCUID(template_id)) {
                 return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
 
             }
@@ -101,8 +103,10 @@ export async function PATCH(request: NextRequest) {
                 return NextResponse.json({ error: "Template not found" }, { status: 404 });
             }
 
+            const shouldUnsave = unsave === true;
+
             // save by default, unsave if unsave is true
-            let prop = (unsave as boolean) ? { disconnect: { id: template_id } } : { connect: { id: template_id } };
+            const prop = shouldUnsave ? { disconnect: { id: template_id } } : { connect: { id: template_id } };
 
             const updatedUser = await prisma.user.update({
                 where: { id: user.id },
@@ -114,7 +118,7 @@ export async function PATCH(request: NextRequest) {
             });
 
             return NextResponse.json({
-                message: unsave ? "Template unsaved successfully" : "Template saved successfully",
+                message: shouldUnsave ? "Template unsaved successfully" : "Template saved successfully",
                 user: updatedUser
             });
 

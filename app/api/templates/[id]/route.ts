@@ -3,7 +3,7 @@ import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { normalizeTags, verifyPATCHParams } from "@/utils/inputValidation/templateValidation";
-import type { TemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
+import type { TemplatePATCHBody } from "@/utils/interfaces";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 import { limitedAuthorSelect } from "@/utils/interfaces";
 

@@ -2,13 +2,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
-import { limitedAuthorSelect } from "@/utils/interfaces";
+import { limitedAuthorSelect, type CommentReportPOSTBody } from "@/utils/interfaces";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { id } = await params;
-            const { title, content } = await request.json();
+            const body: CommentReportPOSTBody = await request.json();
+            const { title, content } = body;
             const { user } = request;
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

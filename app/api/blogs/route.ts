@@ -3,7 +3,7 @@ import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
-import type { BlogPOSTBody, BlogGETQuery } from "@/utils/inputValidation/blogValidation";
+import type { BlogPOSTBody, BlogGETQuery } from "@/utils/interfaces";
 import { normalizeTags, verifyGETParams, verifyPOSTParams } from "@/utils/inputValidation/blogValidation";
 import { Prisma } from "@/app/generated/prisma/client";
 import { limitedAuthorSelect } from "@/utils/interfaces";

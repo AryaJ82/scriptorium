@@ -6,7 +6,7 @@ import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
 import { normalizeTags, verifyPOSTParams } from "@/utils/inputValidation/templateValidation";
-import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/inputValidation/templateValidation";
+import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/interfaces";
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
 

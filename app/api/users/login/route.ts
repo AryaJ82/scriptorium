@@ -3,13 +3,15 @@ import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
 import { setAccessCookie, setRefreshCookie } from "@/utils/tokenAuth";
 import { verifyUsername, verifyPassword } from "@/utils/inputValidation/generalValidation"
+import type { UserLoginPOSTBody } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Hello from the login API!" });
 }
 
 export async function POST(request: NextRequest) {
-    const { username, password } = await request.json();
+    const body: UserLoginPOSTBody = await request.json();
+    const { username, password } = body;
     try {
         if (!verifyUsername(username) || !verifyPassword(password)) {
             return NextResponse.json({ error: "Invalid username or password" }, { status: 400 });

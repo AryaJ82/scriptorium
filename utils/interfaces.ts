@@ -102,3 +102,43 @@ export interface BlogPATCHBody {
     description?: string;
     tags?: string[];
 }
+
+// ------------------- User-facing request bodies
+
+export interface UserLoginPOSTBody {
+    username: string;
+    password: string;
+}
+
+export interface UserRegisterPOSTBody {
+    username: string;
+    password: string;
+}
+
+export interface UserProfilePATCHBody {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string;
+    phoneNumber?: string;
+}
+
+export interface SavedTemplateTogglePATCHBody {
+    template_id: string;
+    unsave?: boolean;
+}
+
+export interface BlogCommentPOSTBody {
+    content: string;
+    parent_comment_id?: string | number;
+}
+
+export interface BlogReportPOSTBody {
+    title: string;
+    content: string;
+}
+
+export interface CommentReportPOSTBody {
+    title: string;
+    content: string;
+}

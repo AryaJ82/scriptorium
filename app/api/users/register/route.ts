@@ -2,13 +2,15 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from '@/utils/client';
 import { hashPassword } from "@/utils/passwordAuth";
 import {verifyUsername, verifyPassword} from "@/utils/inputValidation/generalValidation"
+import type { UserRegisterPOSTBody } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Hello from the registration API!" });
 }
 
 export async function POST(request: NextRequest) {
-    const { username, password } = await request.json();
+    const body: UserRegisterPOSTBody = await request.json();
+    const { username, password } = body;
     try {
         if (!username || !password) {
             return NextResponse.json({ error: "Username, and password are required" }, { status: 400 });

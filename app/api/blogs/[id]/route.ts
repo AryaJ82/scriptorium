@@ -1,7 +1,7 @@
 
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { normalizeTags, verifyPATCHParams } from "@/utils/inputValidation/blogValidation";
-import type { BlogPATCHBody } from "@/utils/inputValidation/blogValidation";
+import type { BlogPATCHBody } from "@/utils/interfaces";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { limitedAuthorSelect } from "@/utils/interfaces";
