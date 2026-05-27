@@ -6,11 +6,6 @@ import prisma from '@/utils/client';
 import type { AuthenticatedRequest } from "./interfaces";
 export type { AuthenticatedRequest } from "./interfaces";
 
-/**
- * Middleware to protect API routes with token verification and role-based access.
- * @param {function} handler - The API route handler to wrap.
- * @returns {function} - A new handler function with token verification and role-based access.
- */
 export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}>>)): (request: NextRequest) => (Promise<NextResponse<{}>>) {
     return async (request: NextRequest) => {
         
