@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
             avatarUrl: user.avatarUrl,
             role: user.role,
 
-         }, { status: 200 });
+        }, { status: 200 });
         setAccessCookie(response, { user_id: user.id, user_role: user.role });
         setRefreshCookie(response, { user_id: user.id, user_role: user.role });
 

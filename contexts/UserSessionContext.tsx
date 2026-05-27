@@ -38,40 +38,39 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
         role: null,
     });
 
-    const refreshAccessToken = useCallback(async () => {
-        try {
-            const response = await fetch(`${baseUrl}/api/users/refresh`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-            });
+    const resetSession = () => {
+        setSession({
+            isAuthenticated: false,
+            username: null,
+            avatarUrl: null,
+            userId: null,
+            role: null,
+        });
+    }
 
-            // Refresh failed, reset session
-            if (!response.ok) {
-                setSession({
-                    isAuthenticated: false,
-                    username: null,
-                    avatarUrl: null,
-                    userId: null,
-                    role: null,
+    const refreshAccessToken = useCallback(
+        async () => {
+            try {
+                const response = await fetch(`${baseUrl}/api/users/refresh`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
                 });
+
+                // Refresh failed, reset session
+                if (!response.ok) {
+                    resetSession()
+                }
+                return response;
+
+            } catch (error) {
+                resetSession()
             }
-            return response;
 
-        } catch (error) {
-            setSession({
-                isAuthenticated: false,
-                username: null,
-                avatarUrl: null,
-                userId: null,
-                role: null,
-            });
-        }
-
-        return null;
-    }, []);
+            return null;
+        }, []);
 
     const authFetch = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -107,6 +106,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 console.error("Failed authFetch:", error);
                 return null;
             }
+
         },
         [session],
     );
@@ -125,16 +125,15 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                     body: JSON.stringify({ username, password }),
                 });
 
-
                 if (!response.ok) {
                     return response;
                 }
 
                 const { id, avatarUrl, role } = await response.json();
-
                 if (!id) {
                     throw new Error("Login Failed");
                 }
+
                 setSession({
                     isAuthenticated: true,
                     userId: id,
@@ -147,42 +146,26 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
 
             } catch (error) {
                 console.error(error);
-
-                setSession({
-                    isAuthenticated: false,
-                    username: null,
-                    avatarUrl: null,
-                    userId: null,
-                    role: null,
-                });
-
+                resetSession();
+                return null;
             }
+        }, []);
 
-            return null;
-        },
-        [],
-    );
+    const logout = useCallback(
+        async () => {
+            try {
+                if (!session.isAuthenticated) {
+                    return;
+                }
 
-    const logout = useCallback(async () => {
-        if (!session.isAuthenticated) {
-            return;
-        }
-
-        try {
-            await fetch(`${baseUrl}/api/users/logout`, {
-                method: "GET",
-                credentials: "include",
-            });
-        } finally {
-            setSession({
-                isAuthenticated: false,
-                username: null,
-                avatarUrl: null,
-                userId: null,
-                role: null,
-            });
-        }
-    }, [session]);
+                await fetch(`${baseUrl}/api/users/logout`, {
+                    method: "GET",
+                    credentials: "include",
+                });
+            } finally {
+                resetSession();
+            }
+        }, [session]);
 
     const contextValue = useMemo(
         () => ({
