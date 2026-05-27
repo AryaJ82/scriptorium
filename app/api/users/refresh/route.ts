@@ -2,7 +2,7 @@ import { verifyRefreshToken, setAccessCookie } from "@/utils/tokenAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
     try {
         const refreshToken = request.cookies.get('refreshToken')?.value ?? null;
         if (!refreshToken) {
