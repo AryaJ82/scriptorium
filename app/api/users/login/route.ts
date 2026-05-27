@@ -12,14 +12,14 @@ export async function POST(request: NextRequest) {
     const { username, password } = await request.json();
     try {
         if (!verifyUsername(username) || !verifyPassword(password)) {
-            return NextResponse.json({ error: "Username, and password are required" }, { status: 400 });
+            return NextResponse.json({ error: "Invalid username or password" }, { status: 400 });
         }
 
         // Check if user exists
         const user = await prisma.user.findUnique({
             where: {
                 username: username
-            }
+            },
         });
         if (!user) {
             console.error("Failed to find user");
@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
 
-        const response = NextResponse.json({ message: "Login successful" }, { status: 200 });
+        const response = NextResponse.json({
+            id: user.id,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+            role: user.role,
+
+         }, { status: 200 });
         setAccessCookie(response, { user_id: user.id, user_role: user.role });
         setRefreshCookie(response, { user_id: user.id, user_role: user.role });
 

@@ -3,6 +3,8 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
 export async function GET(request: NextRequest) {
+    console.log("Recieved a request..");
+    
     try {
         const refreshToken = request.cookies.get('refreshToken')?.value ?? null;
         if (!refreshToken) {
