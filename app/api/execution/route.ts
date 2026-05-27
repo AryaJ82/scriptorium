@@ -4,16 +4,16 @@ import fs from 'fs';
 import path from "path";
 import Docker from 'dockerode';
 import { PassThrough } from 'stream';
-import type {ExecutionRequest} from '@/utils/interfaces'
+import type { ExecutionRequest } from '@/utils/interfaces'
 
 const docker = new Docker();
 
-const TIME_LIMIT = process.env.EXECUTION_TIMELIMIT_MS ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
-const MEMORY_LIMIT = process.env.MEMORY_LIMIT ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
-const CPU_LIMIT = process.env.CPU_LIMIT ? Number(process.env.CPU_LIMIT) : 0.5; // 0.5 CPU
-const MAX_CODE_SIZE = process.env.MAX_CODE_SIZE_KB ? Number(process.env.MAX_CODE_SIZE_KB) * 1024 : 64 * 1024;
-const MAX_STDIN_SIZE = process.env.MAX_STDIN_SIZE_KB ? Number(process.env.MAX_STDIN_SIZE_KB) * 1024 : 64 * 1024;
-const MAX_OUTPUT_SIZE = process.env.MAX_OUTPUT_SIZE_KB ? Number(process.env.MAX_OUTPUT_SIZE_KB) * 1024 : 64 * 1024;
+const TIME_LIMIT = !isNaN(Number(process.env.EXECUTION_TIMELIMIT_MS)) ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
+const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
+const CPU_LIMIT = !isNaN(Number(process.env.CPU_LIMIT)) ? Number(process.env.CPU_LIMIT) : 0.5; // 0.5 CPU
+const MAX_CODE_SIZE = !isNaN(Number(process.env.MAX_CODE_SIZE_KB)) ? Number(process.env.MAX_CODE_SIZE_KB) * 1024 : 64 * 1024;
+const MAX_STDIN_SIZE = !isNaN(Number(process.env.MAX_STDIN_SIZE_KB)) ? Number(process.env.MAX_STDIN_SIZE_KB) * 1024 : 64 * 1024;
+const MAX_OUTPUT_SIZE = !isNaN(Number(process.env.MAX_OUTPUT_SIZE_KB)) ? Number(process.env.MAX_OUTPUT_SIZE_KB) * 1024 : 64 * 1024;
 
 type Language = keyof typeof LANG_CONFIG;
 export type { Language };
