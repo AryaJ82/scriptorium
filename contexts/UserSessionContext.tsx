@@ -29,21 +29,6 @@ interface UserSessionContextValue {
 
 const UserSessionContext = createContext<UserSessionContextValue | undefined>(undefined);
 
-function decodeJwtPayload(token: string) {
-    try {
-        const [, payload] = token.split(".");
-        if (!payload) {
-            return null;
-        }
-
-        const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
-        const decoded = globalThis.atob(normalizedPayload);
-        return JSON.parse(decoded) as { user_id?: string; user_role?: string };
-    } catch {
-        return null;
-    }
-}
-
 export function UserSessionProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = useState<UserSessionState>({
         isAuthenticated: false,
@@ -54,9 +39,6 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     });
 
     const refreshAccessToken = useCallback(async () => {
-        // TODO: is there a possibility of a race condition?
-        console.log("Attempting to refresh tokens");
-
         try {
             const response = await fetch(`${baseUrl}/api/users/refresh`, {
                 method: "GET",
@@ -66,7 +48,8 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 credentials: "include",
             });
 
-            if (response.status !== 200) {
+            // Refresh failed, reset session
+            if (!response.ok) {
                 setSession({
                     isAuthenticated: false,
                     username: null,
@@ -75,9 +58,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                     role: null,
                 });
             }
-
             return response;
-
 
         } catch (error) {
             setSession({
@@ -87,42 +68,45 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 userId: null,
                 role: null,
             });
-        } finally {
-            return null;
         }
+
+        return null;
     }, []);
 
     const authFetch = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit) => {
             try {
-            const headers = new Headers(init?.headers);
+                const headers = new Headers(init?.headers);
 
-            const requestInit: RequestInit = {
-                ...init,
-                headers,
-                credentials: "include",
-            };
+                const requestInit: RequestInit = {
+                    ...init,
+                    headers,
+                    credentials: "include",
+                };
 
-            const response = await fetch(input, requestInit);
+                const response = await fetch(input, requestInit);
 
-            // Request failed, potentially need to refresh token
-            if (session.isAuthenticated && response.status === 401) {
-                const refreshResponse = await refreshAccessToken();
-                if (refreshResponse && refreshResponse.status === 200) {
-                    // Refresh succeeded, re-attempt request
-                    return await fetch(input, requestInit);
-                } else {
-                    // Refresh failed, return original response
-                    // Note: since refresh failed, refreshAccessToken has updated session state
-                    return response;
+
+                // Request failed, potentially need to refresh token
+                if (session.isAuthenticated && response.status === 401) {
+
+                    const refreshResponse = await refreshAccessToken();
+
+                    if (refreshResponse?.ok) {
+                        // Refresh succeeded, re-attempt request
+                        return await fetch(input, requestInit);
+                    } else {
+                        // Refresh failed, return original response
+                        // Note: since refresh failed, refreshAccessToken has updated session state
+                        return response;
+                    }
                 }
-            }
-            return response;
+                return response;
 
-        } catch (error) {
-            console.error("Failed authFetch:", error);
-            return null;
-        }
+            } catch (error) {
+                console.error("Failed authFetch:", error);
+                return null;
+            }
         },
         [session],
     );
@@ -131,6 +115,8 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
         async ({ username, password }: { username: string; password: string }) => {
 
             try {
+                await logout();
+
                 const response = await fetch(`${baseUrl}/api/users/login`, {
                     method: "POST",
                     headers: {
@@ -139,14 +125,14 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                     body: JSON.stringify({ username, password }),
                 });
 
-                
-                if (response.status !== 200) {
+
+                if (!response.ok) {
                     return response;
                 }
 
-                const {id, avatarUrl, role} = await response.json();
+                const { id, avatarUrl, role } = await response.json();
 
-                if (!id){
+                if (!id) {
                     throw new Error("Login Failed");
                 }
                 setSession({
