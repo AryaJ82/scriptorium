@@ -5,12 +5,13 @@ import type { BlogPATCHBody } from "@/utils/interfaces";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { limitedAuthorSelect } from "@/utils/interfaces";
+import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        if (!id || isNaN(Number(id))) {
+        if (!isPositiveIntegerString(id)) {
             return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
         }
 
@@ -67,7 +68,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             if (patchValidationError) {
                 return NextResponse.json({ error: patchValidationError.message }, { status: patchValidationError.status ?? 400 });
             }
-            const { title, description, tags } = body;
+            const { title, content, tags } = body;
 
             const post = await prisma.blogPost.findUnique({ where: { id: post_id } });
             if (!post) {
@@ -87,7 +88,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 where: { id: post_id },
                 data: {
                     ...(title && { title: title.trim() }),
-                    ...(description && { description }),
+                    ...(content && { content }),
                     ...(tagConnectOrCreate !== undefined && {
                         tags: {
                             set: [],

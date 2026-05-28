@@ -1,7 +1,4 @@
 
-
-import prisma from "@/utils/client";
-
 import type { ValidationError, ReportPOSTBody } from "../interfaces";
 import { isString, createError, MAX_TITLE_LENGTH, MAX_CONTENT_LENGTH } from "@/utils/inputValidation/generalValidation";
 

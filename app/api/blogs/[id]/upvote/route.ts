@@ -2,6 +2,7 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
+import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 
 
 // Increment upvote count for a comment
@@ -14,14 +15,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             }
 
             const { id } = await params;
-            const blog_id = Number(id);
-            if (!id || isNaN(blog_id) || blog_id < 0) {
+            if (!isPositiveIntegerString(id)) {
                 return NextResponse.json({ error: "Invalid Blog id." }, { status: 400 });
             }
 
             const blog = await prisma.blogPost.findUnique({
-                where: { id: blog_id },
-                select: { upvotingUsers: { where: { id: user.id }, select: { id: true } } },
+                where: { id: parseInt(id) },
+                select: {
+                    id: true,
+                    upvotingUsers: {
+                        where: { id: user.id }, select: { id: true }
+                    }
+                },
             });
             if (!blog) {
                 return NextResponse.json({ error: "Blog not found" }, { status: 404 });
@@ -32,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
             // increment upvoteCount and create upvote connection
             const updatedBlog = await prisma.blogPost.update({
-                where: { id: blog_id },
+                where: { id: blog.id },
                 data: {
                     upvoteCount: { increment: hasUpvoted ? -1 : 1 },
                     upvotingUsers: hasUpvoted
