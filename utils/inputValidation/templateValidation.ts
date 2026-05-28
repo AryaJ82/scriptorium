@@ -4,7 +4,7 @@ import { validTemplateSortFields, validSortOrders } from "@/utils/interfaces";
 import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody, ValidationError } from "@/utils/interfaces";
 export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";
 
-import { isValidCUID, isString, isValidLanguage, createError, validateTagsArray, isPositiveIntegerString, isOptionalString } from "@/utils/inputValidation/generalValidation";
+import { isValidCUID, isString, isValidLanguage, createError, validateTagsArray, isPositiveIntegerString, isOptionalString, MAX_TITLE_LENGTH, MAX_CONTENT_LENGTH, MAX_USERNAME_LENGTH, MAX_PAGE_SIZE } from "@/utils/inputValidation/generalValidation";
 export { normalizeTags } from "@/utils/inputValidation/generalValidation";
 
 
@@ -19,33 +19,37 @@ export async function templateExists(value: unknown): Promise<boolean> {
 export function verifyGETParams(params: TemplateGETQuery) {
     const { title, template_id, language, tags, content, author, page, pageSize, sortBy, sortOrder } = params;
 
-    if (template_id !== undefined && !isValidCUID(template_id)) {
-        return createError("Invalid template cuid");
-    }
-
-    if (title !== undefined && !isOptionalString(title, 255)) {
-        return createError("Title should be a string with at most 255 characters");
-    }
-
-    if (language !== undefined && !isValidLanguage(language)) {
-        return createError("Invalid language");
-    }
-
-    if (tags !== undefined) {
-        if (!isString(tags) || tags.trim() === "" || tags.length > 50) {
-            return createError("Tags should be a non-empty string with at most 50 characters");
+    if (template_id !== undefined) {
+        if (!isValidCUID(template_id)) {
+            return createError("Invalid template cuid");
         }
     }
 
-    if (content !== undefined && !isOptionalString(content, 1000)) {
-        return createError("Content should be a string with at most 1000 characters");
+    if (!isOptionalString(title, MAX_TITLE_LENGTH)) {
+        return createError("Title should be a string with at most 255 characters");
     }
 
-    if (author !== undefined && !isOptionalString(author, 100)) {
-        return createError("Author should be a string with at most 100 characters");
+    if (language !== undefined) {
+        if (!isValidLanguage(language)) {
+            return createError("Invalid language");
+        }
     }
 
-    if (page !== undefined && !isPositiveIntegerString(page)) {
+    if (!isOptionalString(tags, 100)) {
+        return createError("tags should be a string with at most 100 characters");
+    }
+
+    if (!isOptionalString(content, MAX_CONTENT_LENGTH)) {
+        return createError(`content should be a string with at most ${MAX_CONTENT_LENGTH} characters`);
+    }
+
+    if (author !== undefined) {
+        if (!isOptionalString(author, MAX_USERNAME_LENGTH)) {
+            return createError(`Author should be a string with at most ${MAX_USERNAME_LENGTH} characters`);
+        }
+    }
+
+    if (!isPositiveIntegerString(page)) {
         return createError("Page should be a positive integer");
     }
 
@@ -54,10 +58,11 @@ export function verifyGETParams(params: TemplateGETQuery) {
             return createError("Page size should be a positive integer");
         }
         const pageSizeNumber = Number(pageSize);
-        if (pageSizeNumber > 100) {
-            return createError("Page size should be a number between 1 and 100");
+        if (pageSizeNumber > MAX_PAGE_SIZE) {
+            return createError(`Page size should be a number between 1 and  ${MAX_PAGE_SIZE}`);
         }
     }
+
 
     if (sortBy !== undefined && !validTemplateSortFields.includes(sortBy as typeof validTemplateSortFields[number])) {
         return createError("SortBy should be a valid sort field");
@@ -74,22 +79,22 @@ export async function verifyPOSTParams(body: TemplatePOSTBody): Promise<Validati
     const { title, code, description, language, tags, forkedSourceId } = body;
 
     if (title === undefined || !isString(title) || title.trim() === "") {
-        return createError("Please provide a valid title");
-    }
-    if (title.length > 255) {
-        return createError("Title must be less than 255 characters");
+        return createError("Invalid template title");
+    } else if (title.length > MAX_TITLE_LENGTH) {
+        return createError(`title should be a string with at most ${MAX_TITLE_LENGTH} characters`);
     }
 
-    if (code !== undefined && !isString(code)) {
-        return createError("Code should be a string");
+    if (!isString(code) || code.length > MAX_CONTENT_LENGTH) {
+        // Code body permitted to be empty string
+        return createError(`Code should be a string with at most ${MAX_CONTENT_LENGTH} characters`);
     }
 
     if (!isValidLanguage(language)) {
         return createError("Unsupported language");
     }
 
-    if (!isOptionalString(description, 2000)) {
-        return createError("Description should be a string with at most 2000 characters");
+    if (!isOptionalString(description, MAX_CONTENT_LENGTH)) {
+        return createError(`Description should be a string with at most ${MAX_CONTENT_LENGTH} characters`);
     }
 
     const error = validateTagsArray(tags);
@@ -119,22 +124,24 @@ export function verifyPATCHParams(body: TemplatePATCHBody): ValidationError | nu
     if (title !== undefined) {
         if (!isString(title) || title.trim() === "") {
             return createError("Please provide a valid title");
-        }
-        if (title.length > 255) {
-            return createError("Title must be less than 255 characters");
+        } else if (title.length > MAX_TITLE_LENGTH) {
+            return createError(`title should be a string with at most ${MAX_TITLE_LENGTH} characters`);
         }
     }
 
-    if (code !== undefined && !isString(code)) {
-        return createError("Code should be a string");
+    if (!isOptionalString(code, MAX_CONTENT_LENGTH)) {
+        // Code body permitted to be empty string
+        return createError(`Code should be a string with at most ${MAX_CONTENT_LENGTH} characters`);
     }
 
-    if (language !== undefined && !isValidLanguage(language)) {
-        return createError("Unsupported language");
+    if (language !== undefined) {
+        if (!isValidLanguage(language)) {
+            return createError("Unsupported language");
+        }
     }
 
     if (description !== undefined) {
-        if (!isString(description) || description.length > 2000) {
+        if (!isString(description) || description.length > MAX_CONTENT_LENGTH) {
             return createError("Description should be a string with at most 2000 characters");
         }
     }

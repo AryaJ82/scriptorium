@@ -136,12 +136,7 @@ export interface UserProfilePATCHBody {
 }
 
 // ---------------------------- Reports
-export interface BlogReportPOSTBody {
-    title: string;
-    content: string;
-}
-
-export interface CommentReportPOSTBody {
+export interface ReportPOSTBody {
     title: string;
     content: string;
 }
