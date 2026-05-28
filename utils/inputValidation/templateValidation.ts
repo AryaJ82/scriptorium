@@ -4,7 +4,7 @@ import { validTemplateSortFields, validSortOrders } from "@/utils/interfaces";
 import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody, ValidationError } from "@/utils/interfaces";
 export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";
 
-import { isValidCUID, isString, isValidLanguage, createError, validateTagsArray, isPositiveIntegerString, isOptionalString, MAX_TITLE_LENGTH, MAX_CONTENT_LENGTH, MAX_USERNAME_LENGTH, MAX_PAGE_SIZE } from "@/utils/inputValidation/generalValidation";
+import { isValidCUID, isString, isValidLanguage, createError, validateTagsArray, isPositiveIntegerString, isOptionalString, MAX_TITLE_LENGTH, MAX_CONTENT_LENGTH, MAX_USERNAME_LENGTH, MAX_PAGE_SIZE, MAX_CODE_SIZE } from "@/utils/inputValidation/generalValidation";
 export { normalizeTags } from "@/utils/inputValidation/generalValidation";
 
 
@@ -84,9 +84,11 @@ export async function verifyPOSTParams(body: TemplatePOSTBody): Promise<Validati
         return createError(`title should be a string with at most ${MAX_TITLE_LENGTH} characters`);
     }
 
-    if (!isString(code) || code.length > MAX_CONTENT_LENGTH) {
-        // Code body permitted to be empty string
-        return createError(`Code should be a string with at most ${MAX_CONTENT_LENGTH} characters`);
+    if (code !== undefined) {
+        // Code can be undefined 
+        if (!isString(code) || Buffer.byteLength(code) > MAX_CODE_SIZE) {
+            return createError(`Code should be a string with at most ${MAX_CODE_SIZE / 1024} KB`);
+        }
     }
 
     if (!isValidLanguage(language)) {
@@ -129,9 +131,10 @@ export function verifyPATCHParams(body: TemplatePATCHBody): ValidationError | nu
         }
     }
 
-    if (!isOptionalString(code, MAX_CONTENT_LENGTH)) {
-        // Code body permitted to be empty string
-        return createError(`Code should be a string with at most ${MAX_CONTENT_LENGTH} characters`);
+    if (code !== undefined) {
+        if (!isString(code) || Buffer.byteLength(code) > MAX_CODE_SIZE) {
+            return createError(`Code should be a string with at most ${MAX_CODE_SIZE / 1024} KB`);
+        }
     }
 
     if (language !== undefined) {

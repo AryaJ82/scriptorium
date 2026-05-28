@@ -4,7 +4,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
 import type { BlogPOSTBody, BlogGETQuery } from "@/utils/interfaces";
-import { normalizeTags, verifyGETParams, verifyPOSTParams } from "@/utils/inputValidation/blogValidation";
+import { normalizeTags, verifyGETParams, verifyPOSTBody } from "@/utils/inputValidation/blogValidation";
 import { Prisma } from "@/app/generated/prisma/client";
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-            const postValidationError = await verifyPOSTParams(body);
+            const postValidationError = await verifyPOSTBody(body);
             if (postValidationError) {
                 return NextResponse.json({ error: postValidationError.message }, { status: postValidationError.status ?? 400 });
             }

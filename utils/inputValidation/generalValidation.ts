@@ -12,6 +12,8 @@ export const MAX_PAGE_SIZE = 100;
 export const MAX_USERNAME_LENGTH = 30;
 export const MAX_PASSWORD_LENGTH = 100;
 
+export const MAX_CODE_SIZE = !isNaN(parseInt(process.env.MAX_CODE_SIZE_KB ?? "")) ? parseInt(process.env.MAX_CODE_SIZE_KB ?? "") * 1024 : 64 * 1024;
+
 
 // ----------------------------------------- Error
 export function createError(message: string, status = 400): ValidationError {

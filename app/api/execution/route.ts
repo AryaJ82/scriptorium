@@ -4,14 +4,14 @@ import fs from 'fs';
 import path from "path";
 import Docker from 'dockerode';
 import { PassThrough } from 'stream';
-import type { ExecutionRequest } from '@/utils/interfaces'
+import type { ExecutionRequestPOSTBody } from '@/utils/interfaces'
 
 const docker = new Docker();
 
 const TIME_LIMIT = !isNaN(Number(process.env.EXECUTION_TIMELIMIT_MS)) ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
 const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
 const CPU_LIMIT = !isNaN(Number(process.env.CPU_LIMIT)) ? Number(process.env.CPU_LIMIT) : 0.5; // 0.5 CPU
-const MAX_CODE_SIZE = !isNaN(Number(process.env.MAX_CODE_SIZE_KB)) ? Number(process.env.MAX_CODE_SIZE_KB) * 1024 : 64 * 1024;
+import { MAX_CODE_SIZE } from "@/utils/inputValidation/generalValidation";
 const MAX_STDIN_SIZE = !isNaN(Number(process.env.MAX_STDIN_SIZE_KB)) ? Number(process.env.MAX_STDIN_SIZE_KB) * 1024 : 64 * 1024;
 const MAX_OUTPUT_SIZE = !isNaN(Number(process.env.MAX_OUTPUT_SIZE_KB)) ? Number(process.env.MAX_OUTPUT_SIZE_KB) * 1024 : 64 * 1024;
 
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const body: ExecutionRequest = await request.json();
+    const body: ExecutionRequestPOSTBody = await request.json();
     const { language, code, stdin } = body;
 
     if (!language || !(language in LANG_CONFIG)) {

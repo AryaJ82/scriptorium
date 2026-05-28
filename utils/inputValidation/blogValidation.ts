@@ -66,7 +66,7 @@ export function verifyGETParams(params: BlogGETQuery) {
 }
 
 
-export async function verifyPOSTParams(params: BlogPOSTBody): Promise<ValidationError | null> {
+export async function verifyPOSTBody(params: BlogPOSTBody): Promise<ValidationError | null> {
     const { title, content, linked_template_id, tags } = params;
 
     if (linked_template_id !== undefined) {
@@ -98,7 +98,7 @@ export async function verifyPOSTParams(params: BlogPOSTBody): Promise<Validation
     return null;
 }
 
-export async function verifyPATCHParams(body: BlogPATCHBody): Promise<ValidationError | null> {
+export function verifyPATCHBody(body: BlogPATCHBody): ValidationError | null {
     const { title, content, tags } = body;
 
     if (title === undefined && content === undefined && tags === undefined) {

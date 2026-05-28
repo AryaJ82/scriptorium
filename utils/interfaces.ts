@@ -37,7 +37,7 @@ export const limitedAuthorSelect = {
 
 // ------------------- Execution
 
-export interface ExecutionRequest {
+export interface ExecutionRequestPOSTBody {
     language: Language;
     code: string;
     stdin?: string;       // provide upfront stdin (non-interactive)
@@ -109,9 +109,9 @@ export interface BlogPATCHBody {
 }
 
 // --------------------- Comments
-export interface BlogCommentPOSTBody {
+export interface CommentPOSTBody {
     content: string;
-    parent_comment_id?: string | number;
+    parent_comment_id?: string;
 }
 
 

@@ -3,17 +3,18 @@ import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { limitedAuthorSelect } from "@/utils/interfaces";
+import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        if (!id || isNaN(Number(id))) {
+        if (!isPositiveIntegerString(id)) {
             return NextResponse.json({ error: "Invalid Comment id." }, { status: 400 });
         }
 
         const comment = await prisma.comment.findUnique({
-            where: { id: Number(id) },
+            where: { id: parseInt(id) },
             include: {
                 author: limitedAuthorSelect,
                 parentComment: true,
@@ -44,28 +45,30 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
-            const { id } = await params;
-            const post_id = Number(id);
-            if (!id || isNaN(post_id) || post_id < 0) {
-                return NextResponse.json({ error: "Invalid comment post id." }, { status: 400 });
-            }
-
             const { user } = request;
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
-            const comment = await prisma.comment.findUnique({ where: { id: post_id }, });
+            const { id } = await params;
+            if (!isPositiveIntegerString(id)) {
+                return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
+            }
+
+            const comment = await prisma.comment.findUnique({
+                where: { id: parseInt(id) },
+                select: { id: true, authorId: true }
+            });
 
             if (!comment) {
-                return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+                return NextResponse.json({ error: "Comment not found." }, { status: 404 });
             }
             if (comment.authorId !== user.id) {
-                return NextResponse.json({ error: "Unauthorized to delete this comment" }, { status: 403 });
+                return NextResponse.json({ error: "Forbidden." }, { status: 403 });
             }
 
-            await prisma.comment.delete({ where: { id: post_id } });
-            return NextResponse.json({ message: "Deleted successfully" }, { status: 200 });
+            await prisma.comment.delete({ where: { id: comment.id } });
+            return NextResponse.json({ message: "Comment deleted successfully" }, { status: 200 });
 
         } catch (error) {
             console.error("Error when deleting comment", error);
