@@ -5,7 +5,8 @@ import {
     useCallback,
     useContext,
     useMemo,
-    useState,
+    useReducer,
+    useRef,
 } from "react";
 
 const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "localhost:3000";
@@ -15,8 +16,16 @@ export interface UserSessionState {
     isAuthenticated: boolean;
     username: string | null;
     avatarUrl: string | null;
-    userId: string | null;
+    id: string | null;
     role: string | null;
+}
+
+const initialState: UserSessionState = {
+    isAuthenticated: false,
+    username: null,
+    avatarUrl: null,
+    id: null,
+    role: null,
 }
 
 interface UserSessionContextValue {
@@ -27,53 +36,59 @@ interface UserSessionContextValue {
     authFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response | null>;
 }
 
+type SessionAction = { type: "LOGOUT" } | { type: "LOGIN"; payload: { id: string; username: string; avatarUrl: string; role: string } };
+
+function sessionReducer(state: UserSessionState, action: SessionAction): UserSessionState {
+    switch (action.type) {
+        case "LOGIN":
+            return { isAuthenticated: true, ...action.payload };
+        case "LOGOUT":
+            return initialState;
+    }
+}
+
+/// --------------------------- Context and Provider
 const UserSessionContext = createContext<UserSessionContextValue | undefined>(undefined);
 
 export function UserSessionProvider({ children }: { children: React.ReactNode }) {
-    const [session, setSession] = useState<UserSessionState>({
-        isAuthenticated: false,
-        username: null,
-        avatarUrl: null,
-        userId: null,
-        role: null,
-    });
+    const refreshPromiseRef = useRef<Promise<Response | null> | null>(null); // Ref to prevent multiple simultaneous refreshes
+    const [session, dispatch] = useReducer(sessionReducer, initialState);
 
-    const resetSession = () => {
-        setSession({
-            isAuthenticated: false,
-            username: null,
-            avatarUrl: null,
-            userId: null,
-            role: null,
-        });
-    }
+    const doRefresh = useCallback(async (): Promise<Response | null> => {
+        try {
+            const response = await fetch(`${baseUrl}/api/users/refresh`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+            });
 
-    const refreshAccessToken = useCallback(
-        async () => {
-            try {
-                const response = await fetch(`${baseUrl}/api/users/refresh`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                });
-
-                // Refresh failed, reset session
-                if (!response.ok) {
-                    resetSession()
-                }
-                return response;
-
-            } catch (error) {
-                resetSession()
+            // Refresh failed, reset session
+            if (!response.ok) {
+                dispatch({ type: "LOGOUT" });
             }
-
+            return response;
+        } catch (error) {
+            dispatch({ type: "LOGOUT" });
             return null;
-        }, []);
+        }
+    }, []);
+
+    const refreshAccessToken = useCallback(async (): Promise<Response | null> => {
+        if (!refreshPromiseRef.current) {
+            refreshPromiseRef.current = doRefresh().finally(() => {
+                refreshPromiseRef.current = null;
+            });
+        }
+        return refreshPromiseRef.current;
+    }, [doRefresh]);
 
     const authFetch = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit) => {
+            if (!session.isAuthenticated) {
+                return null;
+            }
             try {
                 const headers = new Headers(init?.headers);
 
@@ -84,7 +99,6 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 };
 
                 const response = await fetch(input, requestInit);
-
 
                 // Request failed, potentially need to refresh token
                 if (session.isAuthenticated && response.status === 401) {
@@ -108,8 +122,24 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
             }
 
         },
-        [session],
+        [session.isAuthenticated, refreshAccessToken],
     );
+
+    const logout = useCallback(
+        async () => {
+            try {
+                if (!session.isAuthenticated) {
+                    return;
+                }
+
+                await fetch(`${baseUrl}/api/users/logout`, {
+                    method: "GET",
+                    credentials: "include",
+                });
+            } finally {
+                dispatch({ type: "LOGOUT" });
+            }
+        }, [session.isAuthenticated]);
 
     const login = useCallback(
         async ({ username, password }: { username: string; password: string }) => {
@@ -134,38 +164,24 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                     throw new Error("Login Failed");
                 }
 
-                setSession({
-                    isAuthenticated: true,
-                    userId: id,
-                    username: username,
-                    avatarUrl: avatarUrl ?? "",
-                    role: role ?? "USER",
+                dispatch({
+                    type: "LOGIN",
+                    payload: {
+                        id: id,
+                        username: username,
+                        avatarUrl: avatarUrl ?? "",
+                        role: role ?? "USER",
+                    }
                 });
 
                 return response;
 
             } catch (error) {
                 console.error(error);
-                resetSession();
+                dispatch({ type: "LOGOUT" });
                 return null;
             }
-        }, []);
-
-    const logout = useCallback(
-        async () => {
-            try {
-                if (!session.isAuthenticated) {
-                    return;
-                }
-
-                await fetch(`${baseUrl}/api/users/logout`, {
-                    method: "GET",
-                    credentials: "include",
-                });
-            } finally {
-                resetSession();
-            }
-        }, [session]);
+        }, [logout]);
 
     const contextValue = useMemo(
         () => ({
