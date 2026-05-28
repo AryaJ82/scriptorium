@@ -28,9 +28,9 @@ const initialState: UserSessionState = {
 interface UserSessionContextValue {
     session: UserSessionState;
     baseUrl: string;
-    login: (credentials: { username: string; password: string }) => Promise<Response | null>;
+    login: (credentials: { username: string; password: string }) => Promise<Response>;
     logout: () => Promise<void>;
-    authFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response | null>;
+    authFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 }
 
 type SessionAction = { type: "LOGOUT" } | { type: "LOGIN"; payload: { id: string; username: string; avatarUrl: string; role: string } };
@@ -50,6 +50,7 @@ const UserSessionContext = createContext<UserSessionContextValue | undefined>(un
 export function UserSessionProvider({ children }: { children: React.ReactNode }) {
     const refreshPromiseRef = useRef<Promise<Response> | null>(null); // Ref to prevent multiple simultaneous refreshes
     const [session, dispatch] = useReducer(sessionReducer, initialState);
+    const isAuthenticatedRef = useRef(false);
 
     // ------------------- Token Refresh Logic
     const doRefresh = useCallback(async (): Promise<Response> => {
@@ -86,6 +87,9 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     const authFetch = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
             try {
+                if (!isAuthenticatedRef.current) {
+                    return Response.json({ error: "Not authenticated" }, { status: 401 });
+                }
                 const headers = new Headers(init?.headers);
                 const requestInit: RequestInit = {
                     ...init,
@@ -97,11 +101,11 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 const response = await fetch(input, requestInit);
 
                 // Request failed, potentially need to refresh token
-                if (session.isAuthenticated && response.status === 401 && !signal?.aborted) {
+                if (isAuthenticatedRef.current && response.status === 401 && !signal?.aborted) {
 
                     const refreshResponse = await refreshAccessToken();
 
-                    if (refreshResponse?.ok && !signal?.aborted) {
+                    if (isAuthenticatedRef.current && refreshResponse?.ok && !signal?.aborted) {
                         // Refresh succeeded, re-attempt request
                         const secondResponse = await fetch(input, requestInit);
 
@@ -116,24 +120,23 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                     return response;
                 }
             } catch (error) {
-                return Response.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+                return Response.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 600 });
             }
         },
-        [session.isAuthenticated, refreshAccessToken],
+        [isAuthenticatedRef, refreshAccessToken],
     );
 
     // ------------------- Login and Logout
     const logout = useCallback(
         async () => {
             try {
-                await fetch(`${baseUrl}/api/users/logout`, {
-                    method: "GET",
-                    credentials: "include",
-                });
+                // Logging out requires accessToken
+                await authFetch(`${baseUrl}/api/users/logout`);
+
             } finally {
                 dispatch({ type: "LOGOUT" });
             }
-        }, []);
+        }, [authFetch]);
 
     const login = useCallback(
         async ({ username, password }: { username: string; password: string }) => {
@@ -176,11 +179,12 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 return response;
 
             } catch (error) {
-                console.error(error);
                 dispatch({ type: "LOGOUT" });
                 throw error;
             }
         }, []);
+
+    // --------------------------- States and Callbacks finished
 
     const contextValue = useMemo(
         () => ({
@@ -196,6 +200,10 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     useEffect(() => { // Attempt to refresh on initial load to populate session if possible
         refreshAccessToken();
     }, [refreshAccessToken]);
+
+    useEffect(() => { // Keep ref updated to prevent multiple simultaneous refresh attempts
+        isAuthenticatedRef.current = session.isAuthenticated;
+    }, [session.isAuthenticated]);
 
     return (
         <UserSessionContext.Provider value={contextValue}>
