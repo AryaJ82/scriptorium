@@ -5,7 +5,7 @@ import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
-import { normalizeTags, verifyPOSTParams } from "@/utils/inputValidation/templateValidation";
+import { normalizeTags, verifyTemplatePOSTBody } from "@/utils/inputValidation/templateValidation";
 import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/interfaces";
 import { limitedAuthorSelect } from "@/utils/interfaces";
 
@@ -72,16 +72,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
-            const body: TemplatePOSTBody = await request.json();
-            const { title, code, language, description, tags, forkedSourceId } = body;
             const { user } = request;
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-            const postValidationError = await verifyPOSTParams(body);
+            
+            const body: TemplatePOSTBody = await request.json();
+            const postValidationError = await verifyTemplatePOSTBody(body);
             if (postValidationError) {
                 return NextResponse.json({ error: postValidationError.message }, { status: postValidationError.status ?? 400 });
             }
+            const { title, code, language, description, tags, forkedSourceId } = body;
 
             const uniqueTags = normalizeTags(tags);
             const tagConnectOrCreate = uniqueTags.map((tag) => ({

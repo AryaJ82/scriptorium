@@ -39,8 +39,7 @@ export function verifyGETParams(params: BlogGETQuery) {
         }
     }
 
-
-    if (!isPositiveIntegerString(page)) {
+    if (page !== undefined && !isPositiveIntegerString(page)) {
         return createError("Page should be a positive integer");
     }
 

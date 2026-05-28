@@ -16,7 +16,7 @@ export async function templateExists(value: unknown): Promise<boolean> {
     return !!template;
 }
 
-export function verifyGETParams(params: TemplateGETQuery) {
+export function verifyTemplateGETParams(params: TemplateGETQuery) {
     const { title, template_id, language, tags, content, author, page, pageSize, sortBy, sortOrder } = params;
 
     if (template_id !== undefined) {
@@ -49,7 +49,7 @@ export function verifyGETParams(params: TemplateGETQuery) {
         }
     }
 
-    if (!isPositiveIntegerString(page)) {
+    if (page !== undefined && !isPositiveIntegerString(page)) {
         return createError("Page should be a positive integer");
     }
 
@@ -75,7 +75,7 @@ export function verifyGETParams(params: TemplateGETQuery) {
     return null;
 }
 
-export async function verifyPOSTParams(body: TemplatePOSTBody): Promise<ValidationError | null> {
+export async function verifyTemplatePOSTBody(body: TemplatePOSTBody): Promise<ValidationError | null> {
     const { title, code, description, language, tags, forkedSourceId } = body;
 
     if (title === undefined || !isString(title) || title.trim() === "") {
@@ -116,7 +116,7 @@ export async function verifyPOSTParams(body: TemplatePOSTBody): Promise<Validati
     return null;
 }
 
-export function verifyPATCHParams(body: TemplatePATCHBody): ValidationError | null {
+export function verifyTemplatePATCHBody(body: TemplatePATCHBody): ValidationError | null {
     const { title, code, language, description, tags } = body;
 
     if (title === undefined && code === undefined && language === undefined && description === undefined && tags === undefined) {

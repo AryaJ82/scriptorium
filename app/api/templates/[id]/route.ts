@@ -2,7 +2,7 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
-import { normalizeTags, verifyPATCHParams } from "@/utils/inputValidation/templateValidation";
+import { normalizeTags, verifyTemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
 import type { TemplatePATCHBody } from "@/utils/interfaces";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 import { limitedAuthorSelect } from "@/utils/interfaces";
@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             }
 
             const body: TemplatePATCHBody = await request.json();
-            const patchValidationError = verifyPATCHParams(body);
+            const patchValidationError = verifyTemplatePATCHBody(body);
             if (patchValidationError) {
                 return NextResponse.json({ error: patchValidationError.message }, { status: patchValidationError.status ?? 400 });
             }
@@ -69,6 +69,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             if (!isValidCUID(id)) {
                 return NextResponse.json({ error: "Invalid template id" }, { status: 400 });
             }
+
             const template = await prisma.template.findUnique({ where: { id: id } });
             if (!template) {
                 return NextResponse.json({ error: "Template not found" }, { status: 404 });
@@ -76,7 +77,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
-            // --- Tag handling ---
             const tagConnectOrCreate = tags !== undefined ? normalizeTags(tags).map((tag) => ({
                 where: { name: tag },
                 create: { name: tag },
@@ -125,6 +125,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             if (!isValidCUID(id)) {
                 return NextResponse.json({ error: "template_id is required and must be a string" }, { status: 400 });
             }
+            
             const template = await prisma.template.findUnique({
                 where: { id: id },
                 include: { descendentTemplates: true },
