@@ -8,7 +8,7 @@ import { isString, createError, validateTagsArray, isPositiveIntegerString, isOp
 export { normalizeTags } from "@/utils/inputValidation/generalValidation";
 
 export function verifyGETParams(params: BlogGETQuery) {
-    const { post_id, linked_template_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = params;
+    const { post_id, linked_template_id, title, content, tags, author, page, pageSize, sortBy, sortOrder } = params;
 
     if (post_id !== undefined && !isPositiveIntegerString(post_id)) {
         return createError("post_id should be a positive integer");
@@ -28,7 +28,7 @@ export function verifyGETParams(params: BlogGETQuery) {
         }
     }
 
-    if (description !== undefined && !isOptionalString(description, 1000)) {
+    if (content !== undefined && !isOptionalString(content, 1000)) {
         return createError("Description should be a string with at most 1000 characters");
     }
 
@@ -63,7 +63,7 @@ export function verifyGETParams(params: BlogGETQuery) {
 
 
 export async function verifyPOSTParams(params: BlogPOSTBody) {
-    const { title, description, linked_template_id, tags } = params;
+    const { title, content, linked_template_id, tags } = params;
 
     if (linked_template_id !== undefined) {
         if (!isString(linked_template_id) || linked_template_id.trim() === "") {
@@ -83,10 +83,10 @@ export async function verifyPOSTParams(params: BlogPOSTBody) {
     }
 
 
-    if (!isString(description) || description.trim() === "") {
+    if (!isString(content) || content.trim() === "") {
         return createError("Please provide a valid description");
     }
-    if (description.length > 10000) {
+    if (content.length > 10000) {
         return createError("description must be less than 10000 characters");
     }
 
@@ -98,9 +98,9 @@ export async function verifyPOSTParams(params: BlogPOSTBody) {
 }
 
 export async function verifyPATCHParams(body: BlogPATCHBody): Promise<ValidationError | null> {
-    const { title, description, tags } = body;
+    const { title, content, tags } = body;
 
-    if (title === undefined && description === undefined && tags === undefined) {
+    if (title === undefined && content === undefined && tags === undefined) {
         return createError("At least one field must be provided to update the blog post");
     }
 
@@ -113,8 +113,8 @@ export async function verifyPATCHParams(body: BlogPATCHBody): Promise<Validation
         }
     }
 
-    if (description !== undefined) {
-        if (!isString(description) || description.length > 2000) {
+    if (content !== undefined) {
+        if (!isString(content) || content.length > 2000) {
             return createError("Description should be a string with at most 2000 characters");
         }
     }

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         if (error) {
             return NextResponse.json({ error: error.message }, { status: error.status });
         }
-        const { post_id, linked_template_id, title, description, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
+        const { post_id, linked_template_id, title, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
         // Get tags as array of strings from comma separation tags=tag1,tag2,...
         const tagList = normalizeTags(tags?.split(','));
 
@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
                     is: { id: linked_template_id.trim() }
                 }
             }),
-            ...(description && {
-                description: { contains: description, },
+            ...(content && {
+                content: { contains: content, },
             }),
             ...(author && {
                 author: {
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const body: BlogPOSTBody = await request.json();
-            const { title, description, tags, linked_template_id } = body;
+            const { title, content, tags, linked_template_id } = body;
             const { user } = request;
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
                 data: {
                     title: title.trim(),
                     author: { connect: { id: user.id } },
-                    description,
+                    content,
                     ...(tagConnectOrCreate.length > 0 && {
                         tags: {
                             connectOrCreate: tagConnectOrCreate,

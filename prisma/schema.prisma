@@ -76,7 +76,7 @@ model BlogPost {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @default(now()) @updatedAt
   title            String
-  description      String
+  content          String
   author           User            @relation("CreatedBlogPosts", fields: [authorId], references: [id], onDelete: Cascade)
   authorId         String
   tags             Tag[]           @relation("blogPostTags")
@@ -112,14 +112,14 @@ model Comment {
 }
 
 model ContentReport {
-  id          Int       @id @default(autoincrement())
-  createdAt   DateTime  @default(now())
-  author      User      @relation("UserContentReports", fields: [authorId], references: [id], onDelete: Cascade)
-  authorId    String
-  title       String
-  description String    @default("")
-  post        BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
-  blogPostId  Int
-  comment     Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  commentId   Int
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  author     User      @relation("UserContentReports", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId   String
+  title      String
+  content    String    @default("")
+  blogPost   BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogPostId Int
+  comment    Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId  Int
 }

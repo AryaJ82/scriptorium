@@ -25,7 +25,7 @@ export const validSortOrders = ["asc", "desc"] as const;
 
 // ---------------------
 
-// Select which does not return the password hash from the author table
+// Select which does not return the password hash or profile details from the author table
 export const limitedAuthorSelect = {
     select: {
         id: true,
@@ -76,13 +76,18 @@ export interface TemplatePATCHBody {
     tags?: string[];
 }
 
-//-------------- Blogs
+export interface SavedTemplateTogglePATCHBody {
+    template_id: string;
+    unsave?: boolean;
+}
+
+//----------------------- Blogs
 
 export interface BlogGETQuery {
     post_id?: string;
     title?: string;
     linked_template_id?: string;
-    description?: string;
+    content?: string;
     tags?: string;
     author?: string;
     page?: string;
@@ -92,16 +97,23 @@ export interface BlogGETQuery {
 }
 export interface BlogPOSTBody {
     title: string;
-    description: string;
+    content: string;
     linked_template_id?: string;
     tags?: string[];
 }
 
 export interface BlogPATCHBody {
     title?: string;
-    description?: string;
+    content?: string;
     tags?: string[];
 }
+
+// --------------------- Comments
+export interface BlogCommentPOSTBody {
+    content: string;
+    parent_comment_id?: string | number;
+}
+
 
 // ------------------- User-facing request bodies
 
@@ -123,16 +135,7 @@ export interface UserProfilePATCHBody {
     phoneNumber?: string;
 }
 
-export interface SavedTemplateTogglePATCHBody {
-    template_id: string;
-    unsave?: boolean;
-}
-
-export interface BlogCommentPOSTBody {
-    content: string;
-    parent_comment_id?: string | number;
-}
-
+// ---------------------------- Reports
 export interface BlogReportPOSTBody {
     title: string;
     content: string;

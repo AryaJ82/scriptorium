@@ -34,7 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             const report = await prisma.contentReport.create({
                 data: {
                     author: { connect: { id: user.id } },
-                    post: { connect: { id: blogPost.id } },
+                    blogPost: { connect: { id: blogPost.id } },
                     description: content,
                     title: title.trim(),
                 },
