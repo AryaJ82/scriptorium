@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
             });
             response.cookies.set("refreshToken", "", {
                 httpOnly: true,
-                path: "/",
+                path: "/api/users/refresh",
                 sameSite: "strict",
                 maxAge: -1
             });

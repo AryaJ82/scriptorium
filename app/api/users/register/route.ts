@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from '@/utils/client';
 import { hashPassword } from "@/utils/passwordAuth";
-import {verifyUsername, verifyPassword} from "@/utils/inputValidation/generalValidation"
+import { verifyUsername, verifyPassword } from "@/utils/inputValidation/userValidation";
 import type { UserRegisterPOSTBody } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
@@ -12,13 +12,15 @@ export async function POST(request: NextRequest) {
     const body: UserRegisterPOSTBody = await request.json();
     const { username, password } = body;
     try {
-        if (!username || !password) {
-            return NextResponse.json({ error: "Username, and password are required" }, { status: 400 });
-        } else if (!verifyUsername(username)) {
-            return NextResponse.json({ error: "Username must be between 3 and 20 characters long." }, { status: 400 });
-        } else if( !verifyPassword(password) ) {
-            return NextResponse.json({ error: "Password must be at least 8 characters long and include uppercase letters, lowercase letters, numbers, and special characters." }, { status: 400 });
+        let error = verifyUsername(username);
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
         }
+        error = verifyPassword(password);
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+        }
+        
         // Check if user already exists
         const existingUser = await prisma.user.findFirst({
             where: {

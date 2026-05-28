@@ -3,6 +3,7 @@ import { withAuth } from "@/utils/middlewareAuth";
 import prisma from "@/utils/client";
 import type { AuthenticatedRequest } from "@/utils/middlewareAuth";
 import type { UserProfilePATCHBody } from "@/utils/interfaces";
+import { verifyUserProfilePATCHBody } from "@/utils/inputValidation/userValidation";
 
 export async function GET(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
@@ -43,12 +44,16 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
-            const body: UserProfilePATCHBody = await request.json();
-            const { email, firstName, lastName, avatarUrl, phoneNumber } = body;
             const { user } = request;
             if (!user) {
-                throw Error("User not loaded into request while editing profile");
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
+            const body: UserProfilePATCHBody = await request.json();
+            const error = verifyUserProfilePATCHBody(body);
+            if (error) {
+                return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+            }
+            const { email, firstName, lastName, avatarUrl, phoneNumber } = body;
 
             const updatedUser = await prisma.user.update({
                 where: { id: user.id },

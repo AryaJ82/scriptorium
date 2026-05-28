@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { comparePassword } from "@/utils/passwordAuth";
 import { setAccessCookie, setRefreshCookie } from "@/utils/tokenAuth";
-import { verifyUsername, verifyPassword } from "@/utils/inputValidation/generalValidation"
+import { verifyUsername, verifyPassword } from "@/utils/inputValidation/userValidation";
 import type { UserLoginPOSTBody } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
@@ -10,11 +10,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const body: UserLoginPOSTBody = await request.json();
-    const { username, password } = body;
     try {
-        if (!verifyUsername(username) || !verifyPassword(password)) {
-            return NextResponse.json({ error: "Invalid username or password" }, { status: 400 });
+        const body: UserLoginPOSTBody = await request.json();
+        const { username, password } = body;
+        let error = verifyUsername(username) || verifyPassword(password);
+        if (!error) {
+            return NextResponse.json({ error: "Invalid credentials." }, { status: 400 });
         }
 
         // Check if user exists
@@ -24,12 +25,10 @@ export async function POST(request: NextRequest) {
             },
         });
         if (!user) {
-            console.error("Failed to find user");
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
 
         if (!(await comparePassword(password, user.passwordHash))) {
-            console.error("Failed to match pass hash");
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
 
