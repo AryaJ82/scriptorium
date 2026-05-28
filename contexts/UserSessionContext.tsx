@@ -130,7 +130,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     const logout = useCallback(
         async () => {
             try {
-                // Logging out requires accessToken
+                // Logging out requires accessToken and thus potentially a refresh
                 await authFetch(`${baseUrl}/api/users/logout`);
 
             } finally {
@@ -142,12 +142,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
         async ({ username, password }: { username: string; password: string }) => {
 
             try {
-                await fetch(`${baseUrl}/api/users/logout`, {
-                    method: "GET",
-                    credentials: "include",
-                });
-
-                // await logout();
+                await logout();
 
                 const response = await fetch(`${baseUrl}/api/users/login`, {
                     method: "POST",
@@ -182,7 +177,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 dispatch({ type: "LOGOUT" });
                 throw error;
             }
-        }, []);
+        }, [logout]);
 
     // --------------------------- States and Callbacks finished
 
