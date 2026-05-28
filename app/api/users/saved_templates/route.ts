@@ -16,16 +16,15 @@ export async function GET(request: NextRequest) {
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-            const { searchParams } = (new URL(request.url));
-            const queryParams = Object.fromEntries(searchParams) as unknown as TemplateGETQuery;
+            const queryParams = request.nextUrl.searchParams as TemplateGETQuery;
 
             let error = verifyGETParams(queryParams);
             if (error) {
                 return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
             }
             const { template_id, title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
-            const tagList = normalizeTags(tags?.split(','));
 
+            const tagList = normalizeTags(tags?.split(','));
             const pageNum = page ? parseInt(page) : 1;
             const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
 
@@ -54,11 +53,6 @@ export async function GET(request: NextRequest) {
                         is: { username: { equals: author } },
                     },
                 }),
-                // ...(tag && {
-                //     tags: {
-                //         some: { name: { equals: tag } },
-                //     },
-                // }),
                 ...(tagList.length > 0 && {
                     AND: tagList.map((tag) => ({
                         tags: { some: { name: { equals: tag } } },
@@ -85,20 +79,17 @@ export async function PATCH(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
-            const body: SavedTemplateTogglePATCHBody = await request.json();
-            const { template_id, unsave } = body;
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
+
+            const body: SavedTemplateTogglePATCHBody = await request.json();
+            const { template_id, unsave } = body;
+
             if (!isValidCUID(template_id)) {
                 return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
-
             }
-
-            const template = await prisma.template.findUnique({
-                where: { id: template_id },
-            });
-
+            const template = await prisma.template.findUnique({ where: { id: template_id }, });
             if (!template) {
                 return NextResponse.json({ error: "Template not found" }, { status: 404 });
             }
