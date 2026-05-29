@@ -6,7 +6,7 @@ import Docker from 'dockerode';
 import { PassThrough } from 'stream';
 import type { ExecutionRequestPOSTBody } from '@/utils/interfaces'
 
-const docker = new Docker();
+import { LANG_CONFIG } from "@/utils/interfaces";
 
 const TIME_LIMIT = !isNaN(Number(process.env.EXECUTION_TIMELIMIT_MS)) ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
 const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
@@ -15,17 +15,7 @@ import { MAX_CODE_SIZE } from "@/utils/inputValidation/generalValidation";
 const MAX_STDIN_SIZE = !isNaN(Number(process.env.MAX_STDIN_SIZE_KB)) ? Number(process.env.MAX_STDIN_SIZE_KB) * 1024 : 64 * 1024;
 const MAX_OUTPUT_SIZE = !isNaN(Number(process.env.MAX_OUTPUT_SIZE_KB)) ? Number(process.env.MAX_OUTPUT_SIZE_KB) * 1024 : 64 * 1024;
 
-type Language = keyof typeof LANG_CONFIG;
-export type { Language };
-
-const LANG_CONFIG = {
-    PYTHON: { fileName: "main.py", image: 'python:3.13-alpine', cmd: ['sh', '-c', 'python3 /code/main.py < /code/stdin.txt'] },
-    JAVASCRIPT: { fileName: "main.js", image: 'node:23-alpine', cmd: ['sh', '-c', 'node /code/main.js < /code/stdin.txt'] },
-    C: { fileName: "main.c", image: 'gcc:14', cmd: ['sh', '-c', 'gcc /code/main.c -o /tmp/main && /tmp/main < /code/stdin.txt'] },
-    CPP: { fileName: "main.cpp", image: 'gcc:14', cmd: ['sh', '-c', 'g++ /code/main.cpp -o /tmp/main && /tmp/main < /code/stdin.txt'] },
-    JAVA: { fileName: "main.java", image: 'eclipse-temurin:24-jdk-alpine', cmd: ['sh', '-c', 'javac -d /tmp /code/main.java && java -cp /tmp main < /code/stdin.txt'] }
-};
-
+const docker = new Docker();
 
 export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Hello from the execution API!" });

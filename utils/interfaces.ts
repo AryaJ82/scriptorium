@@ -15,6 +15,8 @@ export const LANG_CONFIG: Record<Language, { fileName: string; image: string; cm
     JAVA: { fileName: "main.java", image: 'eclipse-temurin:24-jdk-alpine', cmd: ['sh', '-c', 'javac -d /tmp /code/main.java && java -cp /tmp main < /code/stdin.txt'] }
 };
 
+export const LANGUAGES = Object.values(Language) as Language[];
+
 
 // -------------------- General
 export type ValidationError = {
