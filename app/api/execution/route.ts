@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         ]);
 
         if (stderr.endsWith("EOFError: EOF when reading a line\n")) {
-            return NextResponse.json({ stdout: stdout, error: "Execution failed due to discrepancy in required argument length" });
+            return NextResponse.json({ stdout: stdout, error: "Execution failed due to discrepancy in required argument length. Program requested input after EOF in stdin." }, { status: 400 });
         }
 
         return NextResponse.json({ stdout, stderr, exitCode });

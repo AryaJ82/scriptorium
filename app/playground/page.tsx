@@ -17,25 +17,50 @@ import { STARTER_CODE } from "@/lib/mockData";
 
 export default function PlaygroundPage() {
 
-    const { session } = useUserSession();
+    const { session, baseUrl } = useUserSession();
     const [language, setLanguage] = useState<Language>("PYTHON");
     const [code, setCode] = useState<string>(STARTER_CODE[language] ?? '');
     const [stdin, setStdin] = useState('')
     const [status, setStatus] = useState<RunStatus>('idle');
     const [stdout, setStdout] = useState('');
     const [stderr, setStderr] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
-    function run() {
-        setStatus('running')
-        setStdout('')
-        setStderr('')
+    async function run() {
+        setStatus('running');
+        setStdout('');
+        setStderr('');
+        setError(null);
         // Stage 1 mock — Stage 2 will POST to the execution endpoint via fetch.
-        window.setTimeout(() => {
-            const stamp = new Date().toLocaleTimeString()
-            const echo = stdin ? `\n(stdin received: "${stdin.trim()}")` : ''
-            setStatus('success')
-            setStdout(`Hello, ${stdin.trim() || 'world'}!${echo}\n\n[exited 0 · ${stamp}]`)
-        }, 700)
+        try {
+            const response = await fetch(`${baseUrl}/api/execution`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ code, language, stdin }),
+            });
+            const body = await response.json();
+            if (response.ok) {
+                setStatus("success");
+                setStdout(body.stdout);
+                setStderr(body.stderr);
+            } else if (response.status === 408) {
+                setStatus("timeout");
+                setStdout(body.stdout);
+                setStderr(body.stderr);
+            } else if (response.status === 413) {
+                setStatus("error");
+                setStdout(body.stdout);
+                setStderr(body.error);
+            } else {
+                setStatus("error");
+                setError(body.error || "An error has occurred.");
+            }
+        } catch (error) {
+            setError("An error occurred while executing the code.");
+        }
+
     }
 
     function reset() {
@@ -61,7 +86,7 @@ export default function PlaygroundPage() {
             <div className="flex flex-col gap-3">
 
                 <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2">
-                    <Select value={language} onValueChange={(next: Language) => {setLanguage(next); setCode(STARTER_CODE[next] ?? '');}}>
+                    <Select value={language} onValueChange={(next: Language) => { setLanguage(next); setCode(STARTER_CODE[next] ?? ''); }}>
                         <SelectTrigger className="w-40" size="sm">
                             <SelectValue />
                         </SelectTrigger>
@@ -99,6 +124,13 @@ export default function PlaygroundPage() {
                         </Button>
                     </div>
                 </div>
+
+                {/* Display error message if it exists */}
+                {error && (
+                    <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-sm text-destructive">{error}</p>
+                    </div>
+                )}
 
                 <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr]">
                     <div className="overflow-hidden rounded-lg border border-border bg-card">
