@@ -1,8 +1,20 @@
 import { NextRequest } from "next/server";
-import { Language } from "@/app/generated/prisma/enums";
-export { Language } from "@/app/generated/prisma/enums";
 import prisma from "./client";
 import { Prisma } from "@/app/generated/prisma/client";
+
+
+// -------------------- Language
+import { Language } from "@/app/generated/prisma/enums";
+export { Language } from "@/app/generated/prisma/enums";
+
+export const LANG_CONFIG: Record<Language, { fileName: string; image: string; cmd: string[] }> = {
+    PYTHON: { fileName: "main.py", image: 'python:3.13-alpine', cmd: ['sh', '-c', 'python3 /code/main.py < /code/stdin.txt'] },
+    JAVASCRIPT: { fileName: "main.js", image: 'node:23-alpine', cmd: ['sh', '-c', 'node /code/main.js < /code/stdin.txt'] },
+    C: { fileName: "main.c", image: 'gcc:14', cmd: ['sh', '-c', 'gcc /code/main.c -o /tmp/main && /tmp/main < /code/stdin.txt'] },
+    CPP: { fileName: "main.cpp", image: 'gcc:14', cmd: ['sh', '-c', 'g++ /code/main.cpp -o /tmp/main && /tmp/main < /code/stdin.txt'] },
+    JAVA: { fileName: "main.java", image: 'eclipse-temurin:24-jdk-alpine', cmd: ['sh', '-c', 'javac -d /tmp /code/main.java && java -cp /tmp main < /code/stdin.txt'] }
+};
+
 
 // -------------------- General
 export type ValidationError = {

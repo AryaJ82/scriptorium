@@ -17,6 +17,7 @@ enum Language {
   JAVASCRIPT
   CPP
   JAVA
+  C
 }
 
 enum Role {
@@ -56,6 +57,7 @@ model Template {
   code                String     @default("")
   title               String
   description         String     @default("")
+  stdin               String     @default("")
   tags                Tag[]      @relation("templateTags")
   isForked            Boolean    @default(false)
   parentTemplate      Template?  @relation("forkedTemplate", fields: [parentTemplateId], references: [id], onDelete: SetNull)
