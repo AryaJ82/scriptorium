@@ -31,7 +31,7 @@ export default function PlaygroundPage() {
         setStdout('');
         setStderr('');
         setError(null);
-        // Stage 1 mock — Stage 2 will POST to the execution endpoint via fetch.
+
         try {
             const response = await fetch(`${baseUrl}/api/execution`, {
                 method: "POST",
