@@ -63,7 +63,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             if (patchValidationError) {
                 return NextResponse.json({ error: patchValidationError.message }, { status: patchValidationError.status ?? 400 });
             }
-            const { title, code, language, description, tags } = body;
+            const { title, code, stdin, language, description, tags } = body;
 
             const { id } = await params;
             if (!isValidCUID(id)) {
@@ -87,6 +87,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 data: {
                     ...(title && { title: title.trim() }),
                     ...(code && { code }),
+                    ...(stdin && { stdin }),
                     ...(language && { language }),
                     ...(description && { description }),
                     ...(tagConnectOrCreate !== undefined && {

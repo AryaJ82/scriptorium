@@ -4,7 +4,7 @@ import { validTemplateSortFields, validSortOrders } from "@/utils/interfaces";
 import type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody, ValidationError } from "@/utils/interfaces";
 export type { TemplateGETQuery, TemplatePOSTBody, TemplatePATCHBody } from "@/utils/interfaces";
 
-import { isValidCUID, isString, isValidLanguage, createError, validateTagsArray, isPositiveIntegerString, isOptionalString, MAX_TITLE_LENGTH, MAX_CONTENT_LENGTH, MAX_USERNAME_LENGTH, MAX_PAGE_SIZE, MAX_CODE_SIZE } from "@/utils/inputValidation/generalValidation";
+import { isValidCUID, isString, isValidLanguage, createError, validateTagsArray, isPositiveIntegerString, isOptionalString, MAX_TITLE_LENGTH, MAX_CONTENT_LENGTH, MAX_USERNAME_LENGTH, MAX_PAGE_SIZE, MAX_CODE_SIZE, MAX_STDIN_SIZE } from "@/utils/inputValidation/generalValidation";
 export { normalizeTags } from "@/utils/inputValidation/generalValidation";
 
 
@@ -76,7 +76,7 @@ export function verifyTemplateGETParams(params: TemplateGETQuery) {
 }
 
 export async function verifyTemplatePOSTBody(body: TemplatePOSTBody): Promise<ValidationError | null> {
-    const { title, code, description, language, tags, forkedSourceId } = body;
+    const { title, code, stdin, description, language, tags, forkedSourceId } = body;
 
     if (title === undefined || !isString(title) || title.trim() === "") {
         return createError("Invalid template title");
@@ -88,6 +88,12 @@ export async function verifyTemplatePOSTBody(body: TemplatePOSTBody): Promise<Va
         // Code can be undefined 
         if (!isString(code) || Buffer.byteLength(code) > MAX_CODE_SIZE) {
             return createError(`Code should be a string with at most ${MAX_CODE_SIZE / 1024} KB`);
+        }
+    }
+
+    if (stdin !== undefined) {
+        if (!isString(stdin) || Buffer.byteLength(stdin) > MAX_STDIN_SIZE) {
+            return createError(`Stdin should be a string with at most ${MAX_STDIN_SIZE / 1024} KB`);
         }
     }
 
@@ -117,9 +123,9 @@ export async function verifyTemplatePOSTBody(body: TemplatePOSTBody): Promise<Va
 }
 
 export function verifyTemplatePATCHBody(body: TemplatePATCHBody): ValidationError | null {
-    const { title, code, language, description, tags } = body;
+    const { title, code, stdin, language, description, tags } = body;
 
-    if (title === undefined && code === undefined && language === undefined && description === undefined && tags === undefined) {
+    if (title === undefined && code === undefined && stdin === undefined && language === undefined && description === undefined && tags === undefined) {
         return createError("At least one field must be provided to update the template");
     }
 
@@ -134,6 +140,12 @@ export function verifyTemplatePATCHBody(body: TemplatePATCHBody): ValidationErro
     if (code !== undefined) {
         if (!isString(code) || Buffer.byteLength(code) > MAX_CODE_SIZE) {
             return createError(`Code should be a string with at most ${MAX_CODE_SIZE / 1024} KB`);
+        }
+    }
+
+    if (stdin !== undefined) {
+        if (!isString(stdin) || Buffer.byteLength(stdin) > MAX_STDIN_SIZE) {
+            return createError(`Stdin should be a string with at most ${MAX_STDIN_SIZE / 1024} KB`);
         }
     }
 

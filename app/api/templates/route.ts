@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
             if (postValidationError) {
                 return NextResponse.json({ error: postValidationError.message }, { status: postValidationError.status ?? 400 });
             }
-            const { title, code, language, description, tags, forkedSourceId } = body;
+            const { title, code, stdin, language, description, tags, forkedSourceId } = body;
 
             const uniqueTags = normalizeTags(tags);
             const tagConnectOrCreate = uniqueTags.map((tag) => ({
@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
                     title: title.trim(),
                     author: { connect: { id: user.id } },
                     ...(code && { code }),
+                    ...(stdin && { stdin }),
                     language: language,
                     ...(description && { description: description.trim() }),
                     ...(tagConnectOrCreate.length > 0 && {

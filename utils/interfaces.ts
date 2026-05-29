@@ -76,6 +76,7 @@ export interface TemplateGETQuery {
 export interface TemplatePOSTBody {
     title: string;
     code?: string;
+    stdin?: string;
     language: Language;
     description?: string;
     tags?: string[];
@@ -85,6 +86,7 @@ export interface TemplatePOSTBody {
 export interface TemplatePATCHBody {
     title?: string;
     code?: string;
+    stdin?: string;
     language?: Language;
     description?: string;
     tags?: string[];
