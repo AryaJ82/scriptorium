@@ -4,6 +4,7 @@ import { useUserSession } from "@/contexts/UserSessionContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
+import { ScriptoriumLogo } from "./ScriptoriumLogo";
 
 const NAV = [
     // { href: '/playground', label: 'Playground' },
@@ -26,7 +27,7 @@ export function SiteHeader() {
             <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
 
                 <Link href="/" aria-label="Home">
-                    Home
+                    <ScriptoriumLogo />
                 </Link>
 
                 <nav className="ml-4 hidden items-center gap-1 md:flex">
