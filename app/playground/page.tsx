@@ -6,12 +6,13 @@ import { useState } from "react";
 import { SelectValue, Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/Select";
 import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
-import { Play, RotateCcw } from "lucide-react";
+import { Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
 import { Label } from "@/components/Label";
 
 import { STARTER_CODE } from "@/lib/mockData";
+import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
 
 
 
@@ -110,14 +111,13 @@ export default function PlaygroundPage() {
                             <RotateCcw className="size-4" /> Reset
                         </Button>
 
-                        {/* <SaveTemplateDialog
-                        isAuthenticated={session.isAuthenticated}
+                        <SaveTemplateDialogue
                         language={language}
                     >
                         <Button variant="outline" size="sm">
                             <Save className="size-4" /> Save as template
                         </Button>
-                    </SaveTemplateDialog> */}
+                    </SaveTemplateDialogue>
 
                         <Button size="sm" onClick={run} disabled={status === 'running'}>
                             <Play className="size-4" /> Run
