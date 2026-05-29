@@ -7,7 +7,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { ScriptoriumLogo } from "./ScriptoriumLogo";
 
 const NAV = [
-    // { href: '/playground', label: 'Playground' },
+    { href: '/playground', label: 'Playground' },
     // { href: '/templates', label: 'Templates' },
     // { href: '/blog', label: 'Blog' },
     { href: '/info', label: 'Info' },
