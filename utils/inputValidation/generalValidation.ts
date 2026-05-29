@@ -36,7 +36,12 @@ export function isOptionalString(value: unknown, maxLength: number): boolean {
 }
 
 export function isPositiveIntegerString(value: unknown): boolean {
-    return isString(value) && parseInt(value) >= 1;
+  if (typeof value === 'number') {
+    return Number.isInteger(value) && value > 0;
+  }
+
+  return typeof value === 'string' && parseInt(value, 10) > 0;
+
 }
 
 // CUID v1: starts with 'c', 25 chars total, lowercase alphanumeric
