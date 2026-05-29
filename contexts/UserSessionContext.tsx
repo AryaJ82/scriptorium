@@ -15,7 +15,7 @@ const baseUrl = `http://${rawBaseUrl.replace(/\/+$/, "")}`;
 
 export type UserSessionState =
     | { isAuthenticated: false; username: null; id: null; role: null; avatarUrl: null }
-    | { isAuthenticated: true; username: string; id: string; role: string; avatarUrl: string | null };
+    | { isAuthenticated: true; username: string; id: string; role: "ADMIN" | "USER"; avatarUrl: string | null };
 
 const initialState: UserSessionState = {
     isAuthenticated: false,
@@ -33,7 +33,7 @@ interface UserSessionContextValue {
     authFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 }
 
-type SessionAction = { type: "LOGOUT" } | { type: "LOGIN"; payload: { id: string; username: string; avatarUrl: string; role: string } };
+type SessionAction = { type: "LOGOUT" } | { type: "LOGIN"; payload: { id: string; username: string; avatarUrl: string; role: "ADMIN" | "USER" } };
 
 function sessionReducer(state: UserSessionState, action: SessionAction): UserSessionState {
     switch (action.type) {
