@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react'
 import Link from 'next/link';
-import { toast } from 'sonner'
+import { Toaster, toast } from 'sonner'
 import { useUserSession } from '@/contexts/UserSessionContext';
 import { Language } from '@/utils/interfaces';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/Dialog';
@@ -201,6 +201,7 @@ export function SaveTemplateDialogue({
                     >
                         Create Template
                     </Button>
+                    <Toaster />
                 </DialogFooter>
             </DialogContent>
         </Dialog>
