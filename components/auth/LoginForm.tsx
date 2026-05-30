@@ -8,7 +8,7 @@ export interface LoginFormProps {
     title?: string;
     subtitle?: string;
     submitLabel?: string;
-    onSuccess?: (username: string) => void | Promise<void>;
+    onSuccess?: () => void;
 }
 
 export function LoginForm({
@@ -39,7 +39,7 @@ export function LoginForm({
             const result = await login({ username: username.trim(), password });
             setIsLoading(false)
             if (result?.ok) {
-                await onSuccess?.(username.trim());
+                await onSuccess?.();
             } else {
                 const { error } = await result?.json();
                 setFormError(error ?? "Login Failed")

@@ -11,21 +11,33 @@ import { useState } from 'react';
 import { Label } from './Label';
 import Textarea from './ui/Textarea';
 import Input from './ui/Input';
+import { useRouter } from 'next/navigation';
 
 interface SaveTemplateDialogueParams {
-    children: React.ReactNode
-    language: Language
-    forkedFromTitle?: string
+    children: React.ReactNode;
+    language: Language;
+    code?: string;
+    stdin?: string;
+    forkedParent?: { title: string, id: string };
 }
 export function SaveTemplateDialogue({
     children,
     language,
-    forkedFromTitle,
+    code,
+    stdin,
+    forkedParent,
 }: SaveTemplateDialogueParams) {
-    const { session } = useUserSession();
+    const { session, authFetch } = useUserSession();
     const [open, setOpen] = useState(false);
+
+    const [title, setTitle] = useState<string>("");
+    const [desc, setDesc] = useState<string>("");
+    const [tagDraft, setTagDraft] = useState<string>('');
     const [tags, setTags] = useState<string[]>([]);
-    const [tagDraft, setTagDraft] = useState('');
+
+    const [loading, setLoading] = useState(false);
+    // const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     function addTag(e: React.KeyboardEvent<HTMLInputElement>) {
         if ((e.key === 'Enter' || e.key === ',') && tagDraft.trim()) {
@@ -34,6 +46,32 @@ export function SaveTemplateDialogue({
             if (!tags.includes(t)) setTags([...tags, t]);
             setTagDraft('');
         }
+    }
+
+    async function handleSaveTemplate(title: string, code?: string, desc?: string, stdin?: string, tags?: string[]) {
+        const response = await authFetch("/api/templates", {
+            method: "POST",
+            body: JSON.stringify({
+                title,
+                code,
+                desc,
+                stdin,
+                language,
+                tags,
+                ...(forkedParent && {
+                    forkedSourceId: forkedParent.id,
+                }),
+            }),
+        });
+
+        if (!response) {
+            return Response.json({ error: "An unknown error occurred" }, { status: 600 }); // TODO: need to set error back to normal. Timeout?
+        } else if (response.ok) {
+            return response;
+        } else {
+            return response; // TODO: need to set error back to normal. Timeout?
+        }
+
     }
 
     if (!session.isAuthenticated) {
@@ -67,84 +105,104 @@ export function SaveTemplateDialogue({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {forkedFromTitle ? 'Save forked template' : 'Save as template'}
-          </DialogTitle>
-          <DialogDescription>
-            {forkedFromTitle
-              ? `This will be saved as a fork of “${forkedFromTitle}”.`
-              : 'Give your template a title, explanation, and tags so you can find and reuse it later.'}
-          </DialogDescription>
-        </DialogHeader>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        {forkedParent?.title ? 'Save forked template' : 'Save as template'}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {forkedParent?.title
+                            ? `This template will be saved as a fork of “${forkedParent?.title}”.`
+                            : 'Give your template a title, explanation, and tags so you can find and reuse it later.'}
+                    </DialogDescription>
+                </DialogHeader>
 
 
-        <div className="flex flex-col gap-4 py-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="tpl-title">Title</Label>
-            <Input id="tpl-title" placeholder="e.g. Binary search, annotated" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="tpl-exp">Description</Label>
-            <Textarea
-              id="tpl-exp"
-              placeholder="What does this template do? When would you reach for it?"
-              className="h-24 resize-none"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="tpl-tags">Tags</Label>
-            <Input
-              id="tpl-tags"
-              value={tagDraft}
-              onChange={(e) => setTagDraft(e.target.value)}
-              onKeyDown={addTag}
-              placeholder="Type a tag and press Enter"
-            />
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {tags.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTags(tags.filter((x) => x !== t))}
-                    className="group"
-                  >
-                    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 font-mono text-xs">
-                      #{t}
-                      <X className="size-3 text-muted-foreground group-hover:text-destructive" />
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-            <p className="font-mono text-xs text-muted-foreground">
-              Language:{' '}
-              {language}
-            </p>
-          </div>
-        </div>
+                <div className="flex flex-col gap-4 py-2">
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="tpl-title">Title</Label>
+                        <Input id="tpl-title" placeholder="e.g. Binary search, annotated" onChange={(e) => setTitle(e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="tpl-exp">Description</Label>
+                        <Textarea
+                            id="tpl-exp"
+                            placeholder="What does this template do? When would you reach for it?"
+                            className="h-24 resize-none"
+                            onChange={(e) => setDesc(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="tpl-tags">Tags</Label>
+                        <Input
+                            id="tpl-tags"
+                            value={tagDraft}
+                            onChange={(e) => setTagDraft(e.target.value)}
+                            onKeyDown={addTag}
+                            placeholder="Type a tag and press Enter"
+                        />
+                        {tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                                {tags.map((t) => (
+                                    <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => setTags(tags.filter((x) => x !== t))}
+                                        className="group"
+                                    >
+                                        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 font-mono text-xs">
+                                            #{t}
+                                            <X className="size-3 text-muted-foreground group-hover:text-destructive" />
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <p className="font-mono text-xs text-muted-foreground">
+                            Language:{' '}
+                            {language}
+                        </p>
+                    </div>
+                </div>
+                {/* {error ? (
+                    <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                        {error}
+                    </p>
+                ) : null} */}
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        disabled={loading}
+                        onClick={async () => {
+                            setLoading(true);
+                            const response = await handleSaveTemplate(title, code, desc, stdin, tags);
+                            const body = await response.json();
+                            if (response.ok && body.id) {
+                                toast.success(
+                                    forkedParent?.title
+                                        ? 'Forked template saved (mock)'
+                                        : 'Template saved (mock)',
+                                    // { description: 'Wired to the API during Stage 2.' },
+                                ) // TODO: cut out toast, just redirect
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              setOpen(false)
-              toast.success(
-                forkedFromTitle
-                  ? 'Forked template saved (mock)'
-                  : 'Template saved (mock)',
-                { description: 'Wired to the API during Stage 2.' },
-              )
-            }}
-          >
-            Save template
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
+                                setOpen(false);
+                                setLoading(false);
+                                router.push(`/templates/${body.id}`);
+                            } else {
+                                setLoading(false);
+                                toast.error(
+                                    body.error,
+                                    // { description: 'Wired to the API during Stage 2.' },
+                                );
+                            }
+                        }}
+                    >
+                        Create Template
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
 }
