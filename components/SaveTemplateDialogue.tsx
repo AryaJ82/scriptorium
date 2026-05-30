@@ -201,7 +201,7 @@ export function SaveTemplateDialogue({
                     >
                         Create Template
                     </Button>
-                    <Toaster />
+                    <Toaster richColors/>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
