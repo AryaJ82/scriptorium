@@ -45,10 +45,8 @@ export default function TemplatePage() {
     const [loading, setLoading] = useState(true);
 
     // --- Editor state (initialised from template on load) ---
-    const [language, setLanguage] = useState<Language>(LANGUAGES[0]);
     const [code, setCode] = useState('');
     const [stdin, setStdin] = useState('');
-    const [description, setDesc] = useState('');
 
     const [editingStdin, setEditingStdin] = useState(false);
 
@@ -98,10 +96,8 @@ export default function TemplatePage() {
 
                 const t: TemplateResponse = body.template;
                 setTemplate(t);
-                setLanguage(t.language);
                 setCode(t.code);
                 setStdin(t.stdin);
-                setDesc(t.description ?? '');
                 setEditingStdin(false);
             })
             .catch((err) => {
@@ -269,7 +265,7 @@ export default function TemplatePage() {
                     <div className="overflow-hidden rounded-lg border border-border bg-card">
                         <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
                             <span className="font-mono text-xs text-muted-foreground">
-                                {LANG_CONFIG[language].fileName}
+                                {template && LANG_CONFIG[template.language].fileName}
                             </span>
 
                             <div className="ml-auto flex items-center gap-2">
@@ -294,13 +290,13 @@ export default function TemplatePage() {
                                     </Button>
                                 )}
 
-                                <Button size="sm" onClick={() => run(code, language, stdin)} disabled={loading || !template || status === 'running'}>
+                                <Button size="sm" onClick={() => run(code, template?.language ?? LANGUAGES[0], stdin)} disabled={loading || !template || status === 'running'}>
                                     <Play className="size-4" /> Run
                                 </Button>
                             </div>
 
                         </div>
-                        <CodeEditor value={code} onChange={setCode} language={language} />
+                        <CodeEditor value={code} onChange={setCode} language={template?.language ?? LANGUAGES[0]} />
                     </div>
 
                     {/* Stdin + output */}
