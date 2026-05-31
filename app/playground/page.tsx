@@ -2,7 +2,7 @@
 
 import { useUserSession } from "@/contexts/UserSessionContext";
 import { LANG_CONFIG, Language, LANGUAGES } from "@/utils/interfaces";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SelectValue, Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/Select";
 import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
@@ -19,58 +19,69 @@ import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
 export default function PlaygroundPage() {
 
     const { session, baseUrl } = useUserSession();
-    const [language, setLanguage] = useState<Language>("PYTHON");
-    const [code, setCode] = useState<string>(STARTER_CODE[language] ?? '');
-    const [stdin, setStdin] = useState('')
+
+    // --- Template state ---
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    // --- Editor state (initialised from template on load) ---
+    const [language, setLanguage] = useState<Language>(LANGUAGES[0]);
+    const [code, setCode] = useState('');
+    const [stdin, setStdin] = useState('');
+
+    // --- Execution state ---
     const [status, setStatus] = useState<RunStatus>('idle');
     const [stdout, setStdout] = useState('');
     const [stderr, setStderr] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [runError, setRunError] = useState<string | null>(null);
 
-    async function run() {
+    const run = useCallback(async (code: string, language: string, stdin: string) => {
         setStatus('running');
         setStdout('');
         setStderr('');
-        setError(null);
+        setRunError(null);
 
         try {
-            const response = await fetch(`${baseUrl}/api/execution`, {
+            const res = await fetch(`${baseUrl}/api/execution`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code, language, stdin }),
             });
-            const body = await response.json();
-            if (response.ok) {
+            const body = await res.json();
+
+            if (res.ok) {
                 setStatus("success");
                 setStdout(body.stdout);
                 setStderr(body.stderr);
-            } else if (response.status === 408) {
+            } else if (res.status === 408) {
                 setStatus("timeout");
                 setStdout(body.stdout);
                 setStderr(body.stderr);
-            } else if (response.status === 413) {
+            } else if (res.status === 413) {
                 setStatus("error");
                 setStdout(body.stdout);
                 setStderr(body.error);
             } else {
                 setStatus("error");
-                setError(body.error || "An error has occurred.");
+                setRunError(body.error ?? "An error has occurred.");
             }
-        } catch (error) {
-            setError("An error occurred while executing the code.");
+        } catch {
+            setStatus("error");
+            setRunError("An error occurred while executing the code.");
         }
+    }, [baseUrl]);
 
-    }
-
-    function reset() {
+    const reset = useCallback(() => {
         setCode(STARTER_CODE[language] ?? '')
         setStdin('')
         setStatus('idle')
         setStdout('')
         setStderr('')
-    }
+        setRunError(null);
+    }, []);
+
+
+
     return (
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
             <div className="mb-6 flex flex-col gap-1">
@@ -119,16 +130,23 @@ export default function PlaygroundPage() {
                         </Button>
                     </SaveTemplateDialogue>
 
-                        <Button size="sm" onClick={run} disabled={status === 'running'}>
+                        <Button size="sm" onClick={() => run(code, language, stdin)} disabled={status === 'running'}>
                             <Play className="size-4" /> Run
                         </Button>
                     </div>
                 </div>
 
-                {/* Display error message if it exists */}
-                {error && (
+                {/* Load error */}
+                {loadError && (
+                    <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+                        <p className="text-sm text-destructive">{loadError}</p>
+                    </div>
+                )}
+
+                {/* Run error (separate from load error) */}
+                {runError && (
                     <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm text-destructive">{error}</p>
+                        <p className="text-sm text-destructive">{runError}</p>
                     </div>
                 )}
 
