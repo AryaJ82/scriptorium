@@ -47,18 +47,36 @@ export const limitedAuthorSelect = {
         role: true,
     }
 };
+
+// Attributes returned for GET and PATCH requests
+export const templateGetInclude = {
+    include: {
+        author: limitedAuthorSelect,
+        tags: { select: { name: true }, },
+        parentTemplate: {
+            select: {
+                id: true,
+                author: limitedAuthorSelect,
+                title: true,
+                createdAt: true,
+            },
+        },
+        replies: true,
+    }
+}
+
 interface TemplateAuthor {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    role: string;
+        id: string;
+username: string;
+avatarUrl: string;
+role: string;
 }
 
 interface Tag {
     name: string;
 }
 
-import type {Template} from "@/app/generated/prisma/client"
+import type { Template } from "@/app/generated/prisma/client"
 export interface TemplateResponse extends Template {
     author: TemplateAuthor;
     parentTemplate?: { id: string; title: string };

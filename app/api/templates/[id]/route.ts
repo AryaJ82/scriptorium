@@ -5,7 +5,7 @@ import prisma from "@/utils/client";
 import { normalizeTags, verifyTemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
 import type { TemplatePATCHBody } from "@/utils/interfaces";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
-import { limitedAuthorSelect } from "@/utils/interfaces";
+import { limitedAuthorSelect, templateGetInclude } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -16,19 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
         const template = await prisma.template.findUnique({
             where: { id: id },
-            include: {
-                author: limitedAuthorSelect,
-                tags: { select: { name: true }, },
-                parentTemplate: {
-                    select: {
-                        id: true,
-                        author: limitedAuthorSelect,
-                        title: true,
-                        createdAt: true,
-                    },
-                },
-                replies: true,
-            },
+            ...templateGetInclude,
         });
 
         if (!template) {
@@ -91,12 +79,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                         },
                     }),
                 },
-                include: {
-                    tags: {
-                        select: { name: true },
-                    },
-                    author: limitedAuthorSelect,
-                },
+                ...templateGetInclude,
             });
 
             return NextResponse.json({ template: updatedTemplate }, { status: 200 });
