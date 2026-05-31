@@ -20,9 +20,6 @@ export default function PlaygroundPage() {
 
     const { session, baseUrl } = useUserSession();
 
-    // --- Template state ---
-    const [loadError, setLoadError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
 
     // --- Editor state (initialised from template on load) ---
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]);
@@ -111,12 +108,6 @@ export default function PlaygroundPage() {
                         </SelectContent>
                     </Select>
 
-                    {/* {title && (
-                    <span className="hidden truncate font-mono text-sm text-muted-foreground sm:inline">
-                        {title}
-                    </span>
-                )} */}
-
                     <div className="ml-auto flex items-center gap-2">
                         <Button variant="ghost" size="sm" onClick={reset}>
                             <RotateCcw className="size-4" /> Reset
@@ -124,6 +115,8 @@ export default function PlaygroundPage() {
 
                         <SaveTemplateDialogue
                         language={language}
+                        code={code}
+                        stdin={stdin}
                     >
                         <Button variant="outline" size="sm">
                             <Save className="size-4" /> Save as template
@@ -136,13 +129,6 @@ export default function PlaygroundPage() {
                     </div>
                 </div>
 
-                {/* Load error */}
-                {loadError && (
-                    <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
-                        <p className="text-sm text-destructive">{loadError}</p>
-                    </div>
-                )}
-
                 {/* Run error (separate from load error) */}
                 {runError && (
                     <div className="rounded-lg border border-border bg-card p-4">
@@ -150,7 +136,9 @@ export default function PlaygroundPage() {
                     </div>
                 )}
 
+                {/* Editor + I/O panel */}
                 <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr]">
+                    {/* Code editor */}
                     <div className="overflow-hidden rounded-lg border border-border bg-card">
                         <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
                             <span className="font-mono text-xs text-muted-foreground">
@@ -160,6 +148,7 @@ export default function PlaygroundPage() {
                         <CodeEditor value={code} onChange={setCode} language={language} />
                     </div>
 
+                    {/* Stdin + output */}
                     <div className="flex flex-col gap-3">
                         <div className="rounded-lg border border-border bg-card p-4">
                             <Label
@@ -176,6 +165,7 @@ export default function PlaygroundPage() {
                                 className="mt-2 h-24 resize-none font-mono text-[13px]"
                             />
                         </div>
+
                         <div className="flex-1 overflow-hidden rounded-lg border border-border bg-card">
                             <OutputConsole status={status} stdout={stdout} stderr={stderr} />
                         </div>

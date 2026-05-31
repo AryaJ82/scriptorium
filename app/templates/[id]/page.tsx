@@ -11,98 +11,14 @@ import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
 import { Label } from "@/components/Label";
 import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+import TemplateHeader from "@/components/TemplateHeader";
 
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface TemplateAuthor {
-    id: string;
-    username: string;
-    avatarUrl: string;
-    role: string;
-}
-
-interface TemplateTag {
-    name: string;
-}
-
-interface Template {
-    id: string;
-    createdAt: string;
-    updatedAt: string;
-    authorId: string;
-    language: Language;
-    code: string;
-    title: string;
-    description: string;
-    stdin: string;
-    isForked: boolean;
-    parentTemplateId: string | null;
-    author: TemplateAuthor;
-    tags: TemplateTag[];
-    parentTemplate: { id: string; title: string } | null;
-}
+import type { TemplateResponse } from "@/utils/interfaces";
 
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function TemplateHeader({ template }: { template: Template }) {
-    const author = template.author;
-    return (
-        <div className="mb-6 flex flex-col gap-2">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="flex flex-col gap-1">
-                    <h1 className="font-serif text-3xl font-semibold tracking-tight">
-                        {template.title}
-                    </h1>
-                    {template.description && (
-                        <p className="text-sm text-muted-foreground">{template.description}</p>
-                    )}
-                </div>
-
-                {/* Author */}
-                <Avatar className="size-8 border">
-                    {author.avatarUrl ? (
-                        <AvatarImage src={author.avatarUrl} alt="" />
-                    ) : null}
-                    <AvatarFallback className="text-xs font-medium">
-                        {author.username.slice(0, 1).toUpperCase()}
-                    </AvatarFallback>
-                </Avatar>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-                {/* Fork lineage */}
-                {template.isForked && template.parentTemplate && (
-                    <a
-                        href={`/templates/${template.parentTemplate.id}`}
-                        className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-                    >
-                        Forked from: {template.parentTemplate.title}
-                    </a>
-                )}
-
-                {/* Tags */}
-                {template.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                        {template.tags.map((tag) => (
-                            <span
-                                key={tag.name}
-                                className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
-                            >
-                                {tag.name}
-                            </span>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
 
 function TemplateHeaderSkeleton() {
     return (
@@ -122,7 +38,7 @@ export default function TemplatePage() {
     const { session, baseUrl } = useUserSession();
 
     // --- Template state ---
-    const [template, setTemplate] = useState<Template | null>(null);
+    const [template, setTemplate] = useState<TemplateResponse | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -160,7 +76,7 @@ export default function TemplatePage() {
                     throw new Error(body.error ?? "Unable to load template.");
                 }
 
-                const t: Template = body.template;
+                const t: TemplateResponse = body.template;
                 setTemplate(t);
                 setLanguage(t.language);
                 setCode(t.code);
@@ -241,24 +157,6 @@ export default function TemplatePage() {
             ) : null}
 
             <div className="flex flex-col gap-3">
-                {/* Toolbar */}
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2">
-                    <div className="ml-auto flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={reset} disabled={loading || !template}>
-                            <RotateCcw className="size-4" /> Reset
-                        </Button>
-
-                        <SaveTemplateDialogue language={language}>
-                            <Button variant="outline" size="sm" disabled={loading || !template}>
-                                <Save className="size-4" /> Save Changes
-                            </Button>
-                        </SaveTemplateDialogue>
-
-                        <Button size="sm" onClick={() => run(code, language, stdin)} disabled={loading || !template || status === 'running'}>
-                            <Play className="size-4" /> Run
-                        </Button>
-                    </div>
-                </div>
 
                 {/* Load error */}
                 {loadError && (
@@ -282,6 +180,23 @@ export default function TemplatePage() {
                             <span className="font-mono text-xs text-muted-foreground">
                                 {LANG_CONFIG[language].fileName}
                             </span>
+
+                            <div className="ml-auto flex items-center gap-2">
+                                <Button variant="ghost" size="sm" onClick={reset} disabled={loading || !template}>
+                                    <RotateCcw className="size-4" /> Reset
+                                </Button>
+
+                                {(isOwner) && <SaveTemplateDialogue language={language}>
+                                    <Button variant="outline" size="sm" disabled={loading || !template}>
+                                        <Save className="size-4" /> Save Changes
+                                    </Button>
+                                </SaveTemplateDialogue>}
+
+                                <Button size="sm" onClick={() => run(code, language, stdin)} disabled={loading || !template || status === 'running'}>
+                                    <Play className="size-4" /> Run
+                                </Button>
+                            </div>
+
                         </div>
                         <CodeEditor value={code} onChange={setCode} language={language} />
                     </div>

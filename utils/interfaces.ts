@@ -24,11 +24,12 @@ export type ValidationError = {
     status?: number;
 };
 
-export interface AuthenticatedRequest extends NextRequest {
-    user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
-}
-// ---------------------- Sorting Fields
 
+// ===================================================
+// Data Base interfaces
+// ===================================================
+
+// ---------------------- Sorting Fields
 export type ValidSortFields = 'title' | 'createdAt' | 'language' | 'upvoteCount' | 'downvoteCount';
 export type BlogSortFields = 'title' | 'createdAt' | 'upvoteCount' | 'downvoteCount';
 export type ValidSortOrder = 'asc' | 'desc';
@@ -36,8 +37,6 @@ export type ValidSortOrder = 'asc' | 'desc';
 export const validTemplateSortFields = ["title", "createdAt", "language", 'upvoteCount', 'downvoteCount'] as const;
 export const validBlogSortFields = ["title", "createdAt", 'upvoteCount', 'downvoteCount'] as const;
 export const validSortOrders = ["asc", "desc"] as const;
-
-// ---------------------
 
 // Select which does not return the password hash or profile details from the author table
 export const limitedAuthorSelect = {
@@ -48,6 +47,31 @@ export const limitedAuthorSelect = {
         role: true,
     }
 };
+interface TemplateAuthor {
+    id: string;
+    username: string;
+    avatarUrl: string;
+    role: string;
+}
+
+interface Tag {
+    name: string;
+}
+
+import type {Template} from "@/app/generated/prisma/client"
+export interface TemplateResponse extends Template {
+    author: TemplateAuthor;
+}
+
+
+// ===================================================
+// Requests
+// ===================================================
+
+export interface AuthenticatedRequest extends NextRequest {
+    user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
+}
+
 
 // ------------------- Execution
 
