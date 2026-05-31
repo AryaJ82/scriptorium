@@ -27,13 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                         createdAt: true,
                     },
                 },
-                replies: {
-                    select: {
-                        id: true,
-                        title: true,
-                        description: true,
-                    },
-                },
+                replies: true,
             },
         });
 

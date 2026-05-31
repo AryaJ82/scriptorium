@@ -44,7 +44,7 @@ export function UserMenu() {
               <AvatarImage src={session.avatarUrl} alt="" />
             ) : null}
             <AvatarFallback className="text-xs font-medium">
-              {session.username.slice(0, 2)}
+              {session.username.slice(0, 1).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </button>

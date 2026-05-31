@@ -36,7 +36,6 @@ export function SaveTemplateDialogue({
     const [tags, setTags] = useState<string[]>([]);
 
     const [loading, setLoading] = useState(false);
-    // const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
     function addTag(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -69,7 +68,7 @@ export function SaveTemplateDialogue({
         } else if (response.ok) {
             return response;
         } else {
-            return response; // TODO: need to set error back to normal. Timeout?
+            return response; 
         }
 
     }
@@ -164,11 +163,7 @@ export function SaveTemplateDialogue({
                         </p>
                     </div>
                 </div>
-                {/* {error ? (
-                    <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-                        {error}
-                    </p>
-                ) : null} */}
+
                 <DialogFooter>
                     <Button variant="ghost" onClick={() => setOpen(false)}>
                         Cancel
@@ -180,12 +175,6 @@ export function SaveTemplateDialogue({
                             const response = await handleSaveTemplate(title, code, desc, stdin, tags);
                             const body = await response.json();
                             if (response.ok && body.id) {
-                                toast.success(
-                                    forkedParent?.title
-                                        ? 'Forked template saved (mock)'
-                                        : 'Template saved (mock)',
-                                    // { description: 'Wired to the API during Stage 2.' },
-                                ) // TODO: cut out toast, just redirect
 
                                 setOpen(false);
                                 setLoading(false);
@@ -194,7 +183,6 @@ export function SaveTemplateDialogue({
                                 setLoading(false);
                                 toast.error(
                                     body.error,
-                                    // { description: 'Wired to the API during Stage 2.' },
                                 );
                             }
                         }}
