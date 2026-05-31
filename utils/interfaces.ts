@@ -61,6 +61,8 @@ interface Tag {
 import type {Template} from "@/app/generated/prisma/client"
 export interface TemplateResponse extends Template {
     author: TemplateAuthor;
+    parentTemplate?: { id: string; title: string };
+    tags: Tag[];
 }
 
 
