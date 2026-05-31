@@ -23,7 +23,7 @@ export default function PlaygroundPage() {
 
     // --- Editor state (initialised from template on load) ---
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]);
-    const [code, setCode] = useState('');
+    const [code, setCode] = useState(STARTER_CODE[language] ?? '');
     const [stdin, setStdin] = useState('');
 
     // --- Execution state ---
