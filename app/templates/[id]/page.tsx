@@ -6,13 +6,14 @@ import { Language, LANGUAGES, LANG_CONFIG } from "@/utils/interfaces";
 import { useCallback, useEffect, useState } from "react";
 import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
-import { Play, RotateCcw, Save } from "lucide-react";
+import { GitFork, Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
 import { Label } from "@/components/Label";
 import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import type { TemplateResponse } from "@/utils/interfaces";
+import Link from "next/link";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -28,8 +29,16 @@ function TemplateHeader({ template }: { template: TemplateResponse }) {
                     <h1 className="font-serif text-3xl font-semibold tracking-tight">
                         {template.title}
                     </h1>
-                    {template.description && (
-                        <p className="text-sm text-muted-foreground">{template.description}</p>
+
+                    {template.parentTemplate && (
+                        <Link href={`/templates/${template.parentTemplate.id}`}>
+                            <span className="inline-flex w-fit items-center gap-1.5 font-mono text-xs text-muted-foreground">
+                                <GitFork className="size-3.5" />
+                                <p className="text-sm text-muted-foreground">
+                                    {template.parentTemplate.title}
+                                </p>
+                            </span>
+                        </Link>
                     )}
                 </div>
 
