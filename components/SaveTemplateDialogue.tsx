@@ -53,7 +53,7 @@ export function SaveTemplateDialogue({
             body: JSON.stringify({
                 title,
                 code,
-                desc,
+                description: desc,
                 stdin,
                 language,
                 tags,
