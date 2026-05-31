@@ -3,207 +3,23 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useUserSession } from "@/contexts/UserSessionContext";
 import { Language, LANGUAGES, LANG_CONFIG } from "@/utils/interfaces";
-import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
-import { GitFork, Play, RotateCcw, Save, X } from "lucide-react";
+import { GitFork, Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
-import Input from "@/components/ui/Input";
 import { Label } from "@/components/Label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+
 import type { TemplateResponse } from "@/utils/interfaces";
 import DescriptionSection from "@/components/TemplateDescription";
-import Link from "next/link";
+
+import TemplateHeader from "@/components/TemplateHeader";
 
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-
-function TemplateHeader({
-    template,
-    isOwner,
-    title,
-    setTitle,
-    tags,
-    tagDraft,
-    setTagDraft,
-    onAddTag,
-    onRemoveTag,
-    editingTitle,
-    setEditingTitle,
-    editingTags,
-    setEditingTags,
-    onCancelTitle,
-    onCancelTags,
-}: {
-    template: TemplateResponse;
-    isOwner: boolean;
-    title: string;
-    setTitle: (next: string) => void;
-    tags: string[];
-    tagDraft: string;
-    setTagDraft: (next: string) => void;
-    onAddTag: (e: KeyboardEvent<HTMLInputElement>) => void;
-    onRemoveTag: (tag: string) => void;
-    editingTitle: boolean;
-    setEditingTitle: (next: boolean) => void;
-    editingTags: boolean;
-    setEditingTags: (next: boolean) => void;
-    onCancelTitle: () => void;
-    onCancelTags: () => void;
-}) {
-    const author = template.author;
-
-    return (
-        <div className="mb-6 flex flex-col gap-3">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="flex flex-col gap-2 min-w-0">
-                    {isOwner ? (
-                        <div className="flex flex-wrap items-center gap-2">
-                            {editingTitle ? (
-                                <>
-                                    <Input
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        className="text-3xl font-serif font-semibold tracking-tight border-0 bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-transparent"
-                                        aria-label="Template title"
-                                    />
-                                    <Button variant="ghost" size="sm" onClick={onCancelTitle}>
-                                        Cancel
-                                    </Button>
-                                </>
-                            ) : (
-                                <>
-                                    <h1 className="font-serif text-3xl font-semibold tracking-tight">
-                                        {template.title}
-                                    </h1>
-                                    <Button variant="ghost" size="sm" onClick={() => setEditingTitle(true)}>
-                                        Edit
-                                    </Button>
-                                </>
-                            )}
-                        </div>
-                    ) : (
-                        <h1 className="font-serif text-3xl font-semibold tracking-tight">
-                            {template.title}
-                        </h1>
-                    )}
-
-                    {template.parentTemplate && (
-                        <Link href={`/templates/${template.parentTemplate.id}`}>
-                            <span className="inline-flex w-fit items-center gap-1.5 font-mono text-xs text-muted-foreground">
-                                <GitFork className="size-3.5" />
-                                <p className="text-sm text-muted-foreground">
-                                    {template.parentTemplate.title}
-                                </p>
-                            </span>
-                        </Link>
-                    )}
-                </div>
-
-                {/* Author */}
-                <button
-                    className="flex items-center rounded-full outline-none ring-ring focus-visible:ring-2"
-                    aria-label="Visit Author Profile"
-                    onClick={() => { }}
-                >
-                    <Avatar className="size-10 border">
-                        {author.avatarUrl ? (
-                            <AvatarImage src={author.avatarUrl} alt="" />
-                        ) : null}
-                        <AvatarFallback className="text-xs font-large">
-                            {author.username.slice(0, 1).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                </button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                    {template.isForked && template.parentTemplate && (
-                        <a
-                            href={`/templates/${template.parentTemplate.id}`}
-                            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-                        >
-                            Forked from: {template.parentTemplate.title}
-                        </a>
-                    )}
-
-                    {!isOwner && template.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                            {template.tags.map((tag) => (
-                                <span
-                                    key={tag.name}
-                                    className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
-                                >
-                                    #{tag.name}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {isOwner && (
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between gap-2">
-
-                            {editingTags ? (
-                                <Button variant="ghost" size="sm" onClick={onCancelTags}>
-                                    Cancel
-                                </Button>
-                            ) : (
-                                <Button variant="ghost" size="sm" onClick={() => setEditingTags(true)}>
-                                    Edit tags
-                                </Button>
-                            )}
-                        </div>
-                        {editingTags ? (
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="flex flex-wrap gap-1">
-                                    {tags.map((tag) => (
-                                        <button
-                                            key={tag}
-                                            type="button"
-                                            onClick={() => onRemoveTag(tag)}
-                                            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground transition hover:bg-muted/80"
-                                        >
-                                            #{tag}
-                                            <X className="size-3" />
-                                        </button>
-                                    ))}
-                                </div>
-
-                            </div>
-                        ) : (
-                            <div className="flex flex-wrap gap-1">
-                                {tags.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
-                                    >
-                                        #{tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        {editingTags && <div className="min-w-0 flex-1">
-                            <Input
-                                id="template-tags"
-                                value={tagDraft}
-                                onChange={(e) => setTagDraft(e.target.value)}
-                                onKeyDown={onAddTag}
-                                placeholder="Add a tag and press Enter"
-                            />
-                        </div>}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
 
 function TemplateHeaderSkeleton() {
     return (
@@ -233,11 +49,7 @@ export default function TemplatePage() {
     const [code, setCode] = useState('');
     const [stdin, setStdin] = useState('');
     const [description, setDesc] = useState('');
-    const [title, setTitle] = useState('');
-    const [tags, setTags] = useState<string[]>([]);
-    const [tagDraft, setTagDraft] = useState('');
-    const [editingTitle, setEditingTitle] = useState(false);
-    const [editingTags, setEditingTags] = useState(false);
+
     const [editingStdin, setEditingStdin] = useState(false);
 
     // --- Execution state ---
@@ -258,6 +70,15 @@ export default function TemplatePage() {
     // ---------------------------------------------------------------------------
     // Fetch template
     // ---------------------------------------------------------------------------
+    const reset = useCallback((template: TemplateResponse | null) => {
+        if (!template) return;
+        setCode(template.code);
+        setStdin(template.stdin);
+        setStatus('idle');
+        setStdout('');
+        setStderr('');
+        setRunError(null);
+    }, []);
 
     useEffect(() => {
         if (!id) return;
@@ -281,10 +102,6 @@ export default function TemplatePage() {
                 setCode(t.code);
                 setStdin(t.stdin);
                 setDesc(t.description ?? '');
-                setTitle(t.title);
-                setTags(t.tags.map((tag) => tag.name));
-                setEditingTitle(false);
-                setEditingTags(false);
                 setEditingStdin(false);
             })
             .catch((err) => {
@@ -301,34 +118,6 @@ export default function TemplatePage() {
     // ---------------------------------------------------------------------------
     // Actions
     // ---------------------------------------------------------------------------
-
-    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-        if ((e.key === 'Enter' || e.key === ',') && tagDraft.trim()) {
-            e.preventDefault();
-            const nextTag = tagDraft.trim().replace(/^#/, '');
-            if (!tags.includes(nextTag)) {
-                setTags([...tags, nextTag]);
-            }
-            setTagDraft('');
-        }
-    }, [tagDraft, tags]);
-
-    const removeTag = useCallback((tag: string) => {
-        setTags(tags.filter((current) => current !== tag));
-    }, [tags]);
-
-    const cancelTitleEdit = useCallback(() => {
-        if (!template) return;
-        setTitle(template.title);
-        setEditingTitle(false);
-    }, [template]);
-
-    const cancelTagsEdit = useCallback(() => {
-        if (!template) return;
-        setTags(template.tags.map((tag) => tag.name));
-        setTagDraft('');
-        setEditingTags(false);
-    }, [template]);
 
     const cancelStdinEdit = useCallback(() => {
         if (!template) return;
@@ -372,20 +161,8 @@ export default function TemplatePage() {
         }
     }, [baseUrl]);
 
-    const reset = useCallback(() => {
-        if (!template) return;
-        setCode(template.code);
-        setStdin(template.stdin);
-        setStatus('idle');
-        setStdout('');
-        setStderr('');
-        setRunError(null);
-        setTitle(template.title);
-        setTags(template.tags.map((tag) => tag.name));
-    }, [template]);
-
-    const updateTemplate = useCallback(async () => {
-        if (!id || !template) return;
+    const updateTemplate = useCallback(async (updatePayload: { title?: string, code?: string, description?: string, stdin?: string, tags?: string[] }) => {
+        if (!id) return;
         setSaveError(null);
         setSaveLoading(true);
 
@@ -394,10 +171,7 @@ export default function TemplatePage() {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title,
-                    code,
-                    stdin,
-                    tags,
+                    ...updatePayload
                 }),
             });
 
@@ -406,19 +180,15 @@ export default function TemplatePage() {
                 throw new Error(body.error ?? 'Unable to save template changes.');
             }
 
-            setTemplate({
-                ...template,
-                title,
-                code,
-                stdin,
-                tags: tags.map((name) => ({ name })),
-            });
+            setTemplate(body.template);
+            reset(body.template);
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : 'Unable to save template changes.');
         } finally {
             setSaveLoading(false);
         }
-    }, [id, authFetch, baseUrl, code, stdin, tags, title, template]);
+    }, [id, authFetch, baseUrl]);
+
 
     const forkTemplate = useCallback(async () => {
         if (!template) return;
@@ -430,12 +200,12 @@ export default function TemplatePage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title,
-                    code,
-                    stdin,
-                    language,
-                    description,
-                    tags,
+                    title: template.title,
+                    code: template.code,
+                    stdin: template.stdin,
+                    language: template.language,
+                    description: template.description,
+                    tags: template.tags.map((t) => t.name),
                     forkedSourceId: template.id,
                 }),
             });
@@ -453,21 +223,7 @@ export default function TemplatePage() {
         } finally {
             setForkLoading(false);
         }
-    }, [authFetch, baseUrl, code, description, language, router, tags, template, title]);
-
-    const saveDescription = useCallback(async (next: string) => {
-        if (!id) return;
-        const res = await authFetch(`${baseUrl}/api/templates/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ description: next }),
-        });
-        if (!res.ok) {
-            const body = await res.json();
-            throw new Error(body.error ?? "Failed to save description.");
-        }
-        setDesc(next);
-    }, [id, authFetch, baseUrl]);
+    }, [authFetch, baseUrl, template]);
 
     // ---------------------------------------------------------------------------
     // Render
@@ -482,19 +238,6 @@ export default function TemplatePage() {
                 <TemplateHeader
                     template={template}
                     isOwner={isOwner}
-                    title={title}
-                    setTitle={setTitle}
-                    tags={tags}
-                    tagDraft={tagDraft}
-                    setTagDraft={setTagDraft}
-                    onAddTag={addTag}
-                    onRemoveTag={removeTag}
-                    editingTitle={editingTitle}
-                    setEditingTitle={setEditingTitle}
-                    editingTags={editingTags}
-                    setEditingTags={setEditingTags}
-                    onCancelTitle={cancelTitleEdit}
-                    onCancelTags={cancelTagsEdit}
                 />
             ) : null}
 
@@ -530,7 +273,7 @@ export default function TemplatePage() {
                             </span>
 
                             <div className="ml-auto flex items-center gap-2">
-                                <Button variant="ghost" size="sm" onClick={reset} disabled={loading || !template}>
+                                <Button variant="ghost" size="sm" onClick={() => reset(template)} disabled={loading || !template}>
                                     <RotateCcw className="size-4" /> Reset
                                 </Button>
 
@@ -544,7 +287,7 @@ export default function TemplatePage() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={updateTemplate}
+                                        onClick={() => updateTemplate({ code, stdin })}
                                         disabled={saveLoading || loading || !template}
                                     >
                                         <Save className="size-4" /> Save Changes
@@ -601,9 +344,9 @@ export default function TemplatePage() {
                     {/* Description / README */}
                     {!loading && template && (
                         <DescriptionSection
-                            description={description}
+                            description={template.description}
                             isOwner={isOwner}
-                            onSave={saveDescription}
+                            onSave={(new_desc: string) => updateTemplate({ description: new_desc })}
                         />
                     )}
                 </div>
