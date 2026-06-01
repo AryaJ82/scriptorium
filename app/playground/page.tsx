@@ -20,7 +20,7 @@ import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
 export default function PlaygroundPage() {
 
     const { baseUrl } = useUserSession();
-    const { status, stdout, stderr, runError, run, reset } = useExecution(baseUrl);
+    const { status, stdout, stderr, runError, run, resetExecutionStatus } = useExecution(baseUrl);
 
     // --- Editor state (initialised from template on load) ---
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]);
@@ -30,11 +30,13 @@ export default function PlaygroundPage() {
     const resetCode = useCallback(() => {
         setCode(STARTER_CODE[language] ?? '')
         setStdin('')
-        reset();
-    }, [language, reset]);
+        resetExecutionStatus();
+    }, [language, resetExecutionStatus]);
 
-
-
+    const executeCode = useCallback(() => {
+        run(code, language, stdin);
+    }, [code, language, stdin, run]);
+    
     return (
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
             <div className="mb-6 flex flex-col gap-1">
@@ -79,7 +81,7 @@ export default function PlaygroundPage() {
                         </Button>
                     </SaveTemplateDialogue>
 
-                        <Button size="sm" onClick={() => run(code, language, stdin)} disabled={status === 'running'}>
+                        <Button size="sm" onClick={executeCode} disabled={status === 'running'}>
                             <Play className="size-4" /> Run
                         </Button>
                     </div>

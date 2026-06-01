@@ -7,7 +7,7 @@ import { useUserSession } from '@/contexts/UserSessionContext';
 import { Language } from '@/utils/interfaces';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/Dialog';
 import { Button } from './ui/Button';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Label } from './Label';
 import Textarea from './ui/Textarea';
 import Input from './ui/Input';
@@ -38,7 +38,7 @@ export function SaveTemplateDialogue({
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    function addTag(e: React.KeyboardEvent<HTMLInputElement>) {
+    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
             e.preventDefault();
             if (tagDraft.length >= 25) {
@@ -52,9 +52,9 @@ export function SaveTemplateDialogue({
             if (!tags.includes(t)) setTags([...tags, t]);
             setTagDraft('');
         }
-    }
+    }, [tagDraft, tags]);
 
-    async function handleSaveTemplate(title: string, code?: string, desc?: string, stdin?: string, tags?: string[]) {
+    const handleSaveTemplate = useCallback(async (title: string, code?: string, desc?: string, stdin?: string, tags?: string[]) => {
         const response = await authFetch("/api/templates", {
             method: "POST",
             body: JSON.stringify({
@@ -78,7 +78,7 @@ export function SaveTemplateDialogue({
             return response;
         }
 
-    }
+    }, [authFetch, language, forkedParent]);
 
     if (!session.isAuthenticated) {
         return (

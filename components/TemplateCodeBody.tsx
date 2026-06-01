@@ -30,7 +30,7 @@ export default function TemplateCodeBody({
 ) {
 
     const { baseUrl } = useUserSession();
-    const { status, stdout, stderr, runError, run, reset: resetExecution } = useExecution(baseUrl);
+    const { status, stdout, stderr, runError, run, resetExecutionStatus } = useExecution(baseUrl);
 
     // --- Editor state (initialised from template on load) ---
     const [code, setCode] = useState<string>(template.code);
@@ -42,11 +42,15 @@ export default function TemplateCodeBody({
     const isCodeMutated = (template.code !== code);
     const isStdinMutated = (template.stdin !== stdin);
 
+    const executeCode = useCallback(() => {
+        run(code, template.language, stdin);
+    }, [code, template.language, stdin, run]);
+
     const cancelCodeEdit = useCallback(() => {
         if (!template) return;
         setCode(template.code);
-        resetExecution();
-    }, [resetExecution, template.code]);
+        resetExecutionStatus();
+    }, [resetExecutionStatus, template.code]);
 
 
     const cancelStdinEdit = useCallback(() => {
@@ -56,9 +60,13 @@ export default function TemplateCodeBody({
 
     const handleSave = useCallback(async (code: string, stdin: string) => {
         setSaveLoading(true);
-        await updateTemplate({ code, stdin });
-        setEditingStdin(false);
-        setSaveLoading(false);
+        updateTemplate({ code, stdin })
+            .then(() => {
+                setEditingStdin(false);
+            })
+            .finally(() => {
+                setSaveLoading(false);
+            });
     }, [updateTemplate, setSaveLoading])
 
     return (
@@ -96,7 +104,7 @@ export default function TemplateCodeBody({
                                 </Button>
                             )}
 
-                            <Button size="sm" onClick={() => run(code, template.language, stdin)} disabled={loading || status === 'running'}>
+                            <Button size="sm" onClick={executeCode} disabled={loading || status === 'running'}>
                                 <Play className="size-4" /> Run
                             </Button>
                         </div>

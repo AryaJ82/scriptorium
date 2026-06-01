@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Check, Pencil, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { TemplateResponse } from "@/utils/interfaces";
@@ -26,17 +26,17 @@ export default function DescriptionSection({ template, isOwner, onSave }: Descri
     if (editing) textareaRef.current?.focus();
   }, [editing]);
 
-  function handleEdit() {
+  const handleEdit = useCallback(() => {
     setDraft(description);
     setEditing(true);
-  }
+  }, [description]);
 
-  function handleCancel() {
+  const handleCancel = useCallback(() => {
     setDraft(description);
     setEditing(false);
-  }
+  }, [description]);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     setSaving(true);
     try {
       await onSave(draft);
@@ -44,7 +44,7 @@ export default function DescriptionSection({ template, isOwner, onSave }: Descri
     } finally {
       setSaving(false);
     }
-  }
+  }, [draft, onSave]);
 
   const isEmpty = !description.trim();
 

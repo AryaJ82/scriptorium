@@ -43,12 +43,12 @@ export function useExecution(baseUrl: string) {
         }
     }, [baseUrl]);
 
-    const reset = useCallback(() => {
+    const resetExecutionStatus = useCallback(() => {
         setStatus('idle');
         setStdout('');
         setStderr('');
         setRunError(null);
     }, []);
 
-    return { status, stdout, stderr, runError, run, reset };
+    return { status, stdout, stderr, runError, run, resetExecutionStatus };
 }
