@@ -39,9 +39,16 @@ export function SaveTemplateDialogue({
     const router = useRouter();
 
     function addTag(e: React.KeyboardEvent<HTMLInputElement>) {
-        if ((e.key === 'Enter' || e.key === ',') && tagDraft.trim()) {
+        if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
             e.preventDefault();
-            const t = tagDraft.trim().replace(/^#/, '');
+            if (tagDraft.length >= 25) {
+                toast.error("Tag is too long.");
+                return;
+            }
+
+            e.preventDefault();
+            const t = tagDraft.trim()
+
             if (!tags.includes(t)) setTags([...tags, t]);
             setTagDraft('');
         }
@@ -68,7 +75,7 @@ export function SaveTemplateDialogue({
         } else if (response.ok) {
             return response;
         } else {
-            return response; 
+            return response;
         }
 
     }
@@ -189,7 +196,7 @@ export function SaveTemplateDialogue({
                     >
                         Create Template
                     </Button>
-                    <Toaster richColors/>
+                    <Toaster richColors />
                 </DialogFooter>
             </DialogContent>
         </Dialog>
