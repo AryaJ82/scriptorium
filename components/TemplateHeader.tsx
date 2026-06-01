@@ -52,6 +52,8 @@ export default function TemplateHeader({
     // Actions
     // ---------------------------------------------------------------------------
 
+
+    /// ---  Tag editing handlers ---
     const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
         if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
             e.preventDefault();
@@ -72,16 +74,28 @@ export default function TemplateHeader({
         setTags(tags.filter((current) => current !== tag));
     }, [tags]);
 
-    const cancelTitleEdit = useCallback(() => {
-        setTitle(template.title);
-        setEditingTitle(false);
-    }, [template.title]);
-
     const cancelTagsEdit = useCallback(() => {
         setTags(template.tags.map((tag) => tag.name));
         setTagDraft('');
         setEditingTags(false);
     }, [template.tags]);
+
+    const saveTags = useCallback(async () => {
+        setTagsSaving(true);
+        try {
+            await onSaveTags(tags);
+            setEditingTags(false);
+        } finally {
+            setTagsSaving(false);
+        }
+    }, [onSaveTags, tags]);
+
+    // --- Title editing handlers ---
+    const cancelTitleEdit = useCallback(() => {
+        setTitle(template.title);
+        setEditingTitle(false);
+    }, [template.title]);
+
 
     const saveTitle = useCallback(async () => {
         if (!onSaveTitle) {
@@ -97,17 +111,7 @@ export default function TemplateHeader({
         }
     }, [onSaveTitle, title]);
 
-    const saveTags = useCallback(async () => {
-        setTagsSaving(true);
-        try {
-            await onSaveTags(tags);
-            setEditingTags(false);
-        } finally {
-            setTagsSaving(false);
-        }
-    }, [onSaveTags, tags]);
-
-
+    // ---- Deletion and Forking handlers ---
     const confirmDelete = useCallback(async () => {
         setDeleteLoading(true);
         try {
