@@ -38,23 +38,25 @@ export default function TemplateCodeBody({
 
     const [editingStdin, setEditingStdin] = useState(false);
 
-    const isMutated = (template.code !== code) || (template.stdin !== stdin);
+    // const isMutated = (template.code !== code) || (template.stdin !== stdin);
+    const isCodeMutated = (template.code !== code);
+    const isStdinMutated = (template.stdin !== stdin);
 
-    const reset = useCallback((template: TemplateResponse) => {
+    const cancelCodeEdit = useCallback(() => {
         if (!template) return;
         setCode(template.code);
-        setStdin(template.stdin);
         resetExecution();
-    }, [resetExecution]);
+    }, [resetExecution, template.code]);
+
 
     const cancelStdinEdit = useCallback(() => {
         setStdin(template.stdin);
         setEditingStdin(false);
-    }, [template]);
+    }, [template.stdin]);
 
     const handleSave = useCallback(async (code: string, stdin: string) => {
         setSaveLoading(true);
-        await updateTemplate({code, stdin});
+        await updateTemplate({ code, stdin });
         setEditingStdin(false);
         setSaveLoading(false);
     }, [updateTemplate, setSaveLoading])
@@ -78,12 +80,12 @@ export default function TemplateCodeBody({
                         </span>
 
                         <div className="ml-auto flex items-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => reset(template)} disabled={loading || !template}>
+                            {isCodeMutated && <Button variant="ghost" size="sm" onClick={cancelCodeEdit} disabled={loading || !template}>
                                 <RotateCcw className="size-4" /> Reset
-                            </Button>
+                            </Button>}
 
 
-                            {isOwner && isMutated && (
+                            {isOwner && (isStdinMutated || isCodeMutated) && (
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -120,7 +122,7 @@ export default function TemplateCodeBody({
                                     </Button>
                                 ) : (
                                     <Button variant="edit" onClick={() => setEditingStdin(true)}>
-                                        <Pencil className="size-3" /> Edit Stdin
+                                        <Pencil className="size-3" /> Edit
                                     </Button>
                                 )
                             )}
