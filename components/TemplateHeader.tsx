@@ -17,7 +17,7 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { validateTagValue } from "@/utils/inputValidation/generalValidation";
-import DeleteDialogue from "./ui/DeleteDialogue";
+import ActionDialogue from "./ui/ActionDialog";
 
 export default function TemplateHeader({
     template,
@@ -25,14 +25,20 @@ export default function TemplateHeader({
     onSaveTitle,
     onSaveTags,
     setSaveError,
+    setDeleteError,
+    setForkError,
     onDelete,
+    onFork,
 }: {
     template: TemplateResponse;
     isOwner: boolean;
     onSaveTitle: (title: string) => Promise<void>;
     onSaveTags: (tags: string[]) => Promise<void>;
     setSaveError: (saveError: string | null) => void;
+    setDeleteError: (deleteError: string | null) => void;
+    setForkError: (forkError: string | null) => void;
     onDelete: () => Promise<void>;
+    onFork: () => Promise<void>;
 }) {
     const author = template.author;
     const [title, setTitle] = useState(template.title);
@@ -44,7 +50,10 @@ export default function TemplateHeader({
     const [tagsSaving, setTagsSaving] = useState(false);
 
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-    const [deleteSaving, setDeleteSaving] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const [isForkOpen, setIsForkOpen] = useState(false);
+    const [forkLoading, setForkLoading] = useState(false);
     // ---------------------------------------------------------------------------
     // Actions
     // ---------------------------------------------------------------------------
@@ -106,16 +115,29 @@ export default function TemplateHeader({
 
 
     const confirmDelete = useCallback(async () => {
-        setDeleteSaving(true);
+        setDeleteLoading(true);
         try {
             await onDelete();
         } catch (err: any) {
             setSaveError(err?.message || 'Failed to delete template.');
         } finally {
-            setDeleteSaving(false);
+            setDeleteLoading(false);
             setIsDeleteOpen(false);
         }
     }, [onDelete, setSaveError]);
+
+    const confirmFork = useCallback(async () => {
+        setForkLoading(true);
+        try {
+            await onFork();
+        } catch (err: any) {
+            setForkError(err?.message || 'Failed to fork template.');
+        } finally {
+            setForkLoading(false);
+            setIsForkOpen(false);
+        }
+    }, [onFork, setForkError]);
+
 
     return (
         <div className="mb-6 flex flex-col gap-3">
@@ -150,12 +172,14 @@ export default function TemplateHeader({
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem> <GitBranch className="size-3" /> Fork Template</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading}>
+                            <GitBranch className="size-3" /> Fork Template
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {isOwner && (
                             <>
-                                <DropdownMenuItem variant="destructive" onClick={() => setIsDeleteOpen(true)} disabled={deleteSaving}>
-                                        <Trash className="size-3" /> Delete
+                                <DropdownMenuItem variant="destructive" onClick={() => setIsDeleteOpen(true)} disabled={deleteLoading}>
+                                    <Trash className="size-3" /> Delete
                                 </DropdownMenuItem>
                             </>
                         )}
@@ -164,13 +188,23 @@ export default function TemplateHeader({
             </div>
 
             {isDeleteOpen && (
-                <DeleteDialogue
+                <ActionDialogue
                     title={`Delete template "${template.title}"?`}
                     description="Are you sure you want to delete this template? This action cannot be undone."
-                    confirmDelete={confirmDelete}
-                    isDeleteOpen={isDeleteOpen}
-                    setIsDeleteOpen={setIsDeleteOpen}
-                    deleteSaving={deleteSaving}
+                    confirmAction={confirmDelete}
+                    isOpen={isDeleteOpen}
+                    setIsOpen={setIsDeleteOpen}
+                    actionLoading={deleteLoading}
+                />
+            )}
+            {isForkOpen && (
+                <ActionDialogue
+                    title={`Fork template "${template.title}"?`}
+                    description="Are you sure you want to fork this template?"
+                    confirmAction={confirmFork}
+                    isOpen={isForkOpen}
+                    setIsOpen={setIsForkOpen}
+                    actionLoading={forkLoading}
                 />
             )}
             <div className="flex flex-col items-start gap-2">
