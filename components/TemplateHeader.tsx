@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import { GitFork, X, Menu, Pencil } from "lucide-react";
+import { GitFork, X, Menu, Pencil, GitBranch, Trash } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
 import {
     DropdownMenu,
@@ -132,16 +132,16 @@ export default function TemplateHeader({
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Original</DropdownMenuItem>
+                        <DropdownMenuItem> <GitBranch className="size-3" /> Fork Template</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {isOwner && (
                             <>
                                 <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                                    Delete
+                                    <Trash className="size-3" /> Delete
                                 </DropdownMenuItem>
                             </>
                         )}
-                        <DropdownMenuItem>Fork Template</DropdownMenuItem>
+
 
                     </DropdownMenuContent>
                 </DropdownMenu>
