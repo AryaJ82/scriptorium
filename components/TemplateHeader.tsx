@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Textarea from "@/components/ui/Textarea";
 import { GitFork, X } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
 import { useCallback, useEffect, useState } from "react";
@@ -32,6 +33,15 @@ export default function TemplateHeader({
         setTitle(template.title);
         setTags(template.tags.map((tag) => tag.name));
     }, [template.title, template.tags]);
+
+    useEffect(() => {
+        // Auto-grow textarea for title editing
+        const textarea = document.querySelector('textarea[aria-label="Template title"]') as HTMLTextAreaElement;
+        if (textarea && editingTitle) {
+            textarea.style.height = '0px';
+            textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.3) + 'px';
+        }
+    }, [title, editingTitle]);
 
 
     // ---------------------------------------------------------------------------
@@ -95,35 +105,38 @@ export default function TemplateHeader({
             <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="flex flex-col gap-2 min-w-0">
                     {isOwner ? (
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-col gap-2 w-full">
                             {editingTitle ? (
                                 <>
-                                    <Input
+                                    <Textarea
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        className="text-3xl font-serif font-semibold tracking-tight border-0 bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-transparent"
+                                        className="text-3xl font-serif font-semibold tracking-tight border-0 bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-transparent resize-none overflow-hidden"
                                         aria-label="Template title"
+                                        rows={1}
                                     />
-                                    <Button variant="ghost" size="sm" onClick={cancelTitleEdit} disabled={titleSaving}>
-                                        Cancel
-                                    </Button>
-                                    <Button variant="outline" size="sm" onClick={() => saveTitle(title)} disabled={titleSaving || !title.trim()}>
-                                        {titleSaving ? 'Saving…' : 'Save'}
-                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button variant="ghost" size="sm" onClick={cancelTitleEdit} disabled={titleSaving}>
+                                            Cancel
+                                        </Button>
+                                        <Button variant="outline" size="sm" onClick={() => saveTitle(title)} disabled={titleSaving || !title.trim()}>
+                                            {titleSaving ? 'Saving…' : 'Save'}
+                                        </Button>
+                                    </div>
                                 </>
                             ) : (
-                                <>
-                                    <h1 className="font-serif text-3xl font-semibold tracking-tight">
+                                <div className="flex items-start gap-2">
+                                    <h1 className="font-serif text-3xl font-semibold tracking-tight break-all">
                                         {template.title}
                                     </h1>
                                     <Button variant="ghost" size="sm" onClick={() => setEditingTitle(true)}>
                                         Edit
                                     </Button>
-                                </>
+                                </div>
                             )}
                         </div>
                     ) : (
-                        <h1 className="font-serif text-3xl font-semibold tracking-tight">
+                        <h1 className="font-serif text-3xl font-semibold tracking-tight wrap-break-word ">
                             {template.title}
                         </h1>
                     )}
