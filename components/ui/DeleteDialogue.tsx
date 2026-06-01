@@ -4,31 +4,40 @@ import { Dialog, DialogContent, DialogClose, DialogDescription, DialogFooter, Di
 import { Button } from "./Button";
 
 export default function DeleteDialogue({
+    title,
+    description,
     isDeleteOpen,
     setIsDeleteOpen,
     confirmDelete,
-    deleteSaving
+    deleteSaving,
 }: {
+    title?: string,
+    description?: string,
     isDeleteOpen: boolean,
     setIsDeleteOpen: (open: boolean) => void,
     confirmDelete: () => void,
-    deleteSaving: boolean
+    deleteSaving: boolean,
+
 }) {
     return (
-        <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <Dialog open={isDeleteOpen} onOpenChange={(open) => setIsDeleteOpen(open)}>
             <DialogTrigger asChild>
                 <Button variant="destructive" size="sm">Delete</Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Delete template</DialogTitle>
+                    <DialogTitle
+                    className="text-red-500  tracking-tight break-all leading-tight"
+                    >{title ?? "Delete Template"}</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to delete this template? This action cannot be undone.
+                        {description ?? "Are you sure you want to delete this template? This action cannot be undone."}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button variant="ghost" size="sm">Cancel</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setIsDeleteOpen(false)} disabled={deleteSaving}>
+                            Cancel
+                        </Button>
                     </DialogClose>
                     <Button variant="destructive" size="sm" onClick={confirmDelete} disabled={deleteSaving}>
                         {deleteSaving ? 'Deleting…' : 'Delete'}

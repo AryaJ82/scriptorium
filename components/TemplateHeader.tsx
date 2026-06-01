@@ -17,6 +17,7 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { validateTagValue } from "@/utils/inputValidation/generalValidation";
+import DeleteDialogue from "./ui/DeleteDialogue";
 
 export default function TemplateHeader({
     template,
@@ -31,7 +32,7 @@ export default function TemplateHeader({
     onSaveTitle: (title: string) => Promise<void>;
     onSaveTags: (tags: string[]) => Promise<void>;
     setSaveError: (saveError: string | null) => void;
-    onDelete?: () => Promise<void>;
+    onDelete: () => Promise<void>;
 }) {
     const author = template.author;
     const [title, setTitle] = useState(template.title);
@@ -41,6 +42,9 @@ export default function TemplateHeader({
     const [editingTags, setEditingTags] = useState(false);
     const [titleSaving, setTitleSaving] = useState(false);
     const [tagsSaving, setTagsSaving] = useState(false);
+
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [deleteSaving, setDeleteSaving] = useState(false);
     // ---------------------------------------------------------------------------
     // Actions
     // ---------------------------------------------------------------------------
@@ -100,6 +104,19 @@ export default function TemplateHeader({
         }
     }, [onSaveTags, tags]);
 
+
+    const confirmDelete = useCallback(async () => {
+        setDeleteSaving(true);
+        try {
+            await onDelete();
+        } catch (err: any) {
+            setSaveError(err?.message || 'Failed to delete template.');
+        } finally {
+            setDeleteSaving(false);
+            setIsDeleteOpen(false);
+        }
+    }, [onDelete, setSaveError]);
+
     return (
         <div className="mb-6 flex flex-col gap-3">
 
@@ -137,16 +154,25 @@ export default function TemplateHeader({
                         <DropdownMenuSeparator />
                         {isOwner && (
                             <>
-                                <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                                    <Trash className="size-3" /> Delete
+                                <DropdownMenuItem variant="destructive" onClick={() => setIsDeleteOpen(true)} disabled={deleteSaving}>
+                                        <Trash className="size-3" /> Delete
                                 </DropdownMenuItem>
                             </>
                         )}
-
-
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
+            {isDeleteOpen && (
+                <DeleteDialogue
+                    title={`Delete template "${template.title}"?`}
+                    description="Are you sure you want to delete this template? This action cannot be undone."
+                    confirmDelete={confirmDelete}
+                    isDeleteOpen={isDeleteOpen}
+                    setIsDeleteOpen={setIsDeleteOpen}
+                    deleteSaving={deleteSaving}
+                />
+            )}
             <div className="flex flex-col items-start gap-2">
 
                 <div className="flex flex-col gap-2 min-w-0">
@@ -287,7 +313,7 @@ export default function TemplateHeader({
                                 onKeyDown={(e) => addTag(e, tagDraft)}
                                 placeholder="Add a tag and press Enter"
                             />
-                            
+
                         </div>}
                     </div>
                 )}

@@ -44,11 +44,7 @@ export default function TemplatePage() {
     const [saveLoading, setSaveLoading] = useState(false);
     const [forkError, setForkError] = useState<string | null>(null);
     const [forkLoading, setForkLoading] = useState(false);
-    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-    const [deleteSaving, setDeleteSaving] = useState(false);
 
-
-    // Derived: is the current user the author?
     const isOwner = !!session && template?.authorId === session.id;
 
     // ---------------------------------------------------------------------------
@@ -162,7 +158,7 @@ export default function TemplatePage() {
         setSaveLoading(true);
 
         try {
-            const response = await authFetch(`${baseUrl}/api/templates`, {
+            const response = await authFetch(`${baseUrl}/api/templates/${template.id}`, {
                 method: 'DELETE',
             });
 
@@ -182,17 +178,7 @@ export default function TemplatePage() {
     }, [authFetch, baseUrl, template]);
 
 
-    const confirmDelete = useCallback(async () => {
-        setDeleteSaving(true);
-        try {
-            await deleteTemplate();
-        } catch (err: any) {
-            if (setSaveError) setSaveError(err?.message || 'Failed to delete template.');
-        } finally {
-            setDeleteSaving(false);
-            setIsDeleteOpen(false);
-        }
-    }, [deleteTemplate, setSaveError]);
+
     // ---------------------------------------------------------------------------
     // Render
     // ---------------------------------------------------------------------------
@@ -209,6 +195,7 @@ export default function TemplatePage() {
                     onSaveTitle={(title: string) => updateTemplate({ title })}
                     onSaveTags={(tags: string[]) => updateTemplate({ tags })}
                     setSaveError={setSaveError}
+                    onDelete={deleteTemplate}
                 />
             ) : null}
 
