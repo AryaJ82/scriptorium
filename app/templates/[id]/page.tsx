@@ -183,10 +183,11 @@ export default function TemplatePage() {
                 { template && <TemplateCodeBody
                     template={template}
                     isOwner={isOwner}
-                    onSave={updateTemplate}
+                    updateTemplate={updateTemplate}
                     loading={loading}
                     setLoading={setLoading}
                     saveLoading={saveLoading}
+                    setSaveLoading={setSaveLoading}
                 />}
 
                 {/* Description / README */}

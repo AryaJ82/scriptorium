@@ -12,17 +12,19 @@ import { useCallback, useState } from "react";
 export default function TemplateCodeBody({
     template,
     isOwner,
-    onSave,
+    updateTemplate,
     loading,
     setLoading,
-    saveLoading
+    saveLoading,
+    setSaveLoading
 }: {
     template: TemplateResponse,
     isOwner: boolean,
-    onSave: ({ }) => Promise<void>,
+    updateTemplate: ({ }) => Promise<void>,
     loading: boolean,
     setLoading: (loading: boolean) => void,
     saveLoading: boolean,
+    setSaveLoading: (loading: boolean) => void,
 }
 ) {
 
@@ -39,7 +41,7 @@ export default function TemplateCodeBody({
     const [stderr, setStderr] = useState<string>('');
     const [runError, setRunError] = useState<string | null>(null);
 
-    const isMutated = (template.code === code) && (template.stdin === stdin);
+    const isMutated = (template.code !== code) || (template.stdin !== stdin);
 
     const reset = useCallback((template: TemplateResponse | null) => {
         if (!template) return;
@@ -88,10 +90,16 @@ export default function TemplateCodeBody({
     }, [baseUrl]);
 
     const cancelStdinEdit = useCallback(() => {
-        if (!template) return;
         setStdin(template.stdin);
         setEditingStdin(false);
     }, [template]);
+
+    const handleSave = useCallback(async (code: string, stdin: string) => {
+        setSaveLoading(true);
+        await updateTemplate({code, stdin});
+        setEditingStdin(false);
+        setSaveLoading(false);
+    }, [updateTemplate, setSaveLoading])
 
     return (
         <div className="flex flex-col gap-3">
@@ -117,11 +125,11 @@ export default function TemplateCodeBody({
                             </Button>
 
 
-                            {isOwner && (
+                            {isOwner && isMutated && (
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => onSave({ code, stdin })}
+                                    onClick={() => handleSave(code, stdin)}
                                     disabled={saveLoading || loading || !template}
                                 >
                                     <Save className="size-4" /> Save Changes
