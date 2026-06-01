@@ -39,10 +39,9 @@ export default function TemplatePage() {
     const [loading, setLoading] = useState(true);
 
     // --- Update / Delete / fork state ---
-    const [saveError, setSaveError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
-    const [forkError, setForkError] = useState<string | null>(null);
+
 
     const isOwner = !!session && template?.authorId === session.id;
 
@@ -89,7 +88,7 @@ export default function TemplatePage() {
 
     const updateTemplate = useCallback(async (updatePayload: { title?: string, code?: string, description?: string, stdin?: string, tags?: string[] }) => {
         if (!id) return;
-        setSaveError(null);
+        setActionError(null);
         setSaveLoading(true);
 
         try {
@@ -108,16 +107,17 @@ export default function TemplatePage() {
 
             setTemplate(body.template);
         } catch (error) {
-            setSaveError(error instanceof Error ? error.message : 'Unable to save template changes.');
+            setActionError(error instanceof Error ? error.message : 'Unable to save template changes.');
             return
         } finally {
             setSaveLoading(false);
         }
     }, [id, authFetch, baseUrl]);
 
+
     const forkTemplate = useCallback(async () => {
         if (!template) return;
-        setForkError(null);
+        setActionError(null);
 
         try {
             const response = await authFetch(`${baseUrl}/api/templates`, {
@@ -143,14 +143,15 @@ export default function TemplatePage() {
                 router.push(`/templates/${body.id}`);
             }
         } catch (error) {
-            setForkError(error instanceof Error ? error.message : 'Unable to fork template.');
+            setActionError(error instanceof Error ? error.message : 'Unable to fork template.');
         }
     }, [authFetch, baseUrl, template]);
 
 
+
     const deleteTemplate = useCallback(async () => {
         if (!template || !session || template.authorId !== session?.id) return;
-        setDeleteError(null);
+        setActionError(null);
 
         try {
             const response = await authFetch(`${baseUrl}/api/templates/${template.id}`, {
@@ -166,9 +167,10 @@ export default function TemplatePage() {
             router.push(`/playground`);
 
         } catch (error) {
-            setDeleteError(error instanceof Error ? error.message : 'Unable to delete template.');
+            setActionError(error instanceof Error ? error.message : 'Unable to delete template.');
         }
     }, [authFetch, baseUrl, template]);
+
 
 
 
@@ -201,21 +203,10 @@ export default function TemplatePage() {
                     </div>
                 )}
 
-                {(saveError) && (
+                {/* Action error (save, delete, fork) */}
+                {actionError && (
                     <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm text-destructive">{saveError}</p>
-                    </div>
-                )}
-
-                {(forkError) && (
-                    <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm text-destructive">{forkError}</p>
-                    </div>
-                )}
-
-                {(deleteError) && (
-                    <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm text-destructive">{deleteError}</p>
+                        <p className="text-sm text-destructive">{actionError}</p>
                     </div>
                 )}
 
