@@ -110,6 +110,7 @@ export default function TemplatePage() {
             setTemplate(body.template);
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : 'Unable to save template changes.');
+            return 
         } finally {
             setSaveLoading(false);
         }
@@ -165,6 +166,7 @@ export default function TemplatePage() {
                     isOwner={isOwner}
                     onSaveTitle={(title: string) => updateTemplate({ title })}
                     onSaveTags={(tags: string[]) => updateTemplate({ tags })}
+                    setSaveError={setSaveError}
                 />
             ) : null}
 

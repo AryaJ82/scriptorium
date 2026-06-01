@@ -14,11 +14,13 @@ export default function TemplateHeader({
     isOwner,
     onSaveTitle,
     onSaveTags,
+    setSaveError,
 }: {
     template: TemplateResponse;
     isOwner: boolean;
     onSaveTitle: (title: string) => Promise<void>;
     onSaveTags: (tags: string[]) => Promise<void>;
+    setSaveError: (saveError: string | null) => void;
 }) {
     const author = template.author;
     const [title, setTitle] = useState(template.title);
@@ -28,11 +30,6 @@ export default function TemplateHeader({
     const [editingTags, setEditingTags] = useState(false);
     const [titleSaving, setTitleSaving] = useState(false);
     const [tagsSaving, setTagsSaving] = useState(false);
-
-    useEffect(() => {
-        setTitle(template.title);
-        setTags(template.tags.map((tag) => tag.name));
-    }, [template.title, template.tags]);
 
     useEffect(() => {
         // Auto-grow textarea for title editing
@@ -49,9 +46,13 @@ export default function TemplateHeader({
     // ---------------------------------------------------------------------------
 
     const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-        if ((e.key === 'Enter' || e.key === ',') && tagDraft.trim()) {
+        if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
             e.preventDefault();
-            const nextTag = tagDraft.trim().replace(/^#/, '');
+            if (tagDraft.length >= 25){
+                setSaveError("Tag is too long.");
+                return;
+            }
+            const nextTag = tagDraft.trim();
             if (!tags.includes(nextTag)) {
                 setTags([...tags, nextTag]);
             }
