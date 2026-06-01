@@ -80,8 +80,7 @@ export function UserMenu() {
         <DropdownMenuItem
           variant="destructive"
           onSelect={async () => {
-            await logout()
-            router.push('/')
+            await logout();
           }}
         >
           <LogOut className="size-4" /> Log out
