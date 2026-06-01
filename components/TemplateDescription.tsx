@@ -3,14 +3,16 @@
 import { useState, useRef, useEffect } from "react";
 import { Check, Pencil, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { TemplateResponse } from "@/utils/interfaces";
 
 interface DescriptionSectionProps {
-  description: string;
+  template: TemplateResponse;
   isOwner: boolean;
   onSave: (next: string) => Promise<void>;
 }
 
-export default function DescriptionSection({ description, isOwner, onSave }: DescriptionSectionProps) {
+export default function DescriptionSection({ template, isOwner, onSave }: DescriptionSectionProps) {
+  const description = template.description;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(description);
   const [saving, setSaving] = useState(false);

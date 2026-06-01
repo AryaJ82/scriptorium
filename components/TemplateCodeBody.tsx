@@ -20,7 +20,7 @@ export default function TemplateCodeBody({
 }: {
     template: TemplateResponse,
     isOwner: boolean,
-    updateTemplate: ({ }) => Promise<void>,
+    updateTemplate: (updates: { code?: string; stdin?: string }) => Promise<void>,
     loading: boolean,
     setLoading: (loading: boolean) => void,
     saveLoading: boolean,

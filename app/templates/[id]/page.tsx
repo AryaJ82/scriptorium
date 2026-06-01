@@ -180,10 +180,10 @@ export default function TemplatePage() {
                     </div>
                 )}
 
-                { template && <TemplateCodeBody
+                {template && <TemplateCodeBody
                     template={template}
                     isOwner={isOwner}
-                    updateTemplate={updateTemplate}
+                    updateTemplate={(updates: { code?: string; stdin?: string }) => updateTemplate(updates)}
                     loading={loading}
                     setLoading={setLoading}
                     saveLoading={saveLoading}
@@ -193,7 +193,7 @@ export default function TemplatePage() {
                 {/* Description / README */}
                 {!loading && template && (
                     <DescriptionSection
-                        description={template.description}
+                        template={template}
                         isOwner={isOwner}
                         onSave={(new_desc: string) => updateTemplate({ description: new_desc })}
                     />
