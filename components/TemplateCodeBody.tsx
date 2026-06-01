@@ -26,7 +26,7 @@ export default function TemplateCodeBody({
 }
 ) {
 
-    const { session, baseUrl } = useUserSession();
+    const { baseUrl } = useUserSession();
     // --- Execution state ---
     // --- Editor state (initialised from template on load) ---
     const [code, setCode] = useState<string>(template.code);
@@ -150,7 +150,7 @@ export default function TemplateCodeBody({
                             {(
                                 editingStdin ? (
                                     <Button variant="ghost" size="sm" onClick={cancelStdinEdit}>
-                                        Cancel
+                                        Reset
                                     </Button>
                                 ) : (
                                     <Button variant="ghost" size="sm" onClick={() => setEditingStdin(true)}>
