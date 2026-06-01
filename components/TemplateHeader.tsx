@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import { GitFork, X, Menu } from "lucide-react";
+import { GitFork, X, Menu, Pencil } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
 import {
     DropdownMenu,
@@ -111,7 +111,7 @@ export default function TemplateHeader({
                         aria-label="Visit Author Profile"
                         onClick={() => { }}
                     >
-                        
+
                         <Avatar className="size-8 border">
                             {author.avatarUrl ? (<AvatarImage src={author.avatarUrl} alt="" />) : null}
                             <AvatarFallback className="text-xs font-large">
@@ -136,7 +136,6 @@ export default function TemplateHeader({
                         <DropdownMenuSeparator />
                         {isOwner && (
                             <>
-                                <DropdownMenuItem>Duplicate</DropdownMenuItem>
                                 <DropdownMenuItem variant="destructive" onClick={onDelete}>
                                     Delete
                                 </DropdownMenuItem>
@@ -175,8 +174,8 @@ export default function TemplateHeader({
                                     <h1 className="font-serif text-3xl font-semibold tracking-tight break-all leading-tight">
                                         {template.title}
                                     </h1>
-                                    <Button variant="ghost" size="sm" onClick={() => setEditingTitle(true)}>
-                                        Edit
+                                    <Button variant="edit" onClick={() => setEditingTitle(true)}>
+                                        <Pencil className="size-3" /> Edit Title
                                     </Button>
                                 </div>
                             )}
@@ -241,11 +240,9 @@ export default function TemplateHeader({
                                 </>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <Button variant="ghost" size="sm" onClick={() => setEditingTags(true)}>
-                                        Edit tags
+                                    <Button variant="edit" onClick={() => setEditingTags(true)}>
+                                        <Pencil className="size-3" /> Edit Tags
                                     </Button>
-
-
                                 </div>
                             )}
                         </div>

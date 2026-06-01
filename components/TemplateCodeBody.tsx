@@ -2,7 +2,7 @@
 import { LANG_CONFIG, TemplateResponse } from "@/utils/interfaces";
 import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
-import { Play, RotateCcw, Save } from "lucide-react";
+import { Pencil, Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
 import { Label } from "@/components/Label";
@@ -161,8 +161,8 @@ export default function TemplateCodeBody({
                                         Reset
                                     </Button>
                                 ) : (
-                                    <Button variant="ghost" size="sm" onClick={() => setEditingStdin(true)}>
-                                        Edit
+                                    <Button variant="edit" onClick={() => setEditingStdin(true)}>
+                                        <Pencil className="size-3" /> Edit Stdin
                                     </Button>
                                 )
                             )}
