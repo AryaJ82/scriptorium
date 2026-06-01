@@ -54,12 +54,12 @@ export function isValidCUID(value: unknown): boolean {
 
 function validateTagValue(tag: unknown): ValidationError | null {
     if (!isString(tag) || tag === "") {
-        return createError("Each tag should be a non-empty string");
+        return createError("Tags should not be a non-empty string");
     }
-    if (tag.length > 50) {
-        return createError("Each tag must be less than 50 characters");
+    if (tag.length > 25) {
+        return createError("Each tag must be less than 25 characters");
     }
-    if (/[\s,&A-Z]/.test(tag)) {
+    if (/[\s,&A-Z#]/.test(tag)) {
         return createError("Invalid character in tag");
     }
     return null;
@@ -73,9 +73,9 @@ export function validateTagsArray(tags: unknown): ValidationError | null {
         return createError("Tags should be an array of strings");
     }
     for (const tag of tags) {
-        const validated = validateTagValue(tag);
-        if (!validated) {
-            return validated;
+        let error = validateTagValue(tag);
+        if (error) {
+            return error;
         }
     }
     return null;
