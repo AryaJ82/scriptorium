@@ -7,6 +7,7 @@ import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
 import { Label } from "@/components/Label";
 import { useUserSession } from "@/contexts/UserSessionContext";
+import { useExecution } from "@/lib/useExecution";
 import { useCallback, useState } from "react";
 
 export default function TemplateCodeBody({
@@ -29,17 +30,13 @@ export default function TemplateCodeBody({
 ) {
 
     const { baseUrl } = useUserSession();
-    // --- Execution state ---
+    const { status, stdout, stderr, runError, run, reset: resetExecution } = useExecution(baseUrl);
+
     // --- Editor state (initialised from template on load) ---
     const [code, setCode] = useState<string>(template.code);
     const [stdin, setStdin] = useState<string>(template.stdin);
 
     const [editingStdin, setEditingStdin] = useState(false);
-
-    const [status, setStatus] = useState<RunStatus>('idle');
-    const [stdout, setStdout] = useState<string>('');
-    const [stderr, setStderr] = useState<string>('');
-    const [runError, setRunError] = useState<string | null>(null);
 
     const isMutated = (template.code !== code) || (template.stdin !== stdin);
 
@@ -47,47 +44,8 @@ export default function TemplateCodeBody({
         if (!template) return;
         setCode(template.code);
         setStdin(template.stdin);
-        setStatus('idle');
-        setStdout('');
-        setStderr('');
-        setRunError(null);
-    }, []);
-
-    const run = useCallback(async (code: string, language: string, stdin: string) => {
-        setStatus('running');
-        setStdout('');
-        setStderr('');
-        setRunError(null);
-
-        try {
-            const res = await fetch(`${baseUrl}/api/execution`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, language, stdin }),
-            });
-            const body = await res.json();
-
-            if (res.ok) {
-                setStatus("success");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
-            } else if (res.status === 408) {
-                setStatus("timeout");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
-            } else if (res.status === 413) {
-                setStatus("error");
-                setStdout(body.stdout);
-                setStderr(body.error);
-            } else {
-                setStatus("error");
-                setRunError(body.error ?? "An error has occurred.");
-            }
-        } catch {
-            setStatus("error");
-            setRunError("An error occurred while executing the code.");
-        }
-    }, [baseUrl]);
+        resetExecution();
+    }, [resetExecution]);
 
     const cancelStdinEdit = useCallback(() => {
         setStdin(template.stdin);

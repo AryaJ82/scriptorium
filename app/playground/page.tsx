@@ -3,8 +3,9 @@
 import { useUserSession } from "@/contexts/UserSessionContext";
 import { LANG_CONFIG, Language, LANGUAGES } from "@/utils/interfaces";
 import { useCallback, useState } from "react";
+import { useExecution } from "@/lib/useExecution";
 import { SelectValue, Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/Select";
-import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
+import { OutputConsole } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
 import { Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
@@ -18,64 +19,19 @@ import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
 
 export default function PlaygroundPage() {
 
-    const { session, baseUrl } = useUserSession();
-
+    const { baseUrl } = useUserSession();
+    const { status, stdout, stderr, runError, run, reset } = useExecution(baseUrl);
 
     // --- Editor state (initialised from template on load) ---
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]);
     const [code, setCode] = useState(STARTER_CODE[language] ?? '');
     const [stdin, setStdin] = useState('');
 
-    // --- Execution state ---
-    const [status, setStatus] = useState<RunStatus>('idle');
-    const [stdout, setStdout] = useState('');
-    const [stderr, setStderr] = useState('');
-    const [runError, setRunError] = useState<string | null>(null);
-
-    const run = useCallback(async (code: string, language: string, stdin: string) => {
-        setStatus('running');
-        setStdout('');
-        setStderr('');
-        setRunError(null);
-
-        try {
-            const res = await fetch(`${baseUrl}/api/execution`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, language, stdin }),
-            });
-            const body = await res.json();
-
-            if (res.ok) {
-                setStatus("success");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
-            } else if (res.status === 408) {
-                setStatus("timeout");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
-            } else if (res.status === 413) {
-                setStatus("error");
-                setStdout(body.stdout);
-                setStderr(body.error);
-            } else {
-                setStatus("error");
-                setRunError(body.error ?? "An error has occurred.");
-            }
-        } catch {
-            setStatus("error");
-            setRunError("An error occurred while executing the code.");
-        }
-    }, [baseUrl]);
-
-    const reset = useCallback(() => {
+    const resetCode = useCallback(() => {
         setCode(STARTER_CODE[language] ?? '')
         setStdin('')
-        setStatus('idle')
-        setStdout('')
-        setStderr('')
-        setRunError(null);
-    }, []);
+        reset();
+    }, [language, reset]);
 
 
 
@@ -109,7 +65,7 @@ export default function PlaygroundPage() {
                     </Select>
 
                     <div className="ml-auto flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={reset}>
+                        <Button variant="ghost" size="sm" onClick={resetCode}>
                             <RotateCcw className="size-4" /> Reset
                         </Button>
 
