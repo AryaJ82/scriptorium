@@ -12,6 +12,7 @@ import { Label } from './Label';
 import Textarea from './ui/Textarea';
 import Input from './ui/Input';
 import { useRouter } from 'next/navigation';
+import { validateTagValue } from '@/utils/inputValidation/generalValidation';
 
 interface SaveTemplateDialogueParams {
     children: React.ReactNode;
@@ -38,18 +39,17 @@ export function SaveTemplateDialogue({
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
         if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
             e.preventDefault();
-            if (tagDraft.length >= 25) {
-                toast.error("Tag is too long.");
+            const newTag = tagDraft.trim().toLowerCase();
+            const error = validateTagValue(newTag);
+            if (error) {
+                toast.error(error.message);
                 return;
             }
 
-            e.preventDefault();
-            const t = tagDraft.trim()
-
-            if (!tags.includes(t)) setTags([...tags, t]);
+            if (!tags.includes(newTag)) setTags([...tags, newTag]);
             setTagDraft('');
         }
     }, [tagDraft, tags]);
@@ -144,7 +144,7 @@ export function SaveTemplateDialogue({
                             id="tpl-tags"
                             value={tagDraft}
                             onChange={(e) => setTagDraft(e.target.value)}
-                            onKeyDown={addTag}
+                            onKeyDown={(e) => addTag(e, tagDraft)}
                             placeholder="Type a tag and press Enter"
                         />
                         {tags.length > 0 && (
@@ -196,7 +196,10 @@ export function SaveTemplateDialogue({
                     >
                         Create Template
                     </Button>
+
+
                     <Toaster richColors />
+
                 </DialogFooter>
             </DialogContent>
         </Dialog>

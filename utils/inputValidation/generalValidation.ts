@@ -52,14 +52,14 @@ export function isValidCUID(value: unknown): boolean {
 
 ///// ----------------------------------- Tags
 
-function validateTagValue(tag: unknown): ValidationError | null {
+export function validateTagValue(tag: unknown): ValidationError | null {
     if (!isString(tag) || tag === "") {
         return createError("Tags should not be a non-empty string");
     }
     if (tag.length > 25) {
         return createError("Each tag must be less than 25 characters");
     }
-    if (/[\s,&A-Z#]/.test(tag)) {
+    if (/[$\s,&A-Z#]/.test(tag)) {
         return createError("Invalid character in tag");
     }
     return null;

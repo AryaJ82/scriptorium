@@ -5,6 +5,7 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import { GitFork, X, Menu, Pencil, GitBranch, Trash } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
+import { Toaster, toast } from 'sonner'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,6 +16,7 @@ import {
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+import { validateTagValue } from "@/utils/inputValidation/generalValidation";
 
 export default function TemplateHeader({
     template,
@@ -43,24 +45,25 @@ export default function TemplateHeader({
     // Actions
     // ---------------------------------------------------------------------------
 
-    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
         if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
             e.preventDefault();
-            if (tagDraft.length >= 25) {
-                setSaveError("Tag is too long.");
+            const newTag = tagDraft.trim().toLowerCase();
+            const error = validateTagValue(newTag);
+            if (error) {
+                toast.error(error.message);
                 return;
             }
-            const nextTag = tagDraft.trim();
-            if (!tags.includes(nextTag)) {
-                setTags([...tags, nextTag]);
+            if (!tags.includes(newTag)) {
+                setTags([...tags, newTag]);
             }
             setTagDraft('');
         }
-    }, [tagDraft, tags]);
+    }, [tags]);
 
-    const removeTag = useCallback((tags: string[], tag: string) => {
+    const removeTag = useCallback((tag: string) => {
         setTags(tags.filter((current) => current !== tag));
-    }, []);
+    }, [tags]);
 
     const cancelTitleEdit = useCallback(() => {
         setTitle(template.title);
@@ -73,12 +76,11 @@ export default function TemplateHeader({
         setEditingTags(false);
     }, [template.tags]);
 
-    const saveTitle = useCallback(async (title: string) => {
+    const saveTitle = useCallback(async () => {
         if (!onSaveTitle) {
             setEditingTitle(false);
             return;
         }
-
         setTitleSaving(true);
         try {
             await onSaveTitle(title);
@@ -86,10 +88,9 @@ export default function TemplateHeader({
         } finally {
             setTitleSaving(false);
         }
-    }, [onSaveTitle]);
+    }, [onSaveTitle, title]);
 
-    const saveTags = useCallback(async (tags: string[]) => {
-
+    const saveTags = useCallback(async () => {
         setTagsSaving(true);
         try {
             await onSaveTags(tags);
@@ -97,7 +98,7 @@ export default function TemplateHeader({
         } finally {
             setTagsSaving(false);
         }
-    }, [onSaveTags]);
+    }, [onSaveTags, tags]);
 
     return (
         <div className="mb-6 flex flex-col gap-3">
@@ -164,7 +165,7 @@ export default function TemplateHeader({
                                         <Button variant="ghost" size="sm" onClick={cancelTitleEdit} disabled={titleSaving}>
                                             Cancel
                                         </Button>
-                                        <Button variant="outline" size="sm" onClick={() => saveTitle(title)} disabled={titleSaving || !title.trim()}>
+                                        <Button variant="outline" size="sm" onClick={saveTitle} disabled={titleSaving || !title.trim()}>
                                             {titleSaving ? 'Saving…' : 'Save'}
                                         </Button>
                                     </div>
@@ -211,18 +212,19 @@ export default function TemplateHeader({
                         </a>
                     )}
 
-                    {!isOwner && template.tags.length > 0 && (
+                    {!isOwner && !editingTags && template.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                            {template.tags.map((tag) => (
+                            {tags.map((tag) => (
                                 <span
-                                    key={tag.name}
+                                    key={tag}
                                     className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
                                 >
-                                    #{tag.name}
+                                    #{tag}
                                 </span>
                             ))}
                         </div>
                     )}
+
                 </div>
 
                 {isOwner && (
@@ -234,7 +236,7 @@ export default function TemplateHeader({
                                     <Button variant="ghost" size="sm" onClick={cancelTagsEdit} disabled={tagsSaving}>
                                         Cancel
                                     </Button>
-                                    <Button variant="outline" size="sm" onClick={() => saveTags(tags)} disabled={tagsSaving}>
+                                    <Button variant="outline" size="sm" onClick={saveTags} disabled={tagsSaving}>
                                         {tagsSaving ? 'Saving…' : 'Save'}
                                     </Button>
                                 </>
@@ -253,7 +255,7 @@ export default function TemplateHeader({
                                         <button
                                             key={tag}
                                             type="button"
-                                            onClick={() => removeTag(tags, tag)}
+                                            onClick={() => removeTag(tag)}
                                             className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground transition hover:bg-muted/80"
                                         >
                                             #{tag}
@@ -265,25 +267,27 @@ export default function TemplateHeader({
                             </div>
                         ) : (
                             <div className="flex flex-wrap gap-1">
-                                {tags.map((tag) => (
+                                {template.tags.map((tag) => (
                                     <span
-                                        key={tag}
+                                        key={tag.name}
                                         className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
                                     >
-                                        #{tag}
+                                        #{tag.name}
                                     </span>
                                 ))}
                             </div>
                         )}
 
                         {editingTags && <div className="min-w-0 flex-1">
+                            <Toaster richColors />
                             <Input
-                                id="template-tags"
+                                id="template-tags-input"
                                 value={tagDraft}
                                 onChange={(e) => setTagDraft(e.target.value)}
-                                onKeyDown={addTag}
+                                onKeyDown={(e) => addTag(e, tagDraft)}
                                 placeholder="Add a tag and press Enter"
                             />
+                            
                         </div>}
                     </div>
                 )}
