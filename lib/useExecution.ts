@@ -1,5 +1,7 @@
 import { useCallback, useState } from "react";
 import { type RunStatus } from "@/components/OutputConsole";
+import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionValidation";
+import { Language } from "@/utils/interfaces";
 
 export function useExecution(baseUrl: string) {
     const [status, setStatus] = useState<RunStatus>('idle');
@@ -7,12 +9,18 @@ export function useExecution(baseUrl: string) {
     const [stderr, setStderr] = useState('');
     const [runError, setRunError] = useState<string | null>(null);
 
-    const run = useCallback(async (code: string, language: string, stdin: string) => {
+    const run = useCallback(async (code: string, language: Language, stdin: string) => {
         setStatus('running');
         setStdout('');
         setStderr('');
         setRunError(null);
 
+        const error = validateExecutionPOSTBody({ code, language, stdin });
+        if (error) {
+            setStatus('error');
+            setRunError(error.message);
+            return;
+        }
         try {
             const res = await fetch(`${baseUrl}/api/execution`, {
                 method: "POST",
