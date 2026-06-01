@@ -2,24 +2,17 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useUserSession } from "@/contexts/UserSessionContext";
-import { Language, LANGUAGES, LANG_CONFIG } from "@/utils/interfaces";
 import { useCallback, useEffect, useState } from "react";
-import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
-import { Button } from "@/components/ui/Button";
-import { GitFork, Play, RotateCcw, Save } from "lucide-react";
-import { CodeEditor } from "@/components/CodeEditor";
-import Textarea from "@/components/ui/Textarea";
-import { Label } from "@/components/Label";
 
 import type { TemplateResponse } from "@/utils/interfaces";
 import DescriptionSection from "@/components/TemplateDescription";
 
 import TemplateHeader from "@/components/TemplateHeader";
+import TemplateCodeBody from "@/components/TemplateCodeBody";
 
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
 
 function TemplateHeaderSkeleton() {
     return (
@@ -44,18 +37,6 @@ export default function TemplatePage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // --- Editor state (initialised from template on load) ---
-    const [code, setCode] = useState('');
-    const [stdin, setStdin] = useState('');
-
-    const [editingStdin, setEditingStdin] = useState(false);
-
-    // --- Execution state ---
-    const [status, setStatus] = useState<RunStatus>('idle');
-    const [stdout, setStdout] = useState('');
-    const [stderr, setStderr] = useState('');
-    const [runError, setRunError] = useState<string | null>(null);
-
     // --- Update / fork state ---
     const [saveError, setSaveError] = useState<string | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
@@ -68,15 +49,7 @@ export default function TemplatePage() {
     // ---------------------------------------------------------------------------
     // Fetch template
     // ---------------------------------------------------------------------------
-    const reset = useCallback((template: TemplateResponse | null) => {
-        if (!template) return;
-        setCode(template.code);
-        setStdin(template.stdin);
-        setStatus('idle');
-        setStdout('');
-        setStderr('');
-        setRunError(null);
-    }, []);
+
 
     useEffect(() => {
         if (!id) return;
@@ -96,9 +69,6 @@ export default function TemplatePage() {
 
                 const t: TemplateResponse = body.template;
                 setTemplate(t);
-                setCode(t.code);
-                setStdin(t.stdin);
-                setEditingStdin(false);
             })
             .catch((err) => {
                 if (!active) return;
@@ -114,48 +84,6 @@ export default function TemplatePage() {
     // ---------------------------------------------------------------------------
     // Actions
     // ---------------------------------------------------------------------------
-
-    const cancelStdinEdit = useCallback(() => {
-        if (!template) return;
-        setStdin(template.stdin);
-        setEditingStdin(false);
-    }, [template]);
-
-    const run = useCallback(async (code: string, language: string, stdin: string) => {
-        setStatus('running');
-        setStdout('');
-        setStderr('');
-        setRunError(null);
-
-        try {
-            const res = await fetch(`${baseUrl}/api/execution`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, language, stdin }),
-            });
-            const body = await res.json();
-
-            if (res.ok) {
-                setStatus("success");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
-            } else if (res.status === 408) {
-                setStatus("timeout");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
-            } else if (res.status === 413) {
-                setStatus("error");
-                setStdout(body.stdout);
-                setStderr(body.error);
-            } else {
-                setStatus("error");
-                setRunError(body.error ?? "An error has occurred.");
-            }
-        } catch {
-            setStatus("error");
-            setRunError("An error occurred while executing the code.");
-        }
-    }, [baseUrl]);
 
     const updateTemplate = useCallback(async (updatePayload: { title?: string, code?: string, description?: string, stdin?: string, tags?: string[] }) => {
         if (!id) return;
@@ -177,7 +105,7 @@ export default function TemplatePage() {
             }
 
             setTemplate(body.template);
-            reset(body.template);
+            // reset(body.template);
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : 'Unable to save template changes.');
         } finally {
@@ -246,106 +174,29 @@ export default function TemplatePage() {
                     </div>
                 )}
 
-                {/* Run error (separate from load error) */}
-                {runError && (
-                    <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm text-destructive">{runError}</p>
-                    </div>
-                )}
-
                 {(saveError || forkError) && (
                     <div className="rounded-lg border border-border bg-card p-4">
                         <p className="text-sm text-destructive">{saveError ?? forkError}</p>
                     </div>
                 )}
 
-                {/* Editor + I/O panel */}
-                <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr]">
-                    {/* Code editor */}
-                    <div className="overflow-hidden rounded-lg border border-border bg-card">
-                        <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-                            <span className="font-mono text-xs text-muted-foreground">
-                                {template && LANG_CONFIG[template.language].fileName}
-                            </span>
+                { template && <TemplateCodeBody
+                    template={template}
+                    isOwner={isOwner}
+                    onSave={updateTemplate}
+                    loading={loading}
+                    setLoading={setLoading}
+                    saveLoading={saveLoading}
+                />}
 
-                            <div className="ml-auto flex items-center gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => reset(template)} disabled={loading || !template}>
-                                    <RotateCcw className="size-4" /> Reset
-                                </Button>
-
-                                {session.isAuthenticated && template && (
-                                    <Button variant="outline" size="sm" onClick={forkTemplate} disabled={forkLoading || loading}>
-                                        <GitFork className="size-4" /> Fork
-                                    </Button>
-                                )}
-
-                                {isOwner && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => updateTemplate({ code, stdin })}
-                                        disabled={saveLoading || loading || !template}
-                                    >
-                                        <Save className="size-4" /> Save Changes
-                                    </Button>
-                                )}
-
-                                <Button size="sm" onClick={() => run(code, template?.language ?? LANGUAGES[0], stdin)} disabled={loading || !template || status === 'running'}>
-                                    <Play className="size-4" /> Run
-                                </Button>
-                            </div>
-
-                        </div>
-                        <CodeEditor value={code} onChange={setCode} language={template?.language ?? LANGUAGES[0]} />
-                    </div>
-
-                    {/* Stdin + output */}
-                    <div className="flex flex-col gap-3">
-                        <div className="rounded-lg border border-border bg-card p-4">
-                            <div className="flex items-center justify-between gap-2">
-                                <Label
-                                    htmlFor="stdin"
-                                    className="font-mono text-xs uppercase tracking-wider text-muted-foreground"
-                                >
-                                    Standard input (stdin)
-                                </Label>
-                                {isOwner && (
-                                    editingStdin ? (
-                                        <Button variant="ghost" size="sm" onClick={cancelStdinEdit}>
-                                            Cancel
-                                        </Button>
-                                    ) : (
-                                        <Button variant="ghost" size="sm" onClick={() => setEditingStdin(true)}>
-                                            Edit
-                                        </Button>
-                                    )
-                                )}
-                            </div>
-                            <Textarea
-                                id="stdin"
-                                value={stdin}
-                                onChange={(e) => setStdin(e.target.value)}
-                                placeholder="Type input passed to your program before running…"
-                                disabled={!isOwner || !editingStdin}
-                                className="mt-2 h-24 resize-none font-mono text-[13px]"
-                            />
-                        </div>
-
-                        <div className="flex-1 overflow-hidden rounded-lg border border-border bg-card">
-                            <OutputConsole status={status} stdout={stdout} stderr={stderr} />
-                        </div>
-                    </div>
-
-
-                    {/* Description / README */}
-                    {!loading && template && (
-                        <DescriptionSection
-                            description={template.description}
-                            isOwner={isOwner}
-                            onSave={(new_desc: string) => updateTemplate({ description: new_desc })}
-                        />
-                    )}
-                </div>
+                {/* Description / README */}
+                {!loading && template && (
+                    <DescriptionSection
+                        description={template.description}
+                        isOwner={isOwner}
+                        onSave={(new_desc: string) => updateTemplate({ description: new_desc })}
+                    />
+                )}
             </div>
         </div>
     );
