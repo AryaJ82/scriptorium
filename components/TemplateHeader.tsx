@@ -3,8 +3,15 @@
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import { GitFork, X } from "lucide-react";
+import { GitFork, X, Menu } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/components/ui/DropdownMenu";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
@@ -15,12 +22,14 @@ export default function TemplateHeader({
     onSaveTitle,
     onSaveTags,
     setSaveError,
+    onDelete,
 }: {
     template: TemplateResponse;
     isOwner: boolean;
     onSaveTitle: (title: string) => Promise<void>;
     onSaveTags: (tags: string[]) => Promise<void>;
     setSaveError: (saveError: string | null) => void;
+    onDelete?: () => Promise<void>;
 }) {
     const author = template.author;
     const [title, setTitle] = useState(template.title);
@@ -104,6 +113,48 @@ export default function TemplateHeader({
     return (
         <div className="mb-6 flex flex-col gap-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
+                
+                <div className="flex items-left gap-2">
+                    {/* Author */}
+                    <button
+                        className="flex items-center rounded-full outline-none border border-border p-1"
+                        aria-label="Visit Author Profile"
+                        onClick={() => { }}
+                    >
+                        <Avatar className="size-8 border">
+                            {author.avatarUrl ? (<AvatarImage src={author.avatarUrl} alt="" />) : null}
+                            <AvatarFallback className="text-xs font-large">
+                                {author.username.slice(0, 1).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                    </button>
+
+                    {/* Burger Menu */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                className="flex items-center justify-center rounded-md outline-none border border-border p-2 hover:bg-accent"
+                                aria-label="Template actions"
+                            >
+                                <Menu className="size-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem>View Original</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {isOwner && (
+                                <>
+                                    <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                                    <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                                        Delete
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                            <DropdownMenuItem>Fork Template</DropdownMenuItem>
+
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
                 <div className="flex flex-col gap-2 min-w-0">
                     {isOwner ? (
                         <div className="flex flex-col gap-2 w-full">
@@ -154,19 +205,6 @@ export default function TemplateHeader({
                     )}
                 </div>
 
-                {/* Author */}
-                <button
-                    className="flex items-center rounded-full outline-none border border-border p-1"
-                    aria-label="Visit Author Profile"
-                    onClick={() => { }}
-                >
-                    <Avatar className="size-10 border">
-                        {author.avatarUrl ? (<AvatarImage src={author.avatarUrl} alt="" />) : null}
-                        <AvatarFallback className="text-xs font-large">
-                            {author.username.slice(0, 1).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                </button>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -208,9 +246,13 @@ export default function TemplateHeader({
                                     </Button>
                                 </>
                             ) : (
-                                <Button variant="ghost" size="sm" onClick={() => setEditingTags(true)}>
-                                    Edit tags
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => setEditingTags(true)}>
+                                        Edit tags
+                                    </Button>
+
+
+                                </div>
                             )}
                         </div>
                         {editingTags ? (

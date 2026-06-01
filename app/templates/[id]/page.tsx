@@ -9,6 +9,7 @@ import DescriptionSection from "@/components/TemplateDescription";
 
 import TemplateHeader from "@/components/TemplateHeader";
 import TemplateCodeBody from "@/components/TemplateCodeBody";
+import DeleteDialogue from "@/components/ui/DeleteDialogue";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -38,11 +39,14 @@ export default function TemplatePage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // --- Update / fork state ---
+    // --- Update / Delete / fork state ---
     const [saveError, setSaveError] = useState<string | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
     const [forkError, setForkError] = useState<string | null>(null);
     const [forkLoading, setForkLoading] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [deleteSaving, setDeleteSaving] = useState(false);
+
 
     // Derived: is the current user the author?
     const isOwner = !!session && template?.authorId === session.id;
@@ -110,7 +114,7 @@ export default function TemplatePage() {
             setTemplate(body.template);
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : 'Unable to save template changes.');
-            return 
+            return
         } finally {
             setSaveLoading(false);
         }
@@ -151,6 +155,44 @@ export default function TemplatePage() {
         }
     }, [authFetch, baseUrl, template]);
 
+
+    const deleteTemplate = useCallback(async () => {
+        if (!template || !session || template.authorId !== session?.id) return;
+        setSaveError(null);
+        setSaveLoading(true);
+
+        try {
+            const response = await authFetch(`${baseUrl}/api/templates`, {
+                method: 'DELETE',
+            });
+
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body.error ?? 'Unable to delete template.');
+            }
+
+
+            router.push(`/playground`);
+
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : 'Unable to delete template.');
+        } finally {
+            setSaveLoading(false);
+        }
+    }, [authFetch, baseUrl, template]);
+
+
+    const confirmDelete = useCallback(async () => {
+        setDeleteSaving(true);
+        try {
+            await deleteTemplate();
+        } catch (err: any) {
+            if (setSaveError) setSaveError(err?.message || 'Failed to delete template.');
+        } finally {
+            setDeleteSaving(false);
+            setIsDeleteOpen(false);
+        }
+    }, [deleteTemplate, setSaveError]);
     // ---------------------------------------------------------------------------
     // Render
     // ---------------------------------------------------------------------------
@@ -204,6 +246,8 @@ export default function TemplatePage() {
                     />
                 )}
             </div>
+
+
         </div>
     );
 }
