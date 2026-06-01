@@ -115,14 +115,6 @@ export default function TemplatePage() {
         }
     }, [id, authFetch, baseUrl]);
 
-    const saveTitle = useCallback(async (title: string) => {
-        await updateTemplate({ title });
-    }, [updateTemplate]);
-
-    const saveTags = useCallback(async (tags: string[]) => {
-        await updateTemplate({ tags });
-    }, [updateTemplate]);
-
     const forkTemplate = useCallback(async () => {
         if (!template) return;
         setForkError(null);
@@ -171,8 +163,8 @@ export default function TemplatePage() {
                 <TemplateHeader
                     template={template}
                     isOwner={isOwner}
-                    onSaveTitle={saveTitle}
-                    onSaveTags={saveTags}
+                    onSaveTitle={(title: string) => updateTemplate({ title })}
+                    onSaveTags={(tags: string[]) => updateTemplate({ tags })}
                 />
             ) : null}
 
