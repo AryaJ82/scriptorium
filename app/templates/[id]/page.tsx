@@ -9,7 +9,6 @@ import DescriptionSection from "@/components/TemplateDescription";
 
 import TemplateHeader from "@/components/TemplateHeader";
 import TemplateCodeBody from "@/components/TemplateCodeBody";
-import ActionDialogue from "@/components/ui/ActionDialog";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -188,9 +187,6 @@ export default function TemplatePage() {
                     isOwner={isOwner}
                     onSaveTitle={(title: string) => updateTemplate({ title })}
                     onSaveTags={(tags: string[]) => updateTemplate({ tags })}
-                    setSaveError={setSaveError}
-                    setDeleteError={setDeleteError}
-                    setForkError={setForkError}
                     onDelete={deleteTemplate}
                     onFork={forkTemplate}
                 />
@@ -213,19 +209,22 @@ export default function TemplatePage() {
 
                 {(forkError) && (
                     <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm text-destructive">{saveError ?? forkError}</p>
+                        <p className="text-sm text-destructive">{forkError}</p>
                     </div>
                 )}
 
+                {(deleteError) && (
+                    <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-sm text-destructive">{deleteError}</p>
+                    </div>
+                )}
 
                 {template && <TemplateCodeBody
                     template={template}
                     isOwner={isOwner}
                     updateTemplate={(updates: { code?: string; stdin?: string }) => updateTemplate(updates)}
                     loading={loading}
-                    setLoading={setLoading}
                     saveLoading={saveLoading}
-                    setSaveLoading={setSaveLoading}
                 />}
 
                 {/* Description / README */}

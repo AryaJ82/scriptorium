@@ -24,9 +24,6 @@ export default function TemplateHeader({
     isOwner,
     onSaveTitle,
     onSaveTags,
-    setSaveError,
-    setDeleteError,
-    setForkError,
     onDelete,
     onFork,
 }: {
@@ -34,9 +31,6 @@ export default function TemplateHeader({
     isOwner: boolean;
     onSaveTitle: (title: string) => Promise<void>;
     onSaveTags: (tags: string[]) => Promise<void>;
-    setSaveError: (saveError: string | null) => void;
-    setDeleteError: (deleteError: string | null) => void;
-    setForkError: (forkError: string | null) => void;
     onDelete: () => Promise<void>;
     onFork: () => Promise<void>;
 }) {
@@ -118,25 +112,21 @@ export default function TemplateHeader({
         setDeleteLoading(true);
         try {
             await onDelete();
-        } catch (err: any) {
-            setSaveError(err?.message || 'Failed to delete template.');
+            setIsDeleteOpen(false);
         } finally {
             setDeleteLoading(false);
-            setIsDeleteOpen(false);
         }
-    }, [onDelete, setSaveError]);
+    }, [onDelete]);
 
     const confirmFork = useCallback(async () => {
         setForkLoading(true);
         try {
             await onFork();
-        } catch (err: any) {
-            setForkError(err?.message || 'Failed to fork template.');
+            setIsForkOpen(false);
         } finally {
             setForkLoading(false);
-            setIsForkOpen(false);
         }
-    }, [onFork, setForkError]);
+    }, [onFork]);
 
 
     return (

@@ -15,17 +15,13 @@ export default function TemplateCodeBody({
     isOwner,
     updateTemplate,
     loading,
-    setLoading,
     saveLoading,
-    setSaveLoading
 }: {
     template: TemplateResponse,
     isOwner: boolean,
     updateTemplate: (updates: { code?: string; stdin?: string }) => Promise<void>,
     loading: boolean,
-    setLoading: (loading: boolean) => void,
     saveLoading: boolean,
-    setSaveLoading: (loading: boolean) => void,
 }
 ) {
 
@@ -59,15 +55,9 @@ export default function TemplateCodeBody({
     }, [template.stdin]);
 
     const handleSave = useCallback(async (code: string, stdin: string) => {
-        setSaveLoading(true);
-        updateTemplate({ code, stdin })
-            .then(() => {
-                setEditingStdin(false);
-            })
-            .finally(() => {
-                setSaveLoading(false);
-            });
-    }, [updateTemplate, setSaveLoading])
+        await updateTemplate({ code, stdin });
+        setEditingStdin(false);
+    }, [updateTemplate]);
 
     return (
         <div className="flex flex-col gap-3">
