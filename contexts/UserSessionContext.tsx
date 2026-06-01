@@ -52,7 +52,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     const [session, dispatch] = useReducer(sessionReducer, initialState);
     const isAuthenticatedRef = useRef(false);
 
-    // ------------------- Token Refresh Logic
+    // ------------------- Token Refresh Logic. Note: only refreshes token, does not update session
     const doRefresh = useCallback(async (): Promise<Response> => {
         try {
             const response = await fetch(`${baseUrl}/api/users/refresh`, {
@@ -193,7 +193,24 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     );
 
     useEffect(() => { // Attempt to refresh on initial load to populate session if possible
-        refreshAccessToken();
+        let isActive = true;
+        refreshAccessToken().then(async (response) => {
+            if (!response.ok || !isActive) {
+                return;
+            }
+            const body = await response.json();
+            dispatch({
+                type: "LOGIN",
+                payload: {
+                    id: body.id,
+                    username: body.username,
+                    avatarUrl: body.avatarUrl ?? null,
+                    role: body.role,
+                }
+            });
+
+        });
+        return () => { isActive = false; }
     }, [refreshAccessToken]);
 
     useEffect(() => { // Keep ref updated to prevent multiple simultaneous refresh attempts

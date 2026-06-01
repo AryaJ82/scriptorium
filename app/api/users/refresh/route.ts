@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
 export async function GET(request: NextRequest) {
-    
+
     try {
         const refreshToken = request.cookies.get('refreshToken')?.value ?? null;
         if (!refreshToken) {
@@ -27,7 +27,13 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
         }
 
-        const response = NextResponse.json({ message: "Token refresh succesful" }, { status: 200 });
+        const response = NextResponse.json({
+            message: "Token refresh succesful",
+            id: user.id,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+            role: user.role,
+        }, { status: 200 });
         setAccessCookie(response, { user_id: user_id, user_role })
 
         return response;
