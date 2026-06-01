@@ -39,7 +39,7 @@ export default function TemplateCodeBody({
     const [stderr, setStderr] = useState<string>('');
     const [runError, setRunError] = useState<string | null>(null);
 
-
+    const isMutated = (template.code === code) && (template.stdin === stdin);
 
     const reset = useCallback((template: TemplateResponse | null) => {
         if (!template) return;
@@ -128,7 +128,7 @@ export default function TemplateCodeBody({
                                 </Button>
                             )}
 
-                            <Button size="sm" onClick={() => run(code, template?.language, stdin)} disabled={loading || status === 'running'}>
+                            <Button size="sm" onClick={() => run(code, template.language, stdin)} disabled={loading || status === 'running'}>
                                 <Play className="size-4" /> Run
                             </Button>
                         </div>
@@ -147,7 +147,7 @@ export default function TemplateCodeBody({
                             >
                                 Standard input (stdin)
                             </Label>
-                            {isOwner && (
+                            {(
                                 editingStdin ? (
                                     <Button variant="ghost" size="sm" onClick={cancelStdinEdit}>
                                         Cancel
@@ -161,10 +161,10 @@ export default function TemplateCodeBody({
                         </div>
                         <Textarea
                             id="stdin"
-                            value={template.stdin}
+                            value={stdin}
                             onChange={(e) => setStdin(e.target.value)}
                             placeholder="Type input passed to your program before running…"
-                            disabled={!isOwner || !editingStdin}
+                            disabled={!editingStdin}
                             className="mt-2 h-24 resize-none font-mono text-[13px]"
                         />
                     </div>
