@@ -1,5 +1,6 @@
 "use client";
 
+import { verifyPassword, verifyUsername } from "@/utils/inputValidation/userValidation";
 import {
     createContext,
     useCallback,
@@ -140,6 +141,15 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
 
     const login = useCallback(
         async ({ username, password }: { username: string; password: string }) => {
+            let error = null;
+            error = verifyUsername(username);
+            if (error) {
+                return Response.json({ error }, { status: 400 });
+            }
+            error = verifyPassword(password);
+            if (error) {
+                return Response.json({ error }, { status: 400 });
+            }
 
             try {
                 await logout();
