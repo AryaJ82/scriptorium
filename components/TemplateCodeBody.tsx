@@ -1,8 +1,8 @@
 
-import { Language, LANGUAGES, LANG_CONFIG, TemplateResponse } from "@/utils/interfaces";
+import { LANG_CONFIG, TemplateResponse } from "@/utils/interfaces";
 import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
-import { GitFork, Play, RotateCcw, Save } from "lucide-react";
+import { Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
 import { Label } from "@/components/Label";
@@ -43,7 +43,7 @@ export default function TemplateCodeBody({
 
     const isMutated = (template.code !== code) || (template.stdin !== stdin);
 
-    const reset = useCallback((template: TemplateResponse | null) => {
+    const reset = useCallback((template: TemplateResponse) => {
         if (!template) return;
         setCode(template.code);
         setStdin(template.stdin);

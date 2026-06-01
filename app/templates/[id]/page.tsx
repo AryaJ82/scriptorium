@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useUserSession } from "@/contexts/UserSessionContext";
 import { useCallback, useEffect, useState } from "react";
 
@@ -28,7 +28,8 @@ function TemplateHeaderSkeleton() {
 // ---------------------------------------------------------------------------
 
 export default function TemplatePage() {
-    const id = usePathname().split('/').pop();
+    const params = useParams();
+    const id = params?.id;
     const { session, baseUrl, authFetch } = useUserSession();
     const router = useRouter();
 
@@ -54,14 +55,16 @@ export default function TemplatePage() {
     useEffect(() => {
         if (!id) return;
 
-        let active = true;
+        const controller = new AbortController();
         setLoading(true);
         setLoadError(null);
 
-        fetch(`${baseUrl}/api/templates/${id}`)
+        fetch(`${baseUrl}/api/templates/${id}`, {
+            signal: controller.signal,
+        })
             .then(async (res) => {
                 const body = await res.json();
-                if (!active) return;
+                if (controller.signal.aborted) return;
 
                 if (!res.ok) {
                     throw new Error(body.error ?? "Unable to load template.");
@@ -71,14 +74,14 @@ export default function TemplatePage() {
                 setTemplate(t);
             })
             .catch((err) => {
-                if (!active) return;
+                if (controller.signal.aborted) return;
                 setLoadError(err instanceof Error ? err.message : "Unable to load template.");
             })
             .finally(() => {
-                if (active) setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             });
 
-        return () => { active = false; };
+        return () => { controller.abort(); };
     }, [id, baseUrl]);
 
     // ---------------------------------------------------------------------------
@@ -105,7 +108,6 @@ export default function TemplatePage() {
             }
 
             setTemplate(body.template);
-            // reset(body.template);
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : 'Unable to save template changes.');
         } finally {
@@ -113,6 +115,13 @@ export default function TemplatePage() {
         }
     }, [id, authFetch, baseUrl]);
 
+    const saveTitle = useCallback(async (title: string) => {
+        await updateTemplate({ title });
+    }, [updateTemplate]);
+
+    const saveTags = useCallback(async (tags: string[]) => {
+        await updateTemplate({ tags });
+    }, [updateTemplate]);
 
     const forkTemplate = useCallback(async () => {
         if (!template) return;
@@ -162,6 +171,8 @@ export default function TemplatePage() {
                 <TemplateHeader
                     template={template}
                     isOwner={isOwner}
+                    onSaveTitle={saveTitle}
+                    onSaveTags={saveTags}
                 />
             ) : null}
 
