@@ -101,49 +101,54 @@ export default function TemplateHeader({
 
     return (
         <div className="mb-6 flex flex-col gap-3">
-            <div className="flex flex-col items-start justify-between gap-2">
 
-                <div className="flex flex-row items-left gap-2">
-                    {/* Author */}
+            <div className="flex flex-row items-center justify-between">
+                {/* Author */}
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium"> by </span>
                     <button
-                        className="flex items-center rounded-full outline-none border border-border p-1"
+                        className="flex items-center gap-2 rounded-full outline-none border border-border p-1 pr-3"
                         aria-label="Visit Author Profile"
                         onClick={() => { }}
                     >
+                        
                         <Avatar className="size-8 border">
                             {author.avatarUrl ? (<AvatarImage src={author.avatarUrl} alt="" />) : null}
                             <AvatarFallback className="text-xs font-large">
                                 {author.username.slice(0, 1).toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
+                        <span className="text-sm font-medium">{author.username}</span>
                     </button>
-
-                    {/* Burger Menu */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button
-                                className="flex items-center justify-center rounded-md outline-none border border-border p-2 hover:bg-accent"
-                                aria-label="Template actions"
-                            >
-                                <Menu className="size-4" />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Original</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {isOwner && (
-                                <>
-                                    <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                                    <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                                        Delete
-                                    </DropdownMenuItem>
-                                </>
-                            )}
-                            <DropdownMenuItem>Fork Template</DropdownMenuItem>
-
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
+                {/* Burger Menu */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button
+                            className="flex items-center justify-center rounded-md outline-none border border-border p-2 hover:bg-accent"
+                            aria-label="Template actions"
+                        >
+                            <Menu className="size-4" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem>View Original</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {isOwner && (
+                            <>
+                                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                                <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                                    Delete
+                                </DropdownMenuItem>
+                            </>
+                        )}
+                        <DropdownMenuItem>Fork Template</DropdownMenuItem>
+
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+            <div className="flex flex-col items-start gap-2">
+
                 <div className="flex flex-col gap-2 min-w-0">
                     {isOwner ? (
                         <div className="flex flex-col gap-2 w-full">
