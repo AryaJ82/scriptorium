@@ -5,11 +5,15 @@ import type { AuthenticatedRequest } from "@/utils/middlewareAuth";
 import type { UserProfilePATCHBody } from "@/utils/interfaces";
 import { verifyUserProfilePATCHBody } from "@/utils/inputValidation/userValidation";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
             if (!user) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
+            const { id } = await params;
+            if (user.id !== id) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
