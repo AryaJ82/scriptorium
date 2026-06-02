@@ -7,13 +7,13 @@ const COLUMNS = [
     links: [
       { href: '/playground', label: 'Playground' },
       { href: '/templates', label: 'Templates' },
-      { href: '/dashboard/templates', label: 'My templates' },
+    //   { href: '/dashboard/templates', label: 'My templates' },
     ],
   },
   {
     heading: 'Community',
     links: [
-      { href: '/blog', label: 'Blog' },
+    //   { href: '/blog', label: 'Blog' },
       { href: '/blog/new', label: 'Write a post' },
     ],
   },
