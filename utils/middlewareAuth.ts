@@ -65,3 +65,26 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
         }
     }
 }
+
+export async function getOptionalUser(request: NextRequest) {
+    try {
+        const accessToken = request.cookies.get('accessToken')?.value ?? null;
+        if (!accessToken) return null;
+
+        const authPayload = verifyAccessToken(accessToken);
+        if (!authPayload) return null;
+
+        const payload = typeof authPayload === "string"
+            ? JSON.parse(authPayload)
+            : authPayload as JwtPayload;
+
+        const userId = payload.user_id as string | undefined;
+        if (!userId) return null;
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        return user;
+    } catch (error) {
+        console.error("Error in getOptionalUser:", error);
+        return null;
+    }
+}

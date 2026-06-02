@@ -81,6 +81,7 @@ export interface TemplateResponse extends Template {
     author: TemplateAuthor;
     parentTemplate?: { id: string; title: string };
     tags: Tag[];
+    isSavedByCurrentUser?: boolean;
 }
 
 

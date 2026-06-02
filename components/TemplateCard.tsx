@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { GitFork } from 'lucide-react'
+import { GitFork, Bookmark, BookmarkCheck } from 'lucide-react'
 import type { TemplateResponse } from '@/utils/interfaces'
 import { LanguageBadge, TagBadge } from './TagBadge'
 import { VoteButtons } from './ui/VoteButtons'
@@ -19,10 +19,13 @@ export function TemplateCard({ template }: { template: TemplateResponse }) {
     >
       <div className="flex items-start justify-between gap-3">
         <LanguageBadge language={template.language} />
-        {/* <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
-          <Star className="size-3.5" /> {template.stars}
-          <VoteButtons upvotes={template.upv} downvotes={template.downvotes} orientation="horizontal" />
-        </span> */}
+        {template.isSavedByCurrentUser !== undefined && (
+          template.isSavedByCurrentUser ? (
+            <BookmarkCheck className="size-4 text-primary" aria-label="Saved template" />
+          ) : (
+            <Bookmark className="size-4 text-muted-foreground/60" aria-label="Not saved" />
+          )
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">
