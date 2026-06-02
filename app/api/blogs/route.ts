@@ -10,9 +10,7 @@ import { limitedAuthorSelect } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
     try {
-        // const { searchParams } = (new URL(request.url));
-        const queryParams =  request.nextUrl.searchParams as BlogGETQuery;
-        // const queryParams = Object.fromEntries(searchParams) as unknown as BlogGETQuery;
+        const queryParams = Object.fromEntries(request.nextUrl.searchParams) as BlogGETQuery;
 
         let error = verifyGETParams(queryParams);
         if (error) {
