@@ -1,6 +1,6 @@
 'use client'
 
-import { FileSearch } from 'lucide-react'
+import { FileSearch, Loader } from 'lucide-react'
 import { TemplateCard } from "@/components/TemplateCard";
 import {
     Empty,
@@ -117,6 +117,13 @@ export default function TemplatesPage() {
                 </div>
             )}
 
+            {loading ? (
+                <div className="mt-12 flex flex-col items-center justify-center gap-4">
+                    <Loader className="h-8 w-8 animate-spin text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Searching...</p>
+                </div>
+            ) : (
+                <>
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <p className="font-mono text-xs text-muted-foreground">
                     {totalResults === 0
@@ -176,6 +183,8 @@ export default function TemplatesPage() {
                         </EmptyDescription>
                     </EmptyHeader>
                 </Empty>
+            )}
+                </>
             )}
         </div>
     );
