@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import { GitFork, X, Menu, Pencil, GitBranch, Trash } from "lucide-react";
+import { GitFork, X, Menu, Pencil, GitBranch, Trash, Bookmark } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
 import { Toaster, toast } from 'sonner'
 import {
@@ -27,6 +27,7 @@ export default function TemplateHeader({
     onSaveTags,
     onDelete,
     onFork,
+    onSave,
 }: {
     template: TemplateResponse;
     isOwner: boolean;
@@ -34,13 +35,16 @@ export default function TemplateHeader({
     onSaveTags: (tags: string[]) => Promise<void>;
     onDelete: () => Promise<void>;
     onFork: () => Promise<void>;
+    onSave: () => Promise<void>;
 }) {
+
     const author = template.author;
     const [title, setTitle] = useState(template.title);
     const [tags, setTags] = useState<string[]>(template.tags.map((tag) => tag.name));
     const [tagDraft, setTagDraft] = useState('');
     const [editingTitle, setEditingTitle] = useState(false);
     const [editingTags, setEditingTags] = useState(false);
+    const [templateSaving, setTemplateSaving] = useState(false);
     const [titleSaving, setTitleSaving] = useState(false);
     const [tagsSaving, setTagsSaving] = useState(false);
 
@@ -112,6 +116,16 @@ export default function TemplateHeader({
         }
     }, [onSaveTitle, title]);
 
+    // ----- Saving template
+    const saveTemplate = useCallback(async () => {
+        setTemplateSaving(true);
+        try {
+            await onSave();
+        } finally {
+            setTemplateSaving(false);
+        }
+    }, [onSave]);
+
     // ---- Deletion and Forking handlers ---
     const confirmDelete = useCallback(async () => {
         setDeleteLoading(true);
@@ -167,9 +181,14 @@ export default function TemplateHeader({
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => saveTemplate()} disabled={templateSaving}>
+                            <Bookmark className="size-3" /> Save Template
+                        </DropdownMenuItem>
+
                         <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading}>
                             <GitBranch className="size-3" /> Fork Template
                         </DropdownMenuItem>
+
                         <DropdownMenuSeparator />
                         {isOwner && (
                             <>

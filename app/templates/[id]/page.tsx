@@ -147,10 +147,39 @@ export default function TemplatePage() {
         }
     }, [authFetch, baseUrl, template]);
 
+    const saveTemplate = useCallback(async ( ) => {
+        if (!template || !session.isAuthenticated){
+            throw new Error("Invalid template or session.")
+        }
+        setActionError(null);
+        setSaveLoading(true);
 
+            const response = await authFetch(`${baseUrl}/api/users/${session.id}/saved-templates`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    template_id: template.id,
+                }),
+            });
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body.error ?? 'Unable to save template.');
+            }
+
+            //setTemplate(body.template)
+
+        try {
+            
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'Unable to save template to profile.'); 
+        }
+
+    }, [authFetch, template, session.isAuthenticated]);
 
     const deleteTemplate = useCallback(async () => {
-        if (!template || !session || template.authorId !== session?.id) return;
+        if (!template || !session.isAuthenticated || template.authorId !== session?.id){
+            throw new Error("Invalid template or session")
+        }
         setActionError(null);
 
         try {
@@ -163,13 +192,12 @@ export default function TemplatePage() {
                 throw new Error(body.error ?? 'Unable to delete template.');
             }
 
-
             router.push(`/playground`);
 
         } catch (error) {
             setActionError(error instanceof Error ? error.message : 'Unable to delete template.');
         }
-    }, [authFetch, baseUrl, template]);
+    }, [authFetch, baseUrl, template, session]);
 
 
 
@@ -191,6 +219,7 @@ export default function TemplatePage() {
                     onSaveTags={(tags: string[]) => updateTemplate({ tags })}
                     onDelete={deleteTemplate}
                     onFork={forkTemplate}
+                    onSave={saveTemplate}
                 />
             ) : null}
 
