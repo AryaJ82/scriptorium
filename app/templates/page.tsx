@@ -21,9 +21,9 @@ import { LANG_CONFIG, LANGUAGES, TemplateResponse } from "@/utils/interfaces";
 import { useEffect, useState } from "react";
 
 export default function TemplatesPage() {
-    const [query, setQuery] = useState<string>('');
-    const [language, setLanguage] = useState('all');
-    const [tags, setTags] = useState<string[]>([]);
+    const [titleQuery, setTitleQuery] = useState<string>('');
+    const [languageQuery, setLanguageQuery] = useState('all');
+    const [tagsQuery, setTagsQuery] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [results, setResults] = useState<TemplateResponse[]>([]);
 
@@ -35,9 +35,9 @@ export default function TemplatesPage() {
 
             // Build query params
             const params = new URLSearchParams();
-            if (query) params.append('query', query);
-            if (language && language !== 'all') params.append('language', language);
-            tags.forEach(tag => params.append('tags', tag));
+            if (titleQuery) params.append('title', titleQuery);
+            if (languageQuery && languageQuery !== 'all') params.append('language', languageQuery);
+            if (tagsQuery.length > 0) params.append('tags', tagsQuery.join(','));
 
             const controller = new AbortController();
             fetch(`/api/templates?${params.toString()}`,
@@ -61,7 +61,7 @@ export default function TemplatesPage() {
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
         }
-    }, [query, language, tags])
+    }, [titleQuery, languageQuery, tagsQuery])
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -76,12 +76,12 @@ export default function TemplatesPage() {
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <SearchBar
-                    value={query}
-                    onChange={setQuery}
+                    value={titleQuery}
+                    onChange={setTitleQuery}
                     placeholder="Search templates…"
                     className="flex-1"
                 />
-                <Select value={language} onValueChange={setLanguage}>
+                <Select value={languageQuery} onValueChange={setLanguageQuery}>
                     <SelectTrigger className="w-full sm:w-44">
                         <SelectValue placeholder="Language" />
                     </SelectTrigger>
