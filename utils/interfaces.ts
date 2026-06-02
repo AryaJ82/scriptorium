@@ -7,12 +7,12 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { Language } from "@/app/generated/prisma/enums";
 export { Language } from "@/app/generated/prisma/enums";
 
-export const LANG_CONFIG: Record<Language, { fileName: string; image: string; cmd: string[] }> = {
-    PYTHON: { fileName: "main.py", image: 'python:3.13-alpine', cmd: ['sh', '-c', 'python3 /code/main.py < /code/stdin.txt'] },
-    JAVASCRIPT: { fileName: "main.js", image: 'node:23-alpine', cmd: ['sh', '-c', 'node /code/main.js < /code/stdin.txt'] },
-    C: { fileName: "main.c", image: 'gcc:14', cmd: ['sh', '-c', 'gcc /code/main.c -o /tmp/main && /tmp/main < /code/stdin.txt'] },
-    CPP: { fileName: "main.cpp", image: 'gcc:14', cmd: ['sh', '-c', 'g++ /code/main.cpp -o /tmp/main && /tmp/main < /code/stdin.txt'] },
-    JAVA: { fileName: "Main.java", image: 'eclipse-temurin:24-jdk-alpine', cmd: ['sh', '-c', 'javac -d /tmp /code/main.java && java -cp /tmp main < /code/stdin.txt'] }
+export const LANG_CONFIG: Record<Language, { displayLabel: string, fileName: string; image: string; cmd: string[] }> = {
+    PYTHON: { displayLabel: "Python", fileName: "main.py", image: 'python:3.13-alpine', cmd: ['sh', '-c', 'python3 /code/main.py < /code/stdin.txt'] },
+    JAVASCRIPT: { displayLabel: "Javascript", fileName: "main.js", image: 'node:23-alpine', cmd: ['sh', '-c', 'node /code/main.js < /code/stdin.txt'] },
+    C: { displayLabel: "C", fileName: "main.c", image: 'gcc:14', cmd: ['sh', '-c', 'gcc /code/main.c -o /tmp/main && /tmp/main < /code/stdin.txt'] },
+    CPP: { displayLabel: "C++", fileName: "main.cpp", image: 'gcc:14', cmd: ['sh', '-c', 'g++ /code/main.cpp -o /tmp/main && /tmp/main < /code/stdin.txt'] },
+    JAVA: { displayLabel: "Java", fileName: "Main.java", image: 'eclipse-temurin:24-jdk-alpine', cmd: ['sh', '-c', 'javac -d /tmp /code/main.java && java -cp /tmp main < /code/stdin.txt'] }
 };
 
 export const LANGUAGES = Object.values(Language) as Language[];
@@ -48,7 +48,7 @@ export const limitedAuthorSelect = {
     }
 };
 
-// Attributes returned for GET and PATCH requests
+// Attributes returned for GET and PATCH requests through the /api/templates/[id] route
 export const templateGetInclude = {
     include: {
         author: limitedAuthorSelect,
@@ -66,10 +66,10 @@ export const templateGetInclude = {
 }
 
 interface TemplateAuthor {
-        id: string;
-username: string;
-avatarUrl: string;
-role: string;
+    id: string;
+    username: string;
+    avatarUrl: string;
+    role: string;
 }
 
 interface Tag {
