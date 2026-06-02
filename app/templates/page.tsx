@@ -1,6 +1,6 @@
 'use client'
 
-import { FileSearch, Loader } from 'lucide-react'
+import { FileSearch, Loader, User, Tag, Search, FileText, X } from 'lucide-react'
 import { TemplateCard } from "@/components/TemplateCard";
 import { Toaster, toast } from 'sonner'
 import {
@@ -21,7 +21,6 @@ import {
 import { LANG_CONFIG, LANGUAGES, TemplateResponse, validSortOrders, validTemplateSortFields } from "@/utils/interfaces";
 import { useCallback, useEffect, useState } from "react";
 import { validateTagValue } from '@/utils/inputValidation/generalValidation';
-import { TagBadge } from '@/components/TagBadge';
 
 export default function TemplatesPage() {
     // Queries
@@ -33,7 +32,7 @@ export default function TemplatesPage() {
     const [tagDraft, setTagDraft] = useState<string>('');
 
     const [page, setPage] = useState<number>(1);
-    const [pageSize, setPageSize] = useState<number>(6);
+    const [pageSize, setPageSize] = useState<number>(10);
     const [sortByQuery, setSortByQuery] = useState<string>('createdAt');
     const [orderByQuery, setOrderByQuery] = useState<string>('desc');
 
@@ -120,86 +119,101 @@ export default function TemplatesPage() {
                     Search across every public template by title, tags, or content.
                 </p>
             </div>
+            {/* Section label */}
+            <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-2">
+                Search
+            </p>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <div className="flex-1 flex-col gap-3">
-
-                    <SearchBar
-                        value={titleQuery}
-                        onChange={setTitleQuery}
-                        placeholder="Search titles…"
-                        className="flex-1"
-                    />
-                    <SearchBar
-                        value={contentQuery}
-                        onChange={setContentQuery}
-                        placeholder="Search contents…"
-                        className="flex-1"
-                    />
-                    <SearchBar
-                        value={authorQuery}
-                        onChange={setAuthorQuery}
-                        placeholder="Search by author username…"
-                        className="flex-1"
-                    />
-                    <SearchBar
-                        value={tagDraft}
-                        onChange={setTagDraft}
-                        onKeyDown={(e) => addTag(e, tagDraft)}
-                        placeholder="Filter by tags…"
-                        className="flex-1"
-                    />
-
-                    {tagsQuery.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                            {tagsQuery.map((t) => (
-                                <button
-                                    key={t}
-                                    type="button"
-                                    onClick={() => setTagsQuery(tagsQuery.filter((x) => x !== t))}
-                                    className="mt-auto flex flex-wrap items-center gap-1.5 pt-1"
-                                >
-                                    <TagBadge key={t} label={t} deleteMode={true} />
-                                </button>
-                            ))}
-                        </div>
-                    )}
+            {/* Title + Author side by side */}
+            <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Title</label>
+                    <div className="relative">
+                        <SearchBar value={titleQuery} onChange={setTitleQuery}
+                            placeholder="e.g. binary search" className="pl-8"
+                            icon={Search} />
+                    </div>
                 </div>
-                <div className="flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Author</label>
+                    <div className="relative">
+                        <SearchBar value={authorQuery} onChange={setAuthorQuery}
+                            placeholder="e.g. @johndoe" className="pl-8"
+                            icon={User} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Content full width */}
+            <div className="flex flex-col gap-1.5 mb-2.5">
+                <label className="text-xs font-medium text-muted-foreground">Content</label>
+                <div className="relative">
+                    
+                    <SearchBar value={contentQuery} onChange={setContentQuery}
+                        placeholder="Search within content…" className="pl-8"
+                        icon={FileText} />
+                </div>
+            </div>
+
+            {/* Tags */}
+            <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Tags</label>
+                <div className="relative">
+                    <SearchBar value={tagDraft} onChange={setTagDraft}
+                        onKeyDown={(e) => addTag(e, tagDraft)}
+                        placeholder="Type a tag and press Enter…" className="pl-8"
+                        icon={Tag} />
+                </div>
+                {tagsQuery.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                        {tagsQuery.map((t) => (
+                            <button key={t} type="button"
+                                onClick={() => setTagsQuery(tagsQuery.filter((x) => x !== t))}
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-border text-xs font-medium hover:bg-muted transition-colors">
+                                {t} <X className="h-3 w-3 opacity-50" />
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <hr className="my-3.5 border-border/60" />
+
+            {/* Sort & filter */}
+            <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-2">
+                Sort & Filter
+            </p>
+            <div className="grid grid-cols-3 gap-2.5">
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Language</label>
                     <Select value={languageQuery} onValueChange={setLanguageQuery}>
-                        <SelectTrigger className="w-full sm:w-44">
-                            <SelectValue placeholder="Language" />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="All languages" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All languages</SelectItem>
                             {LANGUAGES.map((l) => (
-                                <SelectItem key={l} value={l}>
-                                    {LANG_CONFIG[l].displayLabel}
-                                </SelectItem>
+                                <SelectItem key={l} value={l}>{LANG_CONFIG[l].displayLabel}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Sort by</label>
                     <Select value={sortByQuery} onValueChange={setSortByQuery}>
-                        <SelectTrigger className="w-full sm:w-44">
-                            <SelectValue placeholder="Language" />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Sort by" /></SelectTrigger>
                         <SelectContent>
                             {validTemplateSortFields.map((s) => (
-                                <SelectItem key={s} value={s}>
-                                    {s}
-                                </SelectItem>
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Order</label>
                     <Select value={orderByQuery} onValueChange={setOrderByQuery}>
-                        <SelectTrigger className="w-full sm:w-44">
-                            <SelectValue placeholder="Language" />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Order" /></SelectTrigger>
                         <SelectContent>
-                            {validSortOrders.map((l) => (
-                                <SelectItem key={l} value={l}>
-                                    {l}
-                                </SelectItem>
+                            {validSortOrders.map((o) => (
+                                <SelectItem key={o} value={o}>{o}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -232,9 +246,9 @@ export default function TemplatesPage() {
                                     <SelectValue placeholder="Per page" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="6">6 per page</SelectItem>
-                                    <SelectItem value="12">12 per page</SelectItem>
-                                    <SelectItem value="24">24 per page</SelectItem>
+                                    <SelectItem value="10">10 per page</SelectItem>
+                                    <SelectItem value="20">20 per page</SelectItem>
+                                    <SelectItem value="50">50 per page</SelectItem>
                                 </SelectContent>
                             </Select>
 
