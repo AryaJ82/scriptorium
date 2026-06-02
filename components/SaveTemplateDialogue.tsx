@@ -13,6 +13,7 @@ import Textarea from './ui/Textarea';
 import Input from './ui/Input';
 import { useRouter } from 'next/navigation';
 import { validateTagValue } from '@/utils/inputValidation/generalValidation';
+import { TagBadge } from './TagBadge';
 
 interface SaveTemplateDialogueParams {
     children: React.ReactNode;
@@ -154,12 +155,9 @@ export function SaveTemplateDialogue({
                                         key={t}
                                         type="button"
                                         onClick={() => setTags(tags.filter((x) => x !== t))}
-                                        className="group"
+                                        className="mt-auto flex flex-wrap items-center gap-1.5 pt-1"
                                     >
-                                        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 font-mono text-xs">
-                                            #{t}
-                                            <X className="size-3 text-muted-foreground group-hover:text-destructive" />
-                                        </span>
+                                        <TagBadge key={t} label={t} deleteMode={true} />
                                     </button>
                                 ))}
                             </div>

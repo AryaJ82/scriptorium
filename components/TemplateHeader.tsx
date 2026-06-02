@@ -18,6 +18,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { validateTagValue } from "@/utils/inputValidation/generalValidation";
 import ActionDialogue from "./ui/ActionDialog";
+import { TagBadge } from "./TagBadge";
 
 export default function TemplateHeader({
     template,
@@ -310,10 +311,9 @@ export default function TemplateHeader({
                                             key={tag}
                                             type="button"
                                             onClick={() => removeTag(tag)}
-                                            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground transition hover:bg-muted/80"
+                                            className="mt-auto flex flex-wrap items-center gap-1.5 pt-1"
                                         >
-                                            #{tag}
-                                            <X className="size-3" />
+                                            <TagBadge key={tag} label={tag} deleteMode={true} />
                                         </button>
                                     ))}
                                 </div>
@@ -322,12 +322,7 @@ export default function TemplateHeader({
                         ) : (
                             <div className="flex flex-wrap gap-1">
                                 {template.tags.map((tag) => (
-                                    <span
-                                        key={tag.name}
-                                        className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
-                                    >
-                                        #{tag.name}
-                                    </span>
+                                    <TagBadge key={tag.name} label={tag.name} />
                                 ))}
                             </div>
                         )}
