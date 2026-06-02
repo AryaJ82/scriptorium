@@ -27,7 +27,6 @@ export default function SearchBar({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="pl-9"
         onKeyDown={onKeyDown}
       />
     </div>
