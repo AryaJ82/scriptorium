@@ -28,6 +28,8 @@ export default function TemplatesPage() {
     const [results, setResults] = useState<TemplateResponse[]>([]);
 
     const [loading, setLoading] = useState<boolean>(false);
+    const [page, setPage] = useState<number>(1);
+    const [pageSize, setPageSize] = useState<number>(6);
 
     useEffect(() => {
         try {
@@ -38,6 +40,8 @@ export default function TemplatesPage() {
             if (titleQuery) params.append('title', titleQuery);
             if (languageQuery && languageQuery !== 'all') params.append('language', languageQuery);
             if (tagsQuery.length > 0) params.append('tags', tagsQuery.join(','));
+            params.append('page', page.toString());
+            params.append('pageSize', pageSize.toString());
 
             const controller = new AbortController();
             fetch(`/api/templates?${params.toString()}`,
@@ -61,7 +65,18 @@ export default function TemplatesPage() {
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
         }
-    }, [titleQuery, languageQuery, tagsQuery])
+    }, [titleQuery, languageQuery, tagsQuery, page, pageSize])
+
+    // Reset to first page when query or pageSize changes
+    useEffect(() => {
+        setPage(1);
+    }, [titleQuery, languageQuery, tagsQuery, pageSize]);
+
+    const totalResults = results.length;
+    const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalResults);
+    const paginatedResults = results.slice(startIndex, endIndex);
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -102,13 +117,50 @@ export default function TemplatesPage() {
                 </div>
             )}
 
-            <p className="mt-6 font-mono text-xs text-muted-foreground">
-                {results.length} template{results.length === 1 ? '' : 's'}
-            </p>
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="font-mono text-xs text-muted-foreground">
+                    {totalResults === 0
+                        ? '0 templates'
+                        : `Showing ${startIndex + 1}–${endIndex} of ${totalResults} template${totalResults === 1 ? '' : 's'}`}
+                </p>
 
-            {results.length > 0 ? (
+                <div className="flex items-center gap-3">
+                    <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                        <SelectTrigger className="w-36">
+                            <SelectValue placeholder="Per page" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="6">6 per page</SelectItem>
+                            <SelectItem value="12">12 per page</SelectItem>
+                            <SelectItem value="24">24 per page</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <div className="inline-flex items-center gap-2">
+                        <button
+                            className="px-3 py-1 rounded border bg-background text-sm disabled:opacity-50"
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={page <= 1}
+                        >
+                            Prev
+                        </button>
+
+                        <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+
+                        <button
+                            className="px-3 py-1 rounded border bg-background text-sm disabled:opacity-50"
+                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={page >= totalPages}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {totalResults > 0 ? (
                 <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {results.map((t) => (
+                    {paginatedResults.map((t) => (
                         <TemplateCard key={t.id} template={t} />
                     ))}
                 </div>
