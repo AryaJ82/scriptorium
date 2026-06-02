@@ -60,7 +60,7 @@ export function UserMenu() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild>
-          <Link href="/profile">
+          <Link href={`/users/${session.id}`}>
             <User className="size-4" /> Profile
           </Link>
         </DropdownMenuItem>
