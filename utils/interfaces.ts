@@ -34,9 +34,9 @@ export type ValidSortFields = 'title' | 'createdAt' | 'language' | 'upvoteCount'
 export type BlogSortFields = 'title' | 'createdAt' | 'upvoteCount' | 'downvoteCount';
 export type ValidSortOrder = 'asc' | 'desc';
 
-export const validTemplateSortFields = ["title", "createdAt", "language", 'upvoteCount', 'downvoteCount'] as const;
-export const validBlogSortFields = ["title", "createdAt", 'upvoteCount', 'downvoteCount'] as const;
-export const validSortOrders = ["asc", "desc"] as const;
+export const validTemplateSortFields = ["createdAt", "title", "language"] as const;
+export const validBlogSortFields = ["createdAt", "title", 'upvoteCount', 'downvoteCount'] as const;
+export const validSortOrders = ["desc", "asc"] as const;
 
 // Select which does not return the password hash or profile details from the author table
 export const limitedAuthorSelect = {

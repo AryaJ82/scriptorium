@@ -9,11 +9,13 @@ export default function SearchBar({
   onChange,
   placeholder = 'Search…',
   className,
+  onKeyDown,
 }: {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }) {
   return (
     <div className={cn('relative', className)}>
@@ -24,6 +26,7 @@ export default function SearchBar({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="pl-9"
+        onKeyDown={onKeyDown}
       />
     </div>
   )

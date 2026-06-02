@@ -1,6 +1,5 @@
 'use client'
 
-import { X } from 'lucide-react'
 import Link from 'next/link';
 import { Toaster, toast } from 'sonner'
 import { useUserSession } from '@/contexts/UserSessionContext';
