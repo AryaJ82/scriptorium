@@ -1,5 +1,6 @@
 'use client'
 
+import { FileSearch } from 'lucide-react'
 import { TemplateCard } from "@/components/TemplateCard";
 import {
     Empty,
@@ -26,11 +27,39 @@ export default function TemplatesPage() {
     const [error, setError] = useState<string | null>(null);
     const [results, setResults] = useState<TemplateResponse[]>([]);
 
+    const [loading, setLoading] = useState<boolean>(false);
+
     useEffect(() => {
         try {
+            setLoading(true);
 
-        } catch (error) {
+            // Build query params
+            const params = new URLSearchParams();
+            if (query) params.append('query', query);
+            if (language && language !== 'all') params.append('language', language);
+            tags.forEach(tag => params.append('tags', tag));
 
+            const controller = new AbortController();
+            fetch(`/api/templates?${params.toString()}`,
+                {
+                    method: 'GET',
+                    signal: controller.signal,
+                })
+                .then(async (res) => {
+                    if (!res.ok) throw new Error('Failed to fetch templates');
+                    const data = await res.json();
+                    setResults(data.templates);
+                })
+                .catch(err => {
+                    console.error(err);
+                    setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
+                }).finally(() => {
+                    setLoading(false);
+                });
+
+            return () => controller.abort();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
         }
     }, [query, language, tags])
 
@@ -66,6 +95,12 @@ export default function TemplatesPage() {
                     </SelectContent>
                 </Select>
             </div>
+
+            {error && (
+                <div className="rounded-lg border border-border bg-card p-4">
+                    <p className="text-sm text-destructive">{error}</p>
+                </div>
+            )}
 
             <p className="mt-6 font-mono text-xs text-muted-foreground">
                 {results.length} template{results.length === 1 ? '' : 's'}

@@ -1,6 +1,6 @@
 
 import { LANG_CONFIG, TemplateResponse } from "@/utils/interfaces";
-import { OutputConsole, type RunStatus } from "@/components/OutputConsole";
+import { OutputConsole } from "@/components/OutputConsole";
 import { Button } from "@/components/ui/Button";
 import { Pencil, Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
