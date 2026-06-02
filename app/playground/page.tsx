@@ -60,7 +60,7 @@ export default function PlaygroundPage() {
                         <SelectContent>
                             {LANGUAGES.map((l) => (
                                 <SelectItem key={l} value={l}>
-                                    {l.charAt(0) + l.slice(1).toLowerCase()}
+                                    {LANG_CONFIG[l].displayLabel}
                                 </SelectItem>
                             ))}
                         </SelectContent>
