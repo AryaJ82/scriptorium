@@ -1,5 +1,5 @@
 
-import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
+import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlewareAuth";
 import { normalizeTags, verifyPATCHBody } from "@/utils/inputValidation/blogValidation";
 import type { BlogPATCHBody } from "@/utils/interfaces";
 import { NextResponse, NextRequest } from "next/server";
@@ -15,6 +15,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
         }
 
+
+        const currentUser = await getOptionalUser(request);
+        const currentUserId = currentUser?.id ?? undefined;
+        
         const post = await prisma.blogPost.findUnique({
             where: { id: parseInt(id) },
             include: {
@@ -32,7 +36,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                     include: {
                         author: limitedAuthorSelect,
                     }
-                }
+                },
+                ...(currentUserId ? { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
+                ...(currentUserId ? { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
             },
         });
 
@@ -84,6 +90,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 create: { name: tag },
             })) : undefined;
 
+            const currentUserId = user.id;
             const updatedPost = await prisma.blogPost.update({
                 where: { id: post.id },
                 data: {
@@ -101,6 +108,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                     tags: {
                         select: { name: true },
                     },
+                    comments: {
+                        include: {
+                            author: limitedAuthorSelect,
+                        },
+                    },
+                    ...(currentUserId ? { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
+                    ...(currentUserId ? { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
                 },
             });
 

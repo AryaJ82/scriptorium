@@ -65,7 +65,7 @@ export const templateGetInclude = {
     }
 }
 
-interface TemplateAuthor {
+interface Author {
     id: string;
     username: string;
     avatarUrl: string;
@@ -78,10 +78,17 @@ interface Tag {
 
 import type { Template } from "@/app/generated/prisma/client"
 export interface TemplateResponse extends Template {
-    author: TemplateAuthor;
+    author: Author;
     parentTemplate?: { id: string; title: string };
     tags: Tag[];
     savers: string[]; // This will contain at most one element
+}
+
+import type { BlogPost } from "@/app/generated/prisma/client"
+
+export interface BlogResponse extends BlogPost {
+    author: Author;
+    tags: Tag[];
 }
 
 // Return type for requests to profile under api/users/[id] and 
