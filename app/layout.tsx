@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Toaster } from "sonner";
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { UserSessionProvider } from "@/contexts/UserSessionContext";
 import "./globals.css";
@@ -49,6 +50,7 @@ export default function RootLayout({
               {children}
             </PageShell>
           </UserSessionProvider>
+          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>

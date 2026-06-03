@@ -5,7 +5,7 @@ import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import { GitFork, X, Menu, Pencil, GitBranch, Trash, Bookmark } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
-import { Toaster, toast } from 'sonner'
+import { toast } from 'sonner'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -357,7 +357,6 @@ export default function TemplateHeader({
                         )}
 
                         {editingTags && <div className="min-w-0 flex-1">
-                            <Toaster richColors />
                             <Input
                                 id="template-tags-input"
                                 value={tagDraft}

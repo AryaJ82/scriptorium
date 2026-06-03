@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link';
-import { Toaster, toast } from 'sonner'
+import { toast } from 'sonner'
 import { useUserSession } from '@/contexts/UserSessionContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/Dialog';
 import { Button } from './ui/Button';
@@ -166,9 +166,6 @@ export function SaveBlogDialogue({ children, initialTitle = '', initialContent =
                     >
                         Create Post
                     </Button>
-
-
-                    <Toaster richColors />
 
                 </DialogFooter>
             </DialogContent>
