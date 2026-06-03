@@ -4,12 +4,9 @@ import Link from 'next/link'
 import { GitFork, Bookmark, BookmarkCheck } from 'lucide-react'
 import type { TemplateResponse } from '@/utils/interfaces'
 import { LanguageBadge, TagBadge } from './TagBadge'
-import { VoteButtons } from './ui/VoteButtons'
-import { formatDistanceToNow } from 'date-fns';
 
-function timeAgo(isoString: string) {
-  return formatDistanceToNow(new Date(isoString), { addSuffix: true });
-}
+import { timeAgo } from '@/utils/timeAgo';
+
 
 export function TemplateCard({ template }: { template: TemplateResponse }) {
   const isSavedByCurrentUser = !!template.savers && template.savers.length > 0;
