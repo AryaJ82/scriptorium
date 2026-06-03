@@ -7,7 +7,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
 import { normalizeTags, verifyTemplatePOSTBody } from "@/utils/inputValidation/templateValidation";
 import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/interfaces";
-import { limitedAuthorSelect } from "@/utils/interfaces";
+import { limitedAuthorSelect, templateGetInclude } from "@/utils/interfaces";
 
 
 export async function GET(request: NextRequest) {
@@ -108,16 +108,7 @@ export async function POST(request: NextRequest) {
                         parentTemplate: { connect: { id: forkedSourceId } },
                     }),
                 },
-                include: {
-                    tags: true,
-                    parentTemplate: {
-                        select: {
-                            id: true,
-                            title: true,
-                            author: limitedAuthorSelect,
-                        },
-                    },
-                },
+                ...templateGetInclude({}),
             });
             return NextResponse.json(newTemplate, { status: 201 });
         } catch (error) {

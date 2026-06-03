@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
                 [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
             } as Prisma.TemplateOrderByWithRelationInput;
 
-            const searchResult = await templateSearch(where, orderBy, pageNum, pageSizeNum);
+            const searchResult = await templateSearch(where, orderBy, pageNum, pageSizeNum, user.id ?? undefined);
             return NextResponse.json(searchResult, { status: 200 });
 
         } catch (error) {
@@ -89,32 +89,23 @@ export async function PATCH(request: NextRequest) {
             if (!isValidCUID(template_id)) {
                 return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
             }
-            const template = await prisma.template.findUnique({
+
+            const shouldUnsave = unsave === true;
+
+            // save by default, unsave if unsave is true
+            const prop = shouldUnsave ? { disconnect: { id: user.id } } : { connect: { id: user.id } };
+
+            const template = await prisma.template.update({
                 where: { id: template_id },
-                ...templateGetInclude
+                data: { savers: prop },
+                ...templateGetInclude({ currentUserId: user.id })
             });
             if (!template) {
                 return NextResponse.json({ error: "Template not found" }, { status: 404 });
             }
 
-            const shouldUnsave = unsave === true;
-
-            // save by default, unsave if unsave is true
-            const prop = shouldUnsave ? { disconnect: { id: template_id } } : { connect: { id: template_id } };
-
-            const updatedUser = await prisma.user.update({
-                where: { id: user.id },
-                data: { savedTemplates: prop },
-                select: {
-                    username: true,
-                }
-            });
-
-            Object.assign(template, {savers: shouldUnsave ? [] : [user.id]});
-
             return NextResponse.json({
                 message: shouldUnsave ? "Template unsaved successfully" : "Template saved successfully",
-                user: updatedUser,
                 template: template
             });
 

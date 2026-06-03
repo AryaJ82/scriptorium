@@ -38,6 +38,7 @@ export const validTemplateSortFields = ["createdAt", "title", "language"] as con
 export const validBlogSortFields = ["createdAt", "title", 'upvoteCount', 'downvoteCount'] as const;
 export const validSortOrders = ["desc", "asc"] as const;
 
+// ---------------------- Prisma query defaults
 // Select which does not return the password hash or profile details from the author table
 export const limitedAuthorSelect = {
     select: {
@@ -48,33 +49,53 @@ export const limitedAuthorSelect = {
     }
 };
 
-// Attributes returned for GET and PATCH requests through the /api/templates/[id] route
-export const templateGetInclude = {
-    include: {
-        author: limitedAuthorSelect,
-        tags: { select: { name: true }, },
-        parentTemplate: {
-            select: {
-                id: true,
-                author: limitedAuthorSelect,
-                title: true,
-                createdAt: true,
+// Attributes returned for GET and PATCH
+export function templateGetInclude({ currentUserId, }: { currentUserId?: string; }) {
+    return {
+        include: {
+            author: limitedAuthorSelect,
+            tags: { select: { name: true }, },
+            parentTemplate: {
+                select: {
+                    id: true,
+                    author: limitedAuthorSelect,
+                    title: true,
+                    createdAt: true,
+                },
             },
-        },
-        replies: true,
+            ...(currentUserId && { savers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
+        }
     }
-}
 
+}
+// export const templateGetInclude = {
+//     include: {
+//         author: limitedAuthorSelect,
+//         tags: { select: { name: true }, },
+//         parentTemplate: {
+//             select: {
+//                 id: true,
+//                 author: limitedAuthorSelect,
+//                 title: true,
+//                 createdAt: true,
+//             },
+//         },
+//         replies: true,
+//     }
+// }
+
+
+// ----------------------- Response interfaces
 interface Author {
     id: string;
     username: string;
     avatarUrl: string;
     role: string;
 }
-
 interface Tag {
     name: string;
 }
+
 
 import type { Template } from "@/app/generated/prisma/client"
 export interface TemplateResponse extends Template {
@@ -84,14 +105,14 @@ export interface TemplateResponse extends Template {
     savers: string[]; // This will contain at most one element
 }
 
-import type { Comment } from "@/app/generated/prisma/client"
 
+import type { Comment } from "@/app/generated/prisma/client"
 export interface CommentResponse extends Comment {
     author: Author;
 }
 
-import type { BlogPost } from "@/app/generated/prisma/client"
 
+import type { BlogPost } from "@/app/generated/prisma/client";
 export interface BlogResponse extends BlogPost {
     author: Author;
     tags: Tag[];

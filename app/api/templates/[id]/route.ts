@@ -18,10 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
         const template = await prisma.template.findUnique({
             where: { id: id },
-            include: {
-                ...templateGetInclude.include,
-                ...(currentUser ? { savers: { where: { id: { equals: currentUser.id } }, select: { id: true } } } : {}),
-            },
+            ...templateGetInclude({ currentUserId: currentUser?.id })
         });
 
         if (!template) {
@@ -84,7 +81,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                         },
                     }),
                 },
-                ...templateGetInclude,
+                ...templateGetInclude({ currentUserId: user.id }),
             });
 
             return NextResponse.json({ template: updatedTemplate }, { status: 200 });

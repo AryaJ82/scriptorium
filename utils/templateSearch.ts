@@ -1,6 +1,6 @@
 import prisma from "@/utils/client";
 import { Prisma } from "@/app/generated/prisma/client";
-import { limitedAuthorSelect } from "./interfaces";
+import { limitedAuthorSelect, templateGetInclude } from "./interfaces";
 
 export { verifyTemplateGETParams as verifyGETParams, normalizeTags } from "./inputValidation/templateValidation";
 
@@ -18,19 +18,7 @@ export async function templateSearch(
             orderBy,
             skip: (pageNum - 1) * pageSizeNum,
             take: pageSizeNum,
-            include: {
-                tags: { select: { name: true }, },
-                author: limitedAuthorSelect,
-                parentTemplate: {
-                    select: {
-                        id: true,
-                        author: limitedAuthorSelect,
-                        title: true,
-                        createdAt: true,
-                    },
-                },
-                ...(currentUserId ? { savers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
-            },
+            ...templateGetInclude({currentUserId}),
         }),
     ]);
 
