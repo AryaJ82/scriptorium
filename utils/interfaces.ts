@@ -81,7 +81,7 @@ export interface TemplateResponse extends Template {
     author: TemplateAuthor;
     parentTemplate?: { id: string; title: string };
     tags: Tag[];
-    isSavedByCurrentUser?: boolean;
+    savers: string[]; // This will contain at most one element
 }
 
 

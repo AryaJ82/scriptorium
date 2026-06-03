@@ -6,12 +6,16 @@ import type { TemplateResponse } from '@/utils/interfaces'
 import { LanguageBadge, TagBadge } from './TagBadge'
 import { VoteButtons } from './ui/VoteButtons'
 import { formatDistanceToNow } from 'date-fns';
+import { useMemo } from 'react'
 
 function timeAgo(isoString: string) {
   return formatDistanceToNow(new Date(isoString), { addSuffix: true });
 }
 
 export function TemplateCard({ template }: { template: TemplateResponse }) {
+  const isSavedByCurrentUser = useMemo(() => {
+    return !!template.savers && template.savers.length > 0;
+  }, [template.savers]);
   return (
     <Link
       href={`/templates/${template.id}`}
@@ -19,8 +23,8 @@ export function TemplateCard({ template }: { template: TemplateResponse }) {
     >
       <div className="flex items-start justify-between gap-3">
         <LanguageBadge language={template.language} />
-        {template.isSavedByCurrentUser !== undefined && (
-          template.isSavedByCurrentUser ? (
+        {isSavedByCurrentUser !== undefined && (
+          isSavedByCurrentUser ? (
             <BookmarkCheck className="size-4 text-primary" aria-label="Saved template" />
           ) : (
             <Bookmark className="size-4 text-muted-foreground/60" aria-label="Not saved" />

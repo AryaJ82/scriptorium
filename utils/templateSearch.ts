@@ -4,7 +4,13 @@ import { limitedAuthorSelect } from "./interfaces";
 
 export { verifyTemplateGETParams as verifyGETParams, normalizeTags } from "./inputValidation/templateValidation";
 
-export async function templateSearch(where: Prisma.TemplateWhereInput, orderBy: Prisma.TemplateOrderByWithRelationInput, pageNum: number, pageSizeNum: number) {
+export async function templateSearch(
+    where: Prisma.TemplateWhereInput,
+    orderBy: Prisma.TemplateOrderByWithRelationInput,
+    pageNum: number,
+    pageSizeNum: number,
+    currentUserId?: string,
+) {
     const [totalSize, templates] = await prisma.$transaction([
         prisma.template.count({ where }),
         prisma.template.findMany({
@@ -23,6 +29,7 @@ export async function templateSearch(where: Prisma.TemplateWhereInput, orderBy: 
                         createdAt: true,
                     },
                 },
+                ...(currentUserId ? { savers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
             },
         }),
     ]);

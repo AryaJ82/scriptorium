@@ -1,5 +1,5 @@
 
-import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
+import { AuthenticatedRequest, withAuth, getOptionalUser } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
             [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
         } as Prisma.TemplateOrderByWithRelationInput;
 
-        const searchResult = await templateSearch(where, orderBy, pageNum, pageSizeNum);
+        const currentUser = await getOptionalUser(request);
+        const searchResult = await templateSearch(where, orderBy, pageNum, pageSizeNum, currentUser?.id ?? undefined);
         return NextResponse.json(searchResult, { status: 200 });
 
     } catch (error) {

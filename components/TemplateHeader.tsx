@@ -28,6 +28,7 @@ export default function TemplateHeader({
     onDelete,
     onFork,
     onToggleSaved,
+    isSavedByCurrentUser
 }: {
     template: TemplateResponse;
     isOwner: boolean;
@@ -36,6 +37,7 @@ export default function TemplateHeader({
     onDelete: () => Promise<void>;
     onFork: () => Promise<void>;
     onToggleSaved: () => Promise<void>;
+    isSavedByCurrentUser: boolean;
 }) {
 
     const author = template.author;
@@ -172,7 +174,7 @@ export default function TemplateHeader({
                 </div>
 
                 <span className="flex items-center gap-2">
-                    {template.isSavedByCurrentUser && (
+                    {isSavedByCurrentUser && (
                         <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                             <Bookmark className="size-3" /> Saved
                         </span>
@@ -189,7 +191,7 @@ export default function TemplateHeader({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => toggleSavedState()} disabled={templateSaving}>
-                                <Bookmark className="size-3" /> {template.isSavedByCurrentUser ? 'Unsave Template' : 'Save Template'}
+                                <Bookmark className="size-3" /> {isSavedByCurrentUser ? 'Unsave Template' : 'Save Template'}
                             </DropdownMenuItem>
 
                             <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading}>

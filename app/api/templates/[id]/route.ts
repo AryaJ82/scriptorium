@@ -28,12 +28,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             return NextResponse.json({ error: "Template not found" }, { status: 404 });
         }
 
-        console.log(template);
-
-        if (currentUser) {
-            Object.assign(template, { isSavedByCurrentUser: !!template.savers })
-        }
-
         return NextResponse.json({ template }, { status: 200 });
 
     } catch (error) {
