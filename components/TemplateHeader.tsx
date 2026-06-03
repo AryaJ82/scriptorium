@@ -27,7 +27,7 @@ export default function TemplateHeader({
     onSaveTags,
     onDelete,
     onFork,
-    onSave,
+    onToggleSaved,
 }: {
     template: TemplateResponse;
     isOwner: boolean;
@@ -35,7 +35,7 @@ export default function TemplateHeader({
     onSaveTags: (tags: string[]) => Promise<void>;
     onDelete: () => Promise<void>;
     onFork: () => Promise<void>;
-    onSave: () => Promise<void>;
+    onToggleSaved: () => Promise<void>;
 }) {
 
     const author = template.author;
@@ -117,14 +117,14 @@ export default function TemplateHeader({
     }, [onSaveTitle, title]);
 
     // ----- Saving template
-    const saveTemplate = useCallback(async () => {
+    const toggleSavedState = useCallback(async () => {
         setTemplateSaving(true);
         try {
-            await onSave();
+            await onToggleSaved();
         } finally {
             setTemplateSaving(false);
         }
-    }, [onSave]);
+    }, [onToggleSaved]);
 
     // ---- Deletion and Forking handlers ---
     const confirmDelete = useCallback(async () => {
@@ -170,35 +170,43 @@ export default function TemplateHeader({
                         <span className="text-sm font-medium">{author.username}</span>
                     </button>
                 </div>
-                {/* Burger Menu */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button
-                            className="flex items-center justify-center rounded-md outline-none border border-border p-2 hover:bg-accent"
-                            aria-label="Template actions"
-                        >
-                            <Menu className="size-4" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => saveTemplate()} disabled={templateSaving}>
-                            <Bookmark className="size-3" /> Save Template
-                        </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading}>
-                            <GitBranch className="size-3" /> Fork Template
-                        </DropdownMenuItem>
+                <span className="flex items-center gap-2">
+                    {template.isSavedByCurrentUser && (
+                        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                            <Bookmark className="size-3" /> Saved
+                        </span>
+                    )}
+                    {/* Burger Menu */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                className="flex items-center justify-center rounded-md outline-none border border-border p-2 hover:bg-accent"
+                                aria-label="Template actions"
+                            >
+                                <Menu className="size-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => toggleSavedState()} disabled={templateSaving}>
+                                <Bookmark className="size-3" /> {template.isSavedByCurrentUser ? 'Unsave Template' : 'Save Template'}
+                            </DropdownMenuItem>
 
-                        <DropdownMenuSeparator />
-                        {isOwner && (
-                            <>
-                                <DropdownMenuItem variant="destructive" onClick={() => setIsDeleteOpen(true)} disabled={deleteLoading}>
-                                    <Trash className="size-3" /> Delete
-                                </DropdownMenuItem>
-                            </>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading}>
+                                <GitBranch className="size-3" /> Fork Template
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+                            {isOwner && (
+                                <>
+                                    <DropdownMenuItem variant="destructive" onClick={() => setIsDeleteOpen(true)} disabled={deleteLoading}>
+                                        <Trash className="size-3" /> Delete
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </span>
             </div>
 
             {isDeleteOpen && (

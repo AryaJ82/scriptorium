@@ -4,7 +4,7 @@ import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams, normalizeTags } from "@/utils/templateSearch";
-import type { TemplateGETQuery, SavedTemplateTogglePATCHBody } from "@/utils/interfaces";
+import { type TemplateGETQuery, type SavedTemplateTogglePATCHBody, templateGetInclude } from "@/utils/interfaces";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 
 
@@ -89,7 +89,10 @@ export async function PATCH(request: NextRequest) {
             if (!isValidCUID(template_id)) {
                 return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
             }
-            const template = await prisma.template.findUnique({ where: { id: template_id }, });
+            const template = await prisma.template.findUnique({
+                where: { id: template_id },
+                ...templateGetInclude
+            });
             if (!template) {
                 return NextResponse.json({ error: "Template not found" }, { status: 404 });
             }
@@ -104,13 +107,15 @@ export async function PATCH(request: NextRequest) {
                 data: { savedTemplates: prop },
                 select: {
                     username: true,
-                    savedTemplates: true
                 }
             });
 
+            const t = Object.assign(template, {isSavedByCurrentUser: !shouldUnsave})
+
             return NextResponse.json({
                 message: shouldUnsave ? "Template unsaved successfully" : "Template saved successfully",
-                user: updatedUser
+                user: updatedUser,
+                template: template
             });
 
         } catch (error) {

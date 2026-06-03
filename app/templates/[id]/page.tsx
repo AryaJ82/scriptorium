@@ -147,34 +147,37 @@ export default function TemplatePage() {
         }
     }, [authFetch, baseUrl, template]);
 
-    const saveTemplate = useCallback(async ( ) => {
+    const saveTemplate = useCallback(async () => {
         if (!template || !session.isAuthenticated){
             throw new Error("Invalid template or session.")
         }
         setActionError(null);
         setSaveLoading(true);
 
+        try {
             const response = await authFetch(`${baseUrl}/api/users/${session.id}/saved-templates`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     template_id: template.id,
+                    unsave: template.isSavedByCurrentUser === true,
                 }),
             });
+
             const body = await response.json();
             if (!response.ok) {
-                throw new Error(body.error ?? 'Unable to save template.');
+                throw new Error(body.error ?? 'Unable to update saved template.');
             }
-
-            //setTemplate(body.template)
-
-        try {
+            console.log(body);
             
-        } catch (error) {
-            setActionError(error instanceof Error ? error.message : 'Unable to save template to profile.'); 
-        }
+            setTemplate(body.template as TemplateResponse);
 
-    }, [authFetch, template, session.isAuthenticated]);
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'Unable to save template to profile.');
+        } finally {
+            setSaveLoading(false);
+        }
+    }, [authFetch, template, session.isAuthenticated, baseUrl, session.id]);
 
     const deleteTemplate = useCallback(async () => {
         if (!template || !session.isAuthenticated || template.authorId !== session?.id){
@@ -219,7 +222,7 @@ export default function TemplatePage() {
                     onSaveTags={(tags: string[]) => updateTemplate({ tags })}
                     onDelete={deleteTemplate}
                     onFork={forkTemplate}
-                    onSave={saveTemplate}
+                    onToggleSaved={saveTemplate}
                 />
             ) : null}
 
