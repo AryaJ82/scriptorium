@@ -84,6 +84,18 @@ export interface TemplateResponse extends Template {
     savers: string[]; // This will contain at most one element
 }
 
+// Return type for requests to profile under api/users/[id] and 
+export interface UserProfileData {
+    id: string;
+    username: string;
+    email?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    avatarUrl?: string | null;
+    phoneNumber?: string | null;
+    role?: string | null;
+}
+
 
 // ===================================================
 // Requests

@@ -6,17 +6,7 @@ import { useUserSession } from "@/contexts/UserSessionContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-interface UserProfileData {
-    id: string;
-    username: string;
-    email?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    avatarUrl?: string | null;
-    phoneNumber?: string | null;
-    role?: string | null;
-}
+import { UserProfileData } from "@/utils/interfaces";
 
 export default function UserProfile() {
     const router = useRouter();

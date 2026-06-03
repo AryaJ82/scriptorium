@@ -41,14 +41,14 @@ export function verifyUsername(username: unknown): ValidationError | null {
 export function verifyUserProfilePATCHBody(params: UserProfilePATCHBody) : ValidationError | null  {
     const { email, firstName, lastName, avatarUrl, phoneNumber } = params;
 
-    if (!isOptionalString(firstName, 30)) {
-        return createError(`Invalid first name: must be a string less than 30 characters`);
+    if (!isOptionalString(firstName, MAX_USERNAME_LENGTH)) {
+        return createError(`Invalid first name: must be a string less than ${MAX_USERNAME_LENGTH} characters`);
     }
 
-    if (!isOptionalString(lastName, 30)) {
-        return createError(`Invalid last name: must be a string less than 30 characters`);
+    if (!isOptionalString(lastName, MAX_USERNAME_LENGTH)) {
+        return createError(`Invalid last name: must be a string less than ${MAX_USERNAME_LENGTH} characters`);
     }
-
+    
     if (!isOptionalString(avatarUrl, 2048)) {
         return createError(`Invalid avatar URL: must be a string less than 2048 characters`);
     } else if (avatarUrl && !/^https?:\/\/.+\..+/.test(avatarUrl)) {
