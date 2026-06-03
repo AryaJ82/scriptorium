@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             where: { id: id },
             include: {
                 ...templateGetInclude.include,
-                ...(currentUser ? { savers: { select: { id: true } } } : {}),
+                ...(currentUser ? { savers: { where: { id: { equals: currentUser.id } }, select: { id: true } } } : {}),
             },
         });
 
@@ -28,16 +28,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             return NextResponse.json({ error: "Template not found" }, { status: 404 });
         }
 
-        const responseTemplate = {
-            ...template,
-            isSavedByCurrentUser: currentUser ? template.savers.some((saver) => saver.id === currentUser.id) : undefined,
-        };
+        console.log(template);
 
-        if (!currentUser) {
-            delete (responseTemplate as any).savers;
+        if (currentUser) {
+            Object.assign(template, { isSavedByCurrentUser: !!template.savers })
         }
 
-        return NextResponse.json({ template: responseTemplate }, { status: 200 });
+        return NextResponse.json({ template }, { status: 200 });
 
     } catch (error) {
         console.error("Error fetching templates at [id] route", error);
@@ -117,7 +114,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             if (!isValidCUID(id)) {
                 return NextResponse.json({ error: "template_id is required and must be a string" }, { status: 400 });
             }
-            
+
             const template = await prisma.template.findUnique({
                 where: { id: id },
                 include: { descendentTemplates: true },
