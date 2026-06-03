@@ -1,5 +1,5 @@
 
-import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
+import { AuthenticatedRequest, withAuth, getOptionalUser } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { normalizeTags, verifyTemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
@@ -14,16 +14,30 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             return NextResponse.json({ error: "Invalid template cuid" }, { status: 400 });
         }
 
+        const currentUser = await getOptionalUser(request);
+
         const template = await prisma.template.findUnique({
             where: { id: id },
-            ...templateGetInclude,
+            include: {
+                ...templateGetInclude.include,
+                ...(currentUser ? { savers: { select: { id: true } } } : {}),
+            },
         });
 
         if (!template) {
             return NextResponse.json({ error: "Template not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ template }, { status: 200 });
+        const responseTemplate = {
+            ...template,
+            isSavedByCurrentUser: currentUser ? template.savers.some((saver) => saver.id === currentUser.id) : undefined,
+        };
+
+        if (!currentUser) {
+            delete (responseTemplate as any).savers;
+        }
+
+        return NextResponse.json({ template: responseTemplate }, { status: 200 });
 
     } catch (error) {
         console.error("Error fetching templates at [id] route", error);
