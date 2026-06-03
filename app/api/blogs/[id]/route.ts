@@ -36,8 +36,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                         author: limitedAuthorSelect,
                     }
                 },
-                ...(currentUserId ? { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
-                ...(currentUserId ? { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
+                ...(currentUserId && { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
+                ...(currentUserId && { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
             },
         });
 

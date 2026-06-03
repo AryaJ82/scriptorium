@@ -44,7 +44,6 @@ export default function TemplatePage() {
 
 
     const isOwner = !!session && template?.authorId === session.id;
-    console.log(template?.savers);
     
     const isSavedByCurrentUser = (!!template && template?.savers.length > 0);
     
@@ -71,7 +70,8 @@ export default function TemplatePage() {
                     throw new Error(body.error ?? "Unable to load template.");
                 }
 
-                const t: TemplateResponse = body.template;
+                const t: TemplateResponse | undefined = body.template;
+                if (!t) throw new Error('Template not found');
                 setTemplate(t);
             })
             .catch((err) => {
