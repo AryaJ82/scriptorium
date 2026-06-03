@@ -9,11 +9,9 @@ import { UserMenu } from "./UserMenu";
 
 const NAV = [
     { href: '/playground', label: 'Playground' },
-    // { href: '/templates', label: 'Templates' },
+    { href: '/templates', label: 'Templates' },
     // { href: '/blog', label: 'Blog' },
     { href: '/info', label: 'Info' },
-    { href: '/protected', label: 'Protected' },
-    { href: '/users/login', label: 'Login' },
 ]
 
 export function SiteHeader() {
