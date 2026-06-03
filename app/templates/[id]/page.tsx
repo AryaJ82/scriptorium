@@ -44,7 +44,10 @@ export default function TemplatePage() {
 
 
     const isOwner = !!session && template?.authorId === session.id;
-
+    console.log(template?.savers);
+    
+    const isSavedByCurrentUser = (!!template && template?.savers.length > 0);
+    
     // ---------------------------------------------------------------------------
     // Fetch template
     // ---------------------------------------------------------------------------
@@ -160,7 +163,7 @@ export default function TemplatePage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     template_id: template.id,
-                    unsave: template.isSavedByCurrentUser === true,
+                    unsave: isSavedByCurrentUser,
                 }),
             });
 
@@ -168,7 +171,6 @@ export default function TemplatePage() {
             if (!response.ok) {
                 throw new Error(body.error ?? 'Unable to update saved template.');
             }
-            console.log(body);
             
             setTemplate(body.template as TemplateResponse);
 
@@ -177,7 +179,7 @@ export default function TemplatePage() {
         } finally {
             setSaveLoading(false);
         }
-    }, [authFetch, template, session.isAuthenticated, baseUrl, session.id]);
+    }, [authFetch, template, session.isAuthenticated, baseUrl, session.id, isSavedByCurrentUser]);
 
     const deleteTemplate = useCallback(async () => {
         if (!template || !session.isAuthenticated || template.authorId !== session?.id){
@@ -223,6 +225,7 @@ export default function TemplatePage() {
                     onDelete={deleteTemplate}
                     onFork={forkTemplate}
                     onToggleSaved={saveTemplate}
+                    isSavedByCurrentUser={isSavedByCurrentUser}
                 />
             ) : null}
 
