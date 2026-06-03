@@ -7,6 +7,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { ScriptoriumLogo } from "./ScriptoriumLogo";
 import { UserMenu } from "./UserMenu";
 import { cn } from "@/lib/utils";
+import { Button } from './ui/Button'
+import { SaveBlogDialogue } from "./SaveBlogDialogue";
 
 const NAV = [
     { href: '/playground', label: 'Playground' },
@@ -54,6 +56,11 @@ export function SiteHeader() {
 
                 <div className="ml-auto flex items-center gap-2">
                     <ThemeToggle />
+                    <div className="hidden sm:block">
+                        <SaveBlogDialogue>
+                            <Button variant="edit">Create Post</Button>
+                        </SaveBlogDialogue>
+                    </div>
                     <div className="hidden sm:block">
                         <UserMenu />
                     </div>
