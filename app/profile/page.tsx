@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useUserSession } from "@/contexts/UserSessionContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
@@ -19,8 +19,6 @@ interface UserProfileData {
 }
 
 export default function UserProfile() {
-    const params = useParams();
-    const id = params?.id;
     const router = useRouter();
     const { session, baseUrl, authFetch } = useUserSession();
 
@@ -38,15 +36,8 @@ export default function UserProfile() {
     const [draftPhone, setDraftPhone] = useState("");
 
     useEffect(() => {
-        if (!id) return;
-
         // Only allow viewing/editing your own profile in this page
-        if (!session) {
-            router.push("/users/login");
-            return;
-        }
-
-        if (session.id !== id) {
+        if (!session.isAuthenticated || !session.id)  {
             router.push("/users/login");
             return;
         }
@@ -55,7 +46,7 @@ export default function UserProfile() {
         setLoading(true);
         setActionError(null);
 
-        authFetch(`${baseUrl}/api/users/${id}`, {
+        authFetch(`${baseUrl}/api/users/${session.id}`, {
             method: 'GET',
             signal: controller.signal,
         })
@@ -74,7 +65,7 @@ export default function UserProfile() {
             });
 
         return () => controller.abort();
-    }, [id, session, authFetch, baseUrl, router]);
+    }, [session.id, session.isAuthenticated, authFetch, baseUrl, router]);
 
     const startEdit = useCallback(() => {
         if (!user) return;
