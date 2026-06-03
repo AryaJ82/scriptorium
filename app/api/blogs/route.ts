@@ -1,5 +1,5 @@
 
-import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
+import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
         const where: Prisma.BlogPostWhereInput = {
             ...(post_id && {
-                id: Number(post_id)
+                id: parseInt(post_id)
             }),
             ...(title && {
                 title: { contains: title },
@@ -55,6 +55,8 @@ export async function GET(request: NextRequest) {
             [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
         } as Prisma.BlogPostOrderByWithRelationInput;
 
+        const currentUser = await getOptionalUser(request);
+        const currentUserId = currentUser?.id ?? undefined;
         const [totalSize, blogs] = await prisma.$transaction([
             prisma.blogPost.count({ where }),
             prisma.blogPost.findMany({
@@ -67,6 +69,9 @@ export async function GET(request: NextRequest) {
                         select: { name: true },
                     },
                     author: limitedAuthorSelect,
+                    ...(currentUserId && { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
+                    ...(currentUserId && { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
+                    
                 },
             }),
         ]);

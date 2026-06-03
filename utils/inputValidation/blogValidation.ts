@@ -10,7 +10,7 @@ export { normalizeTags } from "@/utils/inputValidation/generalValidation";
 export function verifyGETParams(params: BlogGETQuery) {
     const { post_id, linked_template_id, title, content, tags, author, page, pageSize, sortBy, sortOrder } = params;
 
-    if (!isPositiveIntegerString(post_id)) {
+    if (post_id !== undefined && !isPositiveIntegerString(post_id)) {
         return createError("post_id should be a positive integer");
     }
 

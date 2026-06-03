@@ -27,7 +27,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                 linkedTemplate: {
                     select: {
                         id: true,
-                        author: limitedAuthorSelect,
                         title: true,
                         createdAt: true,
                     }

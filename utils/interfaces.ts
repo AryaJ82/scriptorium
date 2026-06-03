@@ -84,11 +84,19 @@ export interface TemplateResponse extends Template {
     savers: string[]; // This will contain at most one element
 }
 
+import type { Comment } from "@/app/generated/prisma/client"
+
+export interface CommentResponse extends Comment {
+    author: Author;
+}
+
 import type { BlogPost } from "@/app/generated/prisma/client"
 
 export interface BlogResponse extends BlogPost {
     author: Author;
     tags: Tag[];
+    comments?: CommentResponse[];
+    linkedTemplate?: { id: string, title: string, createdAt: Date }
 }
 
 // Return type for requests to profile under api/users/[id] and 

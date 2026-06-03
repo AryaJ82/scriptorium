@@ -1,0 +1,58 @@
+import Link from 'next/link'
+import { FileCode2, MessageSquare } from 'lucide-react'
+import { TagBadge } from './TagBadge'
+import { VoteButtons } from './ui/VoteButtons'
+import { BlogResponse } from '@/utils/interfaces';
+import { timeAgo } from '@/utils/timeAgo';
+
+export default function BlogPostCard({ post }: { post: BlogResponse }) {
+  return (
+    <article className="flex gap-4 rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50">
+      <div className="hidden shrink-0 sm:block">
+        <VoteButtons upvotes={post.upvoteCount} downvotes={post.downvoteCount} />
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {post.tags.slice(0, 3).map((tag) => (
+            <TagBadge key={tag.name} label={tag.name} />
+          ))}
+        </div>
+
+        <h3 className="text-balance font-serif text-xl font-medium leading-snug">
+          <Link
+            href={`/blog/${post.id}`}
+            className="transition-colors hover:text-primary"
+          >
+            {post.title}
+          </Link>
+        </h3>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+          <span className="font-mono">@{post.author.username}</span>
+          <span>{timeAgo(post.createdAt as unknown as string)}</span>
+          <span className="inline-flex items-center gap-1">
+            <MessageSquare className="size-3.5" /> {post.comments?.length ?? 0} Replies
+          </span>
+          {post.linkedTemplate && (
+            <span className="inline-flex items-center gap-1">
+              Replying to
+              <Link
+                href={`/templates/${post.linkedTemplate.id}`}
+                className="transition-colors hover:text-primary"
+              >
+                <FileCode2 className="size-3.5" />
+                {post.linkedTemplate.title}
+              </Link>
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-border/70 pt-3 text-xs text-muted-foreground">
+        <span className="font-mono">@{post.author.username}</span>
+        <span>{timeAgo(post.updatedAt as unknown as string)}</span>
+      </div>
+    </article>
+  )
+}
