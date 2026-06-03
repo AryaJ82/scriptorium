@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 import { ScriptoriumLogo } from "./ScriptoriumLogo";
 import { UserMenu } from "./UserMenu";
+import { cn } from "@/lib/utils";
 
 const NAV = [
     { href: '/playground', label: 'Playground' },
@@ -29,18 +30,27 @@ export function SiteHeader() {
                     <ScriptoriumLogo />
                 </Link>
 
+
                 <nav className="ml-4 hidden items-center gap-1 md:flex">
                     {links.map((item) => {
+                        const active = pathname === item.href
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className='bg-secondary text-foreground'>
+                                className={cn(
+                                    'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                    active
+                                        ? 'bg-secondary text-foreground'
+                                        : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground',
+                                )}
+                            >
                                 {item.label}
                             </Link>
                         )
                     })}
                 </nav>
+
 
                 <div className="ml-auto flex items-center gap-2">
                     <ThemeToggle />
