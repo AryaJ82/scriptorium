@@ -110,7 +110,7 @@ export async function PATCH(request: NextRequest) {
                 }
             });
 
-            const t = Object.assign(template, {isSavedByCurrentUser: !shouldUnsave})
+            Object.assign(template, {isSavedByCurrentUser: !shouldUnsave})
 
             return NextResponse.json({
                 message: shouldUnsave ? "Template unsaved successfully" : "Template saved successfully",
