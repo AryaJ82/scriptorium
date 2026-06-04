@@ -13,12 +13,6 @@ export default function BlogPostCard({ post }: { post: BlogResponse }) {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {post.tags.slice(0, 3).map((tag) => (
-            <TagBadge key={tag.name} label={tag.name} />
-          ))}
-        </div>
-
         <h3 className="text-balance font-serif text-xl font-medium leading-snug">
           <Link
             href={`/blog/${post.id}`}
@@ -27,6 +21,12 @@ export default function BlogPostCard({ post }: { post: BlogResponse }) {
             {post.title}
           </Link>
         </h3>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {post.tags.slice(0, 3).map((tag) => (
+            <TagBadge key={tag.name} label={tag.name} />
+          ))}
+        </div>
+
 
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
           <span className="font-mono">@{post.author.username}</span>
@@ -49,10 +49,6 @@ export default function BlogPostCard({ post }: { post: BlogResponse }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-border/70 pt-3 text-xs text-muted-foreground">
-        <span className="font-mono">@{post.author.username}</span>
-        <span>{timeAgo(post.updatedAt as unknown as string)}</span>
-      </div>
     </article>
   )
 }
