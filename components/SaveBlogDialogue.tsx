@@ -17,9 +17,15 @@ interface SaveBlogDialogueParams {
     children: React.ReactNode;
     initialTitle?: string;
     initialContent?: string;
+    linkedTemplateId?: string;
 }
 
-export function SaveBlogDialogue({ children, initialTitle = '', initialContent = '' }: SaveBlogDialogueParams) {
+export function SaveBlogDialogue({
+    children,
+    initialTitle = '',
+    initialContent = '',
+    linkedTemplateId
+}: SaveBlogDialogueParams) {
     const { session, authFetch } = useUserSession();
     const [open, setOpen] = useState(false);
 
@@ -46,20 +52,35 @@ export function SaveBlogDialogue({ children, initialTitle = '', initialContent =
         }
     }, [tagDraft, tags]);
 
-    const handleSaveBlog = useCallback(async (title: string, content?: string, tags?: string[]) => {
-        const response = await authFetch("/api/blogs", {
+    const handleSaveBlog = useCallback(async (title: string, content?: string, tags?: string[], linkedTemplateId?: string) => {
+        setLoading(true);
+
+        authFetch("/api/blogs", {
             method: "POST",
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content, tags }),
-        });
+            body: JSON.stringify({
+                title,
+                content,
+                tags,
+                linked_template_id: linkedTemplateId,
+            }),
+        }).then(async (response) => {
+            if (!response) {
+                throw Error("An error has occured when creating blog post")
+            }
 
-        if (!response) {
-            return Response.json({ error: "An unknown error occurred" }, { status: 600 });
-        } else if (response.ok) {
-            return response;
-        } else {
-            return response;
-        }
+            const body = await response.json()
+            if (!response.ok) {
+                throw Error(body.error ?? "An error has occured when creating blog post");
+            }
+
+            router.push(`/blog/${body.id}`);
+            setOpen(false);
+        }).catch((err) => {
+            toast.error(err instanceof Error ? err.message : "Unable to create blog post.");
+        }).finally(() => {
+            setLoading(false);
+        });
 
     }, [authFetch]);
 
@@ -149,19 +170,7 @@ export function SaveBlogDialogue({ children, initialTitle = '', initialContent =
                     <Button
                         disabled={loading}
                         onClick={async () => {
-                            setLoading(true);
-                            const response = await handleSaveBlog(title, content, tags);
-                            const body = await response.json();
-                            if (response.ok && body.id) {
-                                setOpen(false);
-                                setLoading(false);
-                                router.push(`/blog/${body.id}`);
-                            } else {
-                                setLoading(false);
-                                toast.error(
-                                    body.error || 'Failed to create post',
-                                );
-                            }
+                            handleSaveBlog(title, content, tags);
                         }}
                     >
                         Create Post
@@ -173,4 +182,3 @@ export function SaveBlogDialogue({ children, initialTitle = '', initialContent =
     )
 }
 
-export default SaveBlogDialogue

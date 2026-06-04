@@ -55,8 +55,11 @@ export function SaveTemplateDialogue({
     }, [tagDraft, tags]);
 
     const handleSaveTemplate = useCallback(async (title: string, code?: string, desc?: string, stdin?: string, tags?: string[]) => {
-        const response = await authFetch("/api/templates", {
+        setLoading(true);
+
+        authFetch("/api/templates", {
             method: "POST",
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title,
                 code,
@@ -68,15 +71,22 @@ export function SaveTemplateDialogue({
                     forkedSourceId: forkedParent.id,
                 }),
             }),
-        });
+        }).then(async (response) => {
+            if (!response) {
+                throw Error("An error has occured when creating template")
+            }
 
-        if (!response) {
-            return Response.json({ error: "An unknown error occurred" }, { status: 600 }); // TODO: need to set error back to normal. Timeout?
-        } else if (response.ok) {
-            return response;
-        } else {
-            return response;
-        }
+            const body = await response.json()
+            if (!response.ok) {
+                throw Error(body.error ?? "An error has occured when creating template");
+            }
+
+            router.push(`/templates/${body.id}`);
+        }).catch((err) => {
+            toast.error(err instanceof Error ? err.message : "Unable to save template.");
+        }).finally(() => {
+            setLoading(false);
+        });
 
     }, [authFetch, language, forkedParent]);
 
@@ -175,20 +185,7 @@ export function SaveTemplateDialogue({
                     <Button
                         disabled={loading}
                         onClick={async () => {
-                            setLoading(true);
-                            const response = await handleSaveTemplate(title, code, desc, stdin, tags);
-                            const body = await response.json();
-                            if (response.ok && body.id) {
-
-                                setOpen(false);
-                                setLoading(false);
-                                router.push(`/templates/${body.id}`);
-                            } else {
-                                setLoading(false);
-                                toast.error(
-                                    body.error,
-                                );
-                            }
+                            handleSaveTemplate(title, code, desc, stdin, tags);
                         }}
                     >
                         Create Template
