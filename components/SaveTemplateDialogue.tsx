@@ -11,8 +11,9 @@ import { Label } from './Label';
 import Textarea from './ui/Textarea';
 import Input from './ui/Input';
 import { useRouter } from 'next/navigation';
-import { validateTagValue } from '@/utils/inputValidation/generalValidation';
 import { TagBadge } from './TagBadge';
+import { useTagEdit } from '@/lib/useTagEdit';
+
 
 interface SaveTemplateDialogueParams {
     children: React.ReactNode;
@@ -33,26 +34,11 @@ export function SaveTemplateDialogue({
 
     const [title, setTitle] = useState<string>("");
     const [desc, setDesc] = useState<string>("");
-    const [tagDraft, setTagDraft] = useState<string>('');
-    const [tags, setTags] = useState<string[]>([]);
+    const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit();
 
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
-        if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
-            e.preventDefault();
-            const newTag = tagDraft.trim().toLowerCase();
-            const error = validateTagValue(newTag);
-            if (error) {
-                toast.error(error.message);
-                return;
-            }
-
-            if (!tags.includes(newTag)) setTags([...tags, newTag]);
-            setTagDraft('');
-        }
-    }, [tagDraft, tags]);
 
     const handleSaveTemplate = useCallback(async (title: string, code?: string, desc?: string, stdin?: string, tags?: string[]) => {
         setLoading(true);
@@ -163,7 +149,7 @@ export function SaveTemplateDialogue({
                                     <button
                                         key={t}
                                         type="button"
-                                        onClick={() => setTags(tags.filter((x) => x !== t))}
+                                        onClick={() => removeTag(t)}
                                         className="mt-auto flex flex-wrap items-center gap-1.5 pt-1"
                                     >
                                         <TagBadge key={t} label={t} deleteMode={true} />

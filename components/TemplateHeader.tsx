@@ -3,9 +3,8 @@
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import { GitFork, X, Menu, Pencil, GitBranch, Trash, Bookmark } from "lucide-react";
+import { GitFork, X, Menu, Pencil, GitBranch, Trash, Bookmark, MessageSquare } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
-import { toast } from 'sonner'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,9 +15,10 @@ import {
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
-import { validateTagValue } from "@/utils/inputValidation/generalValidation";
 import ActionDialogue from "./ui/ActionDialog";
 import { TagBadge } from "./TagBadge";
+import { SaveBlogDialogue } from "./SaveBlogDialogue";
+import { useTagEdit } from "@/lib/useTagEdit";
 
 export default function TemplateHeader({
     template,
@@ -38,16 +38,17 @@ export default function TemplateHeader({
     onFork: () => Promise<void>;
     onToggleSaved: () => Promise<void>;
     isSavedByCurrentUser: boolean;
+
 }) {
 
     const author = template.author;
     const [title, setTitle] = useState(template.title);
-    const [tags, setTags] = useState<string[]>(template.tags.map((tag) => tag.name));
-    const [tagDraft, setTagDraft] = useState('');
-    const [editingTitle, setEditingTitle] = useState(false);
-    const [editingTags, setEditingTags] = useState(false);
-    const [templateSaving, setTemplateSaving] = useState(false);
-    const [titleSaving, setTitleSaving] = useState(false);
+    const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit();
+;
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [isEditingTags, setIsEditingTags] = useState(false);
+    const [isTemplateSaving, setIsTemplateSaving] = useState(false);
+    const [isTitleSaving, setIsTitleSaving] = useState(false);
     const [tagsSaving, setTagsSaving] = useState(false);
 
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -55,43 +56,29 @@ export default function TemplateHeader({
 
     const [isForkOpen, setIsForkOpen] = useState(false);
     const [forkLoading, setForkLoading] = useState(false);
+
+    const [isBlogReplyOpen, setIsBlogReplyOpen] = useState(false);
+    const [isBlogReplyLoading, setIsBlogReplyLoading] = useState(false);
+
+    
     // ---------------------------------------------------------------------------
     // Actions
     // ---------------------------------------------------------------------------
 
 
     /// ---  Tag editing handlers ---
-    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
-        if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
-            e.preventDefault();
-            const newTag = tagDraft.trim().toLowerCase();
-            const error = validateTagValue(newTag);
-            if (error) {
-                toast.error(error.message);
-                return;
-            }
-            if (!tags.includes(newTag)) {
-                setTags([...tags, newTag]);
-            }
-            setTagDraft('');
-        }
-    }, [tags]);
-
-    const removeTag = useCallback((tag: string) => {
-        setTags(tags.filter((current) => current !== tag));
-    }, [tags]);
 
     const cancelTagsEdit = useCallback(() => {
         setTags(template.tags.map((tag) => tag.name));
         setTagDraft('');
-        setEditingTags(false);
+        setIsEditingTags(false);
     }, [template.tags]);
 
     const saveTags = useCallback(async () => {
         setTagsSaving(true);
         try {
             await onSaveTags(tags);
-            setEditingTags(false);
+            setIsEditingTags(false);
         } finally {
             setTagsSaving(false);
         }
@@ -100,31 +87,31 @@ export default function TemplateHeader({
     // --- Title editing handlers ---
     const cancelTitleEdit = useCallback(() => {
         setTitle(template.title);
-        setEditingTitle(false);
+        setIsEditingTitle(false);
     }, [template.title]);
 
 
     const saveTitle = useCallback(async () => {
         if (!onSaveTitle) {
-            setEditingTitle(false);
+            setIsEditingTitle(false);
             return;
         }
-        setTitleSaving(true);
+        setIsTitleSaving(true);
         try {
             await onSaveTitle(title);
-            setEditingTitle(false);
+            setIsEditingTitle(false);
         } finally {
-            setTitleSaving(false);
+            setIsTitleSaving(false);
         }
     }, [onSaveTitle, title]);
 
     // ----- Saving template
     const toggleSavedState = useCallback(async () => {
-        setTemplateSaving(true);
+        setIsTemplateSaving(true);
         try {
             await onToggleSaved();
         } finally {
-            setTemplateSaving(false);
+            setIsTemplateSaving(false);
         }
     }, [onToggleSaved]);
 
@@ -190,9 +177,17 @@ export default function TemplateHeader({
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => toggleSavedState()} disabled={templateSaving}>
+                            <DropdownMenuItem onClick={() => toggleSavedState()} disabled={isTemplateSaving}>
                                 <Bookmark className="size-3" /> {isSavedByCurrentUser ? 'Unsave Template' : 'Save Template'}
                             </DropdownMenuItem>
+
+
+                            <SaveBlogDialogue linkedTemplateId={template.id}>
+                                <DropdownMenuItem disabled={forkLoading}>
+                                    <MessageSquare className="size-3" /> Reply with Blog Post
+                                </DropdownMenuItem>
+                            </SaveBlogDialogue>
+
 
                             <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading}>
                                 <GitBranch className="size-3" /> Fork Template
@@ -231,12 +226,13 @@ export default function TemplateHeader({
                     actionLoading={forkLoading}
                 />
             )}
+
             <div className="flex flex-col items-start gap-2">
 
                 <div className="flex flex-col gap-2 min-w-0">
                     {isOwner ? (
                         <div className="flex flex-col gap-2 w-full">
-                            {editingTitle ? (
+                            {isEditingTitle ? (
                                 <div className="flex gap-2">
                                     <Textarea
                                         value={title}
@@ -246,11 +242,11 @@ export default function TemplateHeader({
                                         rows={1}
                                     />
                                     <div className="flex flex-col justify-end gap-2">
-                                        <Button variant="ghost" size="sm" onClick={cancelTitleEdit} disabled={titleSaving}>
+                                        <Button variant="ghost" size="sm" onClick={cancelTitleEdit} disabled={isTitleSaving}>
                                             Cancel
                                         </Button>
-                                        <Button variant="outline" size="sm" onClick={saveTitle} disabled={titleSaving || !title.trim()}>
-                                            {titleSaving ? 'Saving…' : 'Save'}
+                                        <Button variant="outline" size="sm" onClick={saveTitle} disabled={isTitleSaving || !title.trim()}>
+                                            {isTitleSaving ? 'Saving…' : 'Save'}
                                         </Button>
                                     </div>
                                 </div>
@@ -259,7 +255,7 @@ export default function TemplateHeader({
                                     <h1 className="font-serif text-3xl font-semibold tracking-tight break-all leading-tight">
                                         {template.title}
                                     </h1>
-                                    <Button variant="edit" onClick={() => setEditingTitle(true)}>
+                                    <Button variant="edit" onClick={() => setIsEditingTitle(true)}>
                                         <Pencil className="size-3" /> Edit Title
                                     </Button>
                                 </div>
@@ -296,7 +292,7 @@ export default function TemplateHeader({
                         </a>
                     )}
 
-                    {!isOwner && !editingTags && template.tags.length > 0 && (
+                    {!isOwner && !isEditingTags && template.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                             {tags.map((tag) => (
                                 <span
@@ -315,7 +311,7 @@ export default function TemplateHeader({
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between gap-2">
 
-                            {editingTags ? (
+                            {isEditingTags ? (
                                 <>
                                     <Button variant="ghost" size="sm" onClick={cancelTagsEdit} disabled={tagsSaving}>
                                         Cancel
@@ -326,13 +322,13 @@ export default function TemplateHeader({
                                 </>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <Button variant="edit" onClick={() => setEditingTags(true)}>
+                                    <Button variant="edit" onClick={() => setIsEditingTags(true)}>
                                         <Pencil className="size-3" /> Edit Tags
                                     </Button>
                                 </div>
                             )}
                         </div>
-                        {editingTags ? (
+                        {isEditingTags ? (
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="flex flex-wrap gap-1">
                                     {tags.map((tag) => (
@@ -356,7 +352,7 @@ export default function TemplateHeader({
                             </div>
                         )}
 
-                        {editingTags && <div className="min-w-0 flex-1">
+                        {isEditingTags && <div className="min-w-0 flex-1">
                             <Input
                                 id="template-tags-input"
                                 value={tagDraft}
