@@ -21,9 +21,6 @@ export default function ActionDialogue({
 }) {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-            <DialogTrigger asChild>
-                <Button variant="destructive" size="sm">Delete</Button>
-            </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle
