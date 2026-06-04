@@ -18,16 +18,18 @@ interface SaveBlogDialogueParams {
     initialTitle?: string;
     initialContent?: string;
     linkedTemplateId?: string;
+    defaultOpen: boolean;
 }
 
 export function SaveBlogDialogue({
     children,
     initialTitle = '',
     initialContent = '',
-    linkedTemplateId
+    linkedTemplateId,
+    defaultOpen = false
 }: SaveBlogDialogueParams) {
     const { session, authFetch } = useUserSession();
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(defaultOpen);
 
     const [title, setTitle] = useState<string>(initialTitle);
     const [content, setContent] = useState<string>(initialContent);

@@ -56,7 +56,7 @@ export default function TemplateHeader({
     const [isForkOpen, setIsForkOpen] = useState(false);
     const [forkLoading, setForkLoading] = useState(false);
 
-    const [isBlogReplyOpen, setIsBlogReplyOpen] = useState(false);
+    const [isBlogReplyOpen, setIsBlogReplyOpen] = useState(0);
     const [isBlogReplyLoading, setIsBlogReplyLoading] = useState(false);
 
     const router = useRouter();
@@ -147,10 +147,10 @@ export default function TemplateHeader({
                         className="flex items-center gap-2 rounded-full outline-none border border-border p-1 pr-3"
                         aria-label="Visit Author Profile"
                         variant='ghost'
-                        onClick={() => {router.push(`users/${template.author.username}`) }}
+                        onClick={() => { router.push(`users/${template.author.username}`) }}
                     >
 
-                        <DisplayAvatar user = {template.author} size="md"/>
+                        <DisplayAvatar user={template.author} size="md" />
                         <span className="text-sm font-medium">{template.author.username}</span>
                     </Button>
                 </div>
@@ -172,15 +172,14 @@ export default function TemplateHeader({
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+
                             <DropdownMenuItem onClick={() => toggleSavedState()} disabled={isTemplateSaving}>
                                 <Bookmark className="size-3" /> {isSavedByCurrentUser ? 'Unsave Template' : 'Save Template'}
                             </DropdownMenuItem>
 
-
-                                <DropdownMenuItem onClick={() => setIsBlogReplyOpen(true)} disabled={isBlogReplyLoading || isBlogReplyOpen}>
-                                    <MessageSquare className="size-3" /> Reply with Blog Post
-                                </DropdownMenuItem>
-
+                            <DropdownMenuItem onClick={() => setIsBlogReplyOpen(n => n+1)} disabled={isBlogReplyLoading}>
+                                <MessageSquare className="size-3" /> Reply with Blog Post
+                            </DropdownMenuItem>
 
 
                             <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading || isForkOpen}>
@@ -219,7 +218,14 @@ export default function TemplateHeader({
                     setIsOpen={setIsForkOpen}
                     actionLoading={forkLoading}
                 />
-            )}
+            )}<SaveBlogDialogue
+                key={isBlogReplyOpen} // Force remount to reset internal state when reopening
+                linkedTemplateId={template.id}
+                defaultOpen={!!isBlogReplyOpen}
+            >
+                <div></div>
+            </SaveBlogDialogue>
+
 
             <div className="flex flex-col items-start gap-2">
 
@@ -266,7 +272,7 @@ export default function TemplateHeader({
                             <span className="inline-flex w-fit items-center gap-1.5 font-mono text-xs text-muted-foreground">
                                 <GitFork className="size-3.5" />
                                 <p className="text-sm text-muted-foreground">
-                                    {template.parentTemplate.title}
+                                    Forked from template <u>{template.parentTemplate.title} </u>
                                 </p>
                             </span>
                         </Link>
@@ -277,14 +283,6 @@ export default function TemplateHeader({
 
             <div className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                    {template.isForked && template.parentTemplate && (
-                        <a
-                            href={`/templates/${template.parentTemplate.id}`}
-                            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-                        >
-                            Forked from: {template.parentTemplate.title}
-                        </a>
-                    )}
 
                     {!isOwner && !isEditingTags && template.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
