@@ -4,6 +4,7 @@
 import { Root, Image, Fallback } from '@radix-ui/react-avatar'
 
 import { cn } from '@/lib/utils'
+import { Button } from './Button'
 
 function Avatar({
   className,
@@ -50,4 +51,24 @@ function AvatarFallback({
   )
 }
 
-export { Avatar, AvatarImage, AvatarFallback }
+export function DisplayAvatar({
+  user,
+  size
+}: {
+  user: { username: string; avatarUrl?: string | null };
+  size: 'sm' | 'md' | 'lg'
+}) {
+  return (
+
+      <Avatar className={`size-${size === 'sm' ? '6' : size === 'md' ? '8' : '10'} border`}>
+        {user.avatarUrl ? (
+          <AvatarImage src={user.avatarUrl} alt={user.username} />
+        ) : (
+          <AvatarFallback className="text-sm font-medium">
+            {user.username?.charAt(0)?.toUpperCase()}
+          </AvatarFallback>
+        )}
+      </Avatar>
+
+  );
+}

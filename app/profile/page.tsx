@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useUserSession } from "@/contexts/UserSessionContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+import { DisplayAvatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { UserProfileData } from "@/utils/interfaces";
@@ -128,13 +128,7 @@ export default function UserProfile() {
         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <Avatar className="size-12 border">
-                        {user.avatarUrl ? (
-                            <AvatarImage src={user.avatarUrl} alt={user.username} />
-                        ) : (
-                            <AvatarFallback>{user.username.slice(0, 1).toUpperCase()}</AvatarFallback>
-                        )}
-                    </Avatar>
+                    <DisplayAvatar user={user} size="lg"/>
                     <div>
                         <h1 className="text-xl font-semibold">{user.username}</h1>
                         <p className="text-sm text-muted-foreground">{user.role ?? 'User'}</p>

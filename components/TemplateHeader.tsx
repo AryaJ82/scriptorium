@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+import { DisplayAvatar } from "@/components/ui/Avatar";
 import ActionDialogue from "./ui/ActionDialog";
 import { TagBadge } from "./TagBadge";
 import { SaveBlogDialogue } from "./SaveBlogDialogue";
@@ -150,12 +150,7 @@ export default function TemplateHeader({
                         onClick={() => { }}
                     >
 
-                        <Avatar className="size-8 border">
-                            {author.avatarUrl ? (<AvatarImage src={author.avatarUrl} alt="" />) : null}
-                            <AvatarFallback className="text-xs font-large">
-                                {author.username.slice(0, 1).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
+                        <DisplayAvatar user = {template.author} size="md"/>
                         <span className="text-sm font-medium">{author.username}</span>
                     </button>
                 </div>

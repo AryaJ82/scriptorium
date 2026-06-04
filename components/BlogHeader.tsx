@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar'
+import { DisplayAvatar } from '@/components/ui/Avatar'
 import { timeAgo } from '@/utils/timeAgo'
 import { VoteButtons } from '@/components/ui/VoteButtons'
 import type { BlogResponse } from "@/utils/interfaces"
@@ -13,15 +13,7 @@ export default function BlogHeader({ post }: { post: BlogResponse }) {
 
                 {/* Author row */}
                 <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 shrink-0">
-                        {post.author.avatarUrl ? (
-                            <AvatarImage src={post.author.avatarUrl} alt={post.author.username} />
-                        ) : (
-                            <AvatarFallback className="text-sm font-medium">
-                                {post.author.username?.charAt(0)?.toUpperCase()}
-                            </AvatarFallback>
-                        )}
-                    </Avatar>
+                    <DisplayAvatar user = {post.author} size="md"/>
                     <div className="flex flex-col gap-0.5">
                         <span className="text-sm font-medium leading-none text-foreground">
                             {post.author.username}

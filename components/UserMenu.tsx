@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/DropdownMenu';
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/Avatar";
+import { DisplayAvatar } from "./ui/Avatar";
 
 export function UserMenu() {
   const { session, logout } = useUserSession();
@@ -39,14 +39,7 @@ export function UserMenu() {
           className="flex items-center rounded-full outline-none ring-ring focus-visible:ring-2"
           aria-label="Open account menu"
         >
-          <Avatar className="size-8 border">
-            {session.avatarUrl ? (
-              <AvatarImage src={session.avatarUrl} alt="" />
-            ) : null}
-            <AvatarFallback className="text-xs font-medium">
-              {session.username.slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <DisplayAvatar user={{username:session.username, avatarUrl:session.avatarUrl}} size="md"/>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
