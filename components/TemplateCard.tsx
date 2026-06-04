@@ -38,7 +38,13 @@ export function TemplateCard({ template }: { template: TemplateResponse }) {
       {template.parentTemplate && (
         <span className="inline-flex w-fit items-center gap-1.5 font-mono text-xs text-muted-foreground">
           <GitFork className="size-3.5" />
-          forked from {template.parentTemplate.title}
+          forked from
+          <Link
+            href={`/templates/${template.parentTemplate.id}`}
+            className="transition-colors hover:text-primary"
+          >
+            {template.parentTemplate.title}
+          </Link>
         </span>
       )}
 
