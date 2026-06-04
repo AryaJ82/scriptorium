@@ -18,7 +18,7 @@ interface SaveBlogDialogueParams {
     initialTitle?: string;
     initialContent?: string;
     linkedTemplateId?: string;
-    defaultOpen: boolean;
+    defaultOpen?: boolean;
 }
 
 export function SaveBlogDialogue({
@@ -158,7 +158,7 @@ export function SaveBlogDialogue({
                     <Button
                         disabled={loading}
                         onClick={async () => {
-                            handleSaveBlog(title, content, tags);
+                            handleSaveBlog(title, content, tags, linkedTemplateId);
                         }}
                     >
                         Create Post
