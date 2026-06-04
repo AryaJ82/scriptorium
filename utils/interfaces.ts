@@ -66,24 +66,22 @@ export function templateGetInclude({ currentUserId, }: { currentUserId?: string;
             ...(currentUserId && { savers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
         }
     }
+};
 
-}
-// export const templateGetInclude = {
-//     include: {
-//         author: limitedAuthorSelect,
-//         tags: { select: { name: true }, },
-//         parentTemplate: {
-//             select: {
-//                 id: true,
-//                 author: limitedAuthorSelect,
-//                 title: true,
-//                 createdAt: true,
-//             },
-//         },
-//         replies: true,
-//     }
-// }
-
+// Attributes returned for requests to the blog api to the [id] route. Comments not included
+export function blogResponseInclude({ currentUserId, }: { currentUserId?: string; }) {
+    return {
+        include: {
+            author: limitedAuthorSelect,
+            tags: { select: { name: true }, },
+            linkedTemplate: templateGetInclude({ currentUserId }),
+            ...(currentUserId && {
+                upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } },
+                downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } }
+            })
+        }
+    }
+};
 
 // ----------------------- Response interfaces
 interface Author {
@@ -117,7 +115,7 @@ export interface BlogResponse extends BlogPost {
     author: Author;
     tags: Tag[];
     comments?: CommentResponse[];
-    linkedTemplate?: { id: string, title: string, createdAt: Date }
+    linkedTemplate?: TemplateResponse
 }
 
 // Return type for requests to profile under api/users/[id] and 

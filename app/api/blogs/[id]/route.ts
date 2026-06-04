@@ -6,7 +6,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { limitedAuthorSelect } from "@/utils/interfaces";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
-
+import { blogResponseInclude } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -21,24 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         
         const post = await prisma.blogPost.findUnique({
             where: { id: parseInt(id) },
-            include: {
-                author: limitedAuthorSelect,
-                tags: { select: { name: true }, },
-                linkedTemplate: {
-                    select: {
-                        id: true,
-                        title: true,
-                        createdAt: true,
-                    }
-                },
-                comments: {
-                    include: {
-                        author: limitedAuthorSelect,
-                    }
-                },
-                ...(currentUserId && { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
-                ...(currentUserId && { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
-            },
+            ...blogResponseInclude({currentUserId}),
         });
 
         if (!post) {
@@ -102,19 +85,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                         },
                     }),
                 },
-                include: {
-                    author: limitedAuthorSelect,
-                    tags: {
-                        select: { name: true },
-                    },
-                    comments: {
-                        include: {
-                            author: limitedAuthorSelect,
-                        },
-                    },
-                    ...(currentUserId ? { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
-                    ...(currentUserId ? { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } } : {}),
-                },
+                ...blogResponseInclude({currentUserId}),
             });
 
             return NextResponse.json({ blog: updatedPost }, { status: 200 });

@@ -6,7 +6,7 @@ import prisma from "@/utils/client";
 import type { BlogPOSTBody, BlogGETQuery } from "@/utils/interfaces";
 import { normalizeTags, verifyGETParams, verifyPOSTBody } from "@/utils/inputValidation/blogValidation";
 import { Prisma } from "@/app/generated/prisma/client";
-import { limitedAuthorSelect } from "@/utils/interfaces";
+import { blogResponseInclude, limitedAuthorSelect } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
     try {
@@ -64,15 +64,7 @@ export async function GET(request: NextRequest) {
                 orderBy,
                 skip: (pageNum - 1) * pageSizeNum,
                 take: pageSizeNum,
-                include: {
-                    tags: {
-                        select: { name: true },
-                    },
-                    author: limitedAuthorSelect,
-                    ...(currentUserId && { upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
-                    ...(currentUserId && { downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } } }),
-                    
-                },
+                ...blogResponseInclude({currentUserId}),
             }),
         ]);
 
@@ -127,19 +119,7 @@ export async function POST(request: NextRequest) {
                         linkedTemplate: { connect: { id: linked_template_id } }
                     })
                 },
-                select: {
-                    id: true,
-                    tags: true,
-                    author: limitedAuthorSelect,
-                    linkedTemplate: {
-                        select: {
-                            id: true,
-                            title: true,
-                            tags: true,
-                            author: true,
-                        }
-                    },
-                },
+                ...blogResponseInclude({currentUserId: user.id})
             });
             return NextResponse.json(newBlogPost, { status: 201 });
         } catch (error) {
