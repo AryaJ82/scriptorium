@@ -86,7 +86,7 @@ export default function TemplatesPage() {
                     setResults(data.templates);
                 })
                 .catch(err => {
-                    console.error(err);
+                    if (controller.signal.aborted) return;
                     setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
                 }).finally(() => {
                     setLoading(false);
@@ -148,7 +148,7 @@ export default function TemplatesPage() {
             <div className="flex flex-col gap-1.5 mb-2.5">
                 <label className="text-xs font-medium text-muted-foreground">Content</label>
                 <div className="relative">
-                    
+
                     <SearchBar value={contentQuery} onChange={setContentQuery}
                         placeholder="Search within content…" className="pl-8"
                         icon={FileText} />
