@@ -75,6 +75,7 @@ export default function TemplatePage() {
         })
             .catch((err) => {
                 if (controller.signal.aborted) return;
+                if (err instanceof Error && err.name === 'AbortError') return;
                 setLoadError(err instanceof Error ? err.message : "Unable to load template.");
             })
             .finally(() => {
