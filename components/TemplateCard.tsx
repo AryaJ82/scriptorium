@@ -11,7 +11,7 @@ import { timeAgo } from '@/utils/timeAgo';
 export function TemplateCard({ template }: { template: TemplateResponse }) {
   const isSavedByCurrentUser = !!template.savers && template.savers.length > 0;
   return (
-    <>
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50">
       <div className="flex items-start justify-between gap-3">
         <LanguageBadge language={template.language} />
         {isSavedByCurrentUser !== undefined && (
@@ -24,7 +24,7 @@ export function TemplateCard({ template }: { template: TemplateResponse }) {
       </div>
       <Link
         href={`/templates/${template.id}`}
-        className="group flex flex-col gap-3 rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50"
+        className="group flex flex-col rounded-lg bg-card transition-colors hover:border-primary/50"
       >
         <div className="flex flex-col gap-1.5">
           <h3 className="font-serif text-lg font-medium leading-snug text-balance group-hover:text-primary">
@@ -59,6 +59,6 @@ export function TemplateCard({ template }: { template: TemplateResponse }) {
         <span className="font-mono">@{template.author.username}</span>
         <span>{timeAgo(template.updatedAt as unknown as string)}</span>
       </div>
-    </>
+    </div>
   )
 }
