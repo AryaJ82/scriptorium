@@ -44,9 +44,9 @@ export default function TemplatePage() {
 
 
     const isOwner = !!session && template?.authorId === session.id;
-    
+
     const isSavedByCurrentUser = (!!template && template?.savers.length > 0);
-    
+
     // ---------------------------------------------------------------------------
     // Fetch template
     // ---------------------------------------------------------------------------
@@ -61,19 +61,18 @@ export default function TemplatePage() {
 
         fetch(`${baseUrl}/api/templates/${id}`, {
             signal: controller.signal,
+        }).then(async (res) => {
+            const body = await res.json();
+            if (controller.signal.aborted) return;
+
+            if (!res.ok) {
+                throw new Error(body.error ?? "Unable to load template.");
+            }
+
+            const t: TemplateResponse | undefined = body.template;
+            if (!t) throw new Error('Template not found');
+            setTemplate(t);
         })
-            .then(async (res) => {
-                const body = await res.json();
-                if (controller.signal.aborted) return;
-
-                if (!res.ok) {
-                    throw new Error(body.error ?? "Unable to load template.");
-                }
-
-                const t: TemplateResponse | undefined = body.template;
-                if (!t) throw new Error('Template not found');
-                setTemplate(t);
-            })
             .catch((err) => {
                 if (controller.signal.aborted) return;
                 setLoadError(err instanceof Error ? err.message : "Unable to load template.");
@@ -94,14 +93,13 @@ export default function TemplatePage() {
         setActionError(null);
         setSaveLoading(true);
 
-        try {
-            const response = await authFetch(`${baseUrl}/api/templates/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...updatePayload
-                }),
-            });
+        authFetch(`${baseUrl}/api/templates/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...updatePayload
+            }),
+        }).then(async (response) => {
 
             const body = await response.json();
             if (!response.ok) {
@@ -109,12 +107,12 @@ export default function TemplatePage() {
             }
 
             setTemplate(body.template);
-        } catch (error) {
+        }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to save template changes.');
             return
-        } finally {
+        }).finally(() => {
             setSaveLoading(false);
-        }
+        })
     }, [id, authFetch, baseUrl]);
 
 
@@ -122,20 +120,19 @@ export default function TemplatePage() {
         if (!template) return;
         setActionError(null);
 
-        try {
-            const response = await authFetch(`${baseUrl}/api/templates`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: template.title,
-                    code: template.code,
-                    stdin: template.stdin,
-                    language: template.language,
-                    description: template.description,
-                    tags: template.tags.map((t) => t.name),
-                    forkedSourceId: template.id,
-                }),
-            });
+        authFetch(`${baseUrl}/api/templates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: template.title,
+                code: template.code,
+                stdin: template.stdin,
+                language: template.language,
+                description: template.description,
+                tags: template.tags.map((t) => t.name),
+                forkedSourceId: template.id,
+            }),
+        }).then(async (response) => {
 
             const body = await response.json();
             if (!response.ok) {
@@ -145,52 +142,53 @@ export default function TemplatePage() {
             if (body.id) {
                 router.push(`/templates/${body.id}`);
             }
-        } catch (error) {
+        }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to fork template.');
-        }
+        });
     }, [authFetch, baseUrl, template]);
 
     const saveTemplate = useCallback(async () => {
-        if (!template || !session.isAuthenticated){
+        if (!template || !session.isAuthenticated) {
             throw new Error("Invalid template or session.")
         }
         setActionError(null);
         setSaveLoading(true);
 
-        try {
-            const response = await authFetch(`${baseUrl}/api/users/${session.id}/saved-templates`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    template_id: template.id,
-                    unsave: isSavedByCurrentUser,
-                }),
-            });
+        authFetch(`${baseUrl}/api/users/${session.id}/saved-templates`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                template_id: template.id,
+                unsave: isSavedByCurrentUser,
+            }),
+        }).then(async (response) => {
+            if (!response) {
+                throw new Error('Unable to update saved template.');
+            }
 
             const body = await response.json();
             if (!response.ok) {
                 throw new Error(body.error ?? 'Unable to update saved template.');
             }
-            
+
             setTemplate(body.template as TemplateResponse);
 
-        } catch (error) {
+        }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to save template to profile.');
-        } finally {
+        }).finally(() => {
             setSaveLoading(false);
-        }
+        });
     }, [authFetch, template, session.isAuthenticated, baseUrl, session.id, isSavedByCurrentUser]);
 
     const deleteTemplate = useCallback(async () => {
-        if (!template || !session.isAuthenticated || template.authorId !== session?.id){
+        if (!template || !session.isAuthenticated || template.authorId !== session?.id) {
             throw new Error("Invalid template or session")
         }
         setActionError(null);
 
-        try {
-            const response = await authFetch(`${baseUrl}/api/templates/${template.id}`, {
-                method: 'DELETE',
-            });
+        authFetch(`${baseUrl}/api/templates/${template.id}`, {
+            method: 'DELETE',
+        }).then(async (response) => {
 
             const body = await response.json();
             if (!response.ok) {
@@ -199,9 +197,9 @@ export default function TemplatePage() {
 
             router.push(`/playground`);
 
-        } catch (error) {
+        }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to delete template.');
-        }
+        });
     }, [authFetch, baseUrl, template, session]);
 
 

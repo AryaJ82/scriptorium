@@ -19,28 +19,29 @@ export default function BlogPostPage() {
 
   const [post, setPost] = useState<BlogResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     const controller = new AbortController();
     setLoading(true);
-    setLoadError(null);
+    setActionError(null);
 
-    fetch(`${baseUrl}/api/blogs/${id}`, { signal: controller.signal })
-      .then(async (res) => {
-        const body = await res.json();
-        if (controller.signal.aborted) return;
+    fetch(`${baseUrl}/api/blogs/${id}`, {
+      signal: controller.signal
+    }).then(async (res) => {
+      const body = await res.json();
+      if (controller.signal.aborted) return;
 
-        if (!res.ok) throw new Error(body.error ?? 'Unable to load post')
+      if (!res.ok) throw new Error(body.error ?? 'Unable to load post')
 
-        const p: BlogResponse | undefined = body.post;
-        if (!p) throw new Error('Post not found');
-        setPost(p)
-      })
+      const p: BlogResponse | undefined = body.post;
+      if (!p) throw new Error('Post not found');
+      setPost(p)
+    })
       .catch((err) => {
         if (controller.signal.aborted) return;
-        setLoadError(err instanceof Error ? err.message : 'Unable to load post');
+        setActionError(err instanceof Error ? err.message : 'Unable to load post');
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -56,9 +57,9 @@ export default function BlogPostPage() {
           <div className="h-8 w-72 rounded-md bg-muted mb-2" />
           <div className="h-4 w-48 rounded-md bg-muted" />
         </div>
-      ) : loadError ? (
+      ) : actionError ? (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">{loadError}</p>
+          <p className="text-sm text-destructive">{actionError}</p>
         </div>
       ) : post ? (
         <article className="flex flex-col gap-6">
