@@ -19,6 +19,7 @@ import ActionDialogue from "./ui/ActionDialog";
 import { TagBadge } from "./TagBadge";
 import { SaveBlogDialogue } from "./SaveBlogDialogue";
 import { useTagEdit } from "@/lib/useTagEdit";
+import { useRouter } from "next/navigation";
 
 export default function TemplateHeader({
     template,
@@ -40,8 +41,6 @@ export default function TemplateHeader({
     isSavedByCurrentUser: boolean;
 
 }) {
-
-    const author = template.author;
     const [title, setTitle] = useState(template.title);
     const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit(template.tags.map((tag) => tag.name));
 
@@ -60,7 +59,7 @@ export default function TemplateHeader({
     const [isBlogReplyOpen, setIsBlogReplyOpen] = useState(false);
     const [isBlogReplyLoading, setIsBlogReplyLoading] = useState(false);
 
-    
+    const router = useRouter();
     // ---------------------------------------------------------------------------
     // Actions
     // ---------------------------------------------------------------------------
@@ -144,15 +143,16 @@ export default function TemplateHeader({
                 {/* Author */}
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium"> by </span>
-                    <button
+                    <Button
                         className="flex items-center gap-2 rounded-full outline-none border border-border p-1 pr-3"
                         aria-label="Visit Author Profile"
-                        onClick={() => { }}
+                        variant='ghost'
+                        onClick={() => {router.push(`users/${template.author.username}`) }}
                     >
 
                         <DisplayAvatar user = {template.author} size="md"/>
-                        <span className="text-sm font-medium">{author.username}</span>
-                    </button>
+                        <span className="text-sm font-medium">{template.author.username}</span>
+                    </Button>
                 </div>
 
                 <span className="flex items-center gap-2">
@@ -177,21 +177,20 @@ export default function TemplateHeader({
                             </DropdownMenuItem>
 
 
-                            <SaveBlogDialogue linkedTemplateId={template.id}>
-                                <DropdownMenuItem disabled={forkLoading}>
+                                <DropdownMenuItem onClick={() => setIsBlogReplyOpen(true)} disabled={isBlogReplyLoading || isBlogReplyOpen}>
                                     <MessageSquare className="size-3" /> Reply with Blog Post
                                 </DropdownMenuItem>
-                            </SaveBlogDialogue>
 
 
-                            <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading}>
+
+                            <DropdownMenuItem onClick={() => setIsForkOpen(true)} disabled={forkLoading || isForkOpen}>
                                 <GitBranch className="size-3" /> Fork Template
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
                             {isOwner && (
                                 <>
-                                    <DropdownMenuItem variant="destructive" onClick={() => setIsDeleteOpen(true)} disabled={deleteLoading}>
+                                    <DropdownMenuItem variant="destructive" onClick={() => setIsDeleteOpen(true)} disabled={deleteLoading || isDeleteOpen}>
                                         <Trash className="size-3" /> Delete
                                     </DropdownMenuItem>
                                 </>
