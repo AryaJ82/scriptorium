@@ -43,8 +43,8 @@ export default function TemplateHeader({
 
     const author = template.author;
     const [title, setTitle] = useState(template.title);
-    const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit();
-;
+    const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit(template.tags.map((tag) => tag.name));
+
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingTags, setIsEditingTags] = useState(false);
     const [isTemplateSaving, setIsTemplateSaving] = useState(false);

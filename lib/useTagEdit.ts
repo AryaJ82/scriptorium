@@ -4,9 +4,9 @@ import { validateTagValue } from '@/utils/inputValidation/generalValidation';
 import { toast } from 'sonner'
 
 
-export function useTagEdit() {
+export function useTagEdit(initialTags?: string[]) {
     const [tagDraft, setTagDraft] = useState<string>('');
-    const [tags, setTags] = useState<string[]>([]);
+    const [tags, setTags] = useState<string[]>(initialTags || []);
 
     const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
         if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
