@@ -13,7 +13,7 @@ import { SaveBlogDialogue } from "./SaveBlogDialogue";
 const NAV = [
     { href: '/playground', label: 'Playground' },
     { href: '/templates', label: 'Templates' },
-    // { href: '/blog', label: 'Blog' },
+    { href: '/blog', label: 'Blog' },
     { href: '/info', label: 'Info' },
 ]
 
