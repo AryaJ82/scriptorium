@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react'
 import { BlogResponse } from '@/utils/interfaces'
 import ReactMarkdown from "react-markdown";
 import BlogHeader from '@/components/BlogHeader'
-import DescriptionSection from '@/components/TemplateDescription'
 
 export default function BlogPostPage() {
   const params = useParams();
