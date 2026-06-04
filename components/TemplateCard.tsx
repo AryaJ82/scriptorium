@@ -11,10 +11,7 @@ import { timeAgo } from '@/utils/timeAgo';
 export function TemplateCard({ template }: { template: TemplateResponse }) {
   const isSavedByCurrentUser = !!template.savers && template.savers.length > 0;
   return (
-    <Link
-      href={`/templates/${template.id}`}
-      className="group flex flex-col gap-3 rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50"
-    >
+    <>
       <div className="flex items-start justify-between gap-3">
         <LanguageBadge language={template.language} />
         {isSavedByCurrentUser !== undefined && (
@@ -25,20 +22,24 @@ export function TemplateCard({ template }: { template: TemplateResponse }) {
           )
         )}
       </div>
-
-      <div className="flex flex-col gap-1.5">
-        <h3 className="font-serif text-lg font-medium leading-snug text-balance group-hover:text-primary">
-          {template.title}
-        </h3>
-        <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-          {template.description}
-        </p>
-      </div>
+      <Link
+        href={`/templates/${template.id}`}
+        className="group flex flex-col gap-3 rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50"
+      >
+        <div className="flex flex-col gap-1.5">
+          <h3 className="font-serif text-lg font-medium leading-snug text-balance group-hover:text-primary">
+            {template.title}
+          </h3>
+          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+            {template.description}
+          </p>
+        </div>
+      </Link>
 
       {template.parentTemplate && (
         <span className="inline-flex w-fit items-center gap-1.5 font-mono text-xs text-muted-foreground">
           <GitFork className="size-3.5" />
-          
+
           <Link
             href={`/templates/${template.parentTemplate.id}`}
             className="transition-colors hover:text-primary"
@@ -58,6 +59,6 @@ export function TemplateCard({ template }: { template: TemplateResponse }) {
         <span className="font-mono">@{template.author.username}</span>
         <span>{timeAgo(template.updatedAt as unknown as string)}</span>
       </div>
-    </Link>
+    </>
   )
 }
