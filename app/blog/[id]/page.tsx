@@ -4,11 +4,9 @@ import { useParams } from 'next/navigation'
 import { useUserSession } from '@/contexts/UserSessionContext'
 import { useEffect, useState } from 'react'
 import { BlogResponse } from '@/utils/interfaces'
-import { VoteButtons } from '@/components/ui/VoteButtons'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar'
-import { formatDistanceToNow } from 'date-fns'
-
-import { timeAgo } from '@/utils/timeAgo'
+import ReactMarkdown from "react-markdown";
+import BlogHeader from '@/components/BlogHeader'
+import DescriptionSection from '@/components/TemplateDescription'
 
 export default function BlogPostPage() {
   const params = useParams();
@@ -21,10 +19,10 @@ export default function BlogPostPage() {
 
   useEffect(() => {
     if (!id) return;
-    const controller = new AbortController();
     setLoading(true);
     setActionError(null);
 
+    const controller = new AbortController();
     fetch(`${baseUrl}/api/blogs/${id}`, {
       signal: controller.signal
     }).then(async (res) => {
@@ -50,43 +48,58 @@ export default function BlogPostPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      {loading ? (
-        <div className="animate-pulse">
-          <div className="h-8 w-72 rounded-md bg-muted mb-2" />
-          <div className="h-4 w-48 rounded-md bg-muted" />
-        </div>
-      ) : actionError ? (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">{actionError}</p>
-        </div>
-      ) : post ? (
-        <article className="flex flex-col gap-6">
-          <header className="flex items-start justify-between gap-4">
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  {post.author.avatarUrl ? (
-                    <AvatarImage src={post.author.avatarUrl} alt={post.author.username} />
-                  ) : (
-                    <AvatarFallback>@{post.author.username?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                  )}
-                </Avatar>
-                <div>
-                  <h1 className="font-serif text-2xl font-semibold tracking-tight">{post.title}</h1>
-                  <p className="text-xs text-muted-foreground">By <span className="font-mono">@{post.author.username}</span> • {timeAgo(post.createdAt as unknown as string)}</p>
-                </div>
-              </div>
-            </div>
+      <article className="flex flex-col gap-0">
 
-            <div className="hidden sm:block">
-              <VoteButtons upvotes={post.upvoteCount} downvotes={post.downvoteCount} orientation="vertical" />
-            </div>
-          </header>
+        {/* ── Header ── */}
+        {post ? (<BlogHeader post={post}></BlogHeader>
+        ) : (
+          <div className="mb-6 flex flex-col gap-2 animate-pulse">
+            <div className="h-8 w-64 rounded-md bg-muted" />
+            <div className="h-4 w-40 rounded-md bg-muted" />
+          </div>
+        )}
 
-          <div className="prose max-w-none">{post.content}</div>
+        {/* ── Divider ── */}
+        <hr className="my-6 border-border/30" />
 
-        </article>
-      ) : null}
+
+        {/* ── Body ── */}
+        {!loading && post && (
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <ReactMarkdown>{post.content}</ReactMarkdown>
+          </div>
+        )}
+
+
+
+        {/* ── Footer ── */}
+        {/* <div className="mt-6 flex items-center justify-between border-t border-border/30 pt-5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setBookmarked((b) => !b)}
+              aria-label={bookmarked ? "Remove bookmark" : "Bookmark post"}
+              className="flex items-center gap-1.5 rounded-lg border border-border/30 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              <BookmarkIcon filled={bookmarked} size={14} />
+              {bookmarked ? "Saved" : "Save"}
+            </button>
+
+            <button
+              aria-label="Share post"
+              className="flex items-center gap-1.5 rounded-lg border border-border/30 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              <ShareIcon size={14} />
+              Share
+            </button>
+          </div>
+
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <ClockIcon size={12} />
+            {readTime} min read
+          </span>
+        </div> */}
+
+      </article>
     </div>
-  )
+  );
 }
