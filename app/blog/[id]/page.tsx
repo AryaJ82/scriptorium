@@ -8,9 +8,7 @@ import { VoteButtons } from '@/components/ui/VoteButtons'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar'
 import { formatDistanceToNow } from 'date-fns'
 
-function timeAgo(isoString: string) {
-  return formatDistanceToNow(new Date(isoString), { addSuffix: true });
-}
+import { timeAgo } from '@/utils/timeAgo'
 
 export default function BlogPostPage() {
   const params = useParams();
