@@ -88,7 +88,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 ...blogResponseInclude({currentUserId}),
             });
 
-            return NextResponse.json({ blog: updatedPost }, { status: 200 });
+            return NextResponse.json({ post: updatedPost }, { status: 200 });
         } catch (error) {
             console.error("Error when updating blog post:", error);
             return NextResponse.json({ error: "Internal server error when updating blog post" }, { status: 500 });
