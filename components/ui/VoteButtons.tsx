@@ -4,7 +4,7 @@ import { useUserSession } from '@/contexts/UserSessionContext';
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowBigDown, ArrowBigUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BlogResponse } from '@/utils/interfaces';;
+import { BlogResponse, CommentResponse } from '@/utils/interfaces';;
 
 const formatter = new Intl.NumberFormat('en', {
   notation: 'compact',
@@ -19,19 +19,19 @@ export function VoteButtons({
   updatePost,
   setActionError,
 }: {
-  post: BlogResponse;
+  post: BlogResponse| CommentResponse;
   orientation?: 'vertical' | 'horizontal';
   type?: 'blog' | 'comment';
   className?: string;
-  updatePost: (newObject: BlogResponse) => void;
+  updatePost: (newObject: BlogResponse | CommentResponse) => void;
   setActionError?: (err: string | null) => void;
 }) {
   const { session, baseUrl, authFetch } = useUserSession();
 
 
   const score = formatter.format(post.upvoteCount - post.downvoteCount);
-  const hasUpvoted = post.upvotingUsers.length > 0;
-  const hasDownvoted = post.downvotingUsers.length > 0;
+  const hasUpvoted = post.upvotingUsers?.length > 0;
+  const hasDownvoted = post.downvotingUsers?.length > 0;
 
 
   const handleUpvote = useCallback(async () => {

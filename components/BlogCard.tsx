@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { FileCode2, MessageSquare } from 'lucide-react'
 import { TagBadge } from './TagBadge'
 import { VoteButtons } from './ui/VoteButtons'
-import { BlogResponse } from '@/utils/interfaces';
+import { BlogResponse, CommentResponse } from '@/utils/interfaces';
 import { timeAgo } from '@/utils/timeAgo';
 
 export default function BlogPostCard({ post, updatePost }: { post: BlogResponse, updatePost: (newVal: BlogResponse) => void }) {
@@ -52,7 +52,7 @@ export default function BlogPostCard({ post, updatePost }: { post: BlogResponse,
         <VoteButtons
           post={post}
           type="blog"
-          updatePost={updatePost}
+          updatePost={updatePost as ((p: BlogResponse | CommentResponse) => void)}
 
         />
       </div>
