@@ -90,7 +90,10 @@ export default function TemplatePage() {
     // ---------------------------------------------------------------------------
 
     const updateTemplate = useCallback(async (updatePayload: { title?: string, code?: string, description?: string, stdin?: string, tags?: string[] }) => {
-        if (!id) return;
+        if (!template || !session.isAuthenticated || template.authorId !== session?.id) {
+            throw new Error("Invalid template or session")
+        }
+
         setActionError(null);
         setSaveLoading(true);
 
@@ -114,7 +117,7 @@ export default function TemplatePage() {
         }).finally(() => {
             setSaveLoading(false);
         })
-    }, [id, authFetch, baseUrl]);
+    }, [id, authFetch, baseUrl, template]);
 
 
     const forkTemplate = useCallback(async () => {
@@ -223,7 +226,7 @@ export default function TemplatePage() {
                     onSaveTags={(tags: string[]) => updateTemplate({ tags })}
                     onDelete={deleteTemplate}
                     onFork={forkTemplate}
-                    onToggleSaved={saveTemplate}
+                    onToggleSaved={() => setSaveLoading(b => !b)}
                     isSavedByCurrentUser={isSavedByCurrentUser}
                 />
             ) : null}

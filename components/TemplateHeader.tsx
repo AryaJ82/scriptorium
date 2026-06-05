@@ -37,7 +37,7 @@ export default function TemplateHeader({
     onSaveTags: (tags: string[]) => Promise<void>;
     onDelete: () => Promise<void>;
     onFork: () => Promise<void>;
-    onToggleSaved: () => Promise<void>;
+    onToggleSaved: () => void;
     isSavedByCurrentUser: boolean;
 
 }) {
@@ -91,10 +91,6 @@ export default function TemplateHeader({
 
 
     const saveTitle = useCallback(async () => {
-        if (!onSaveTitle) {
-            setIsEditingTitle(false);
-            return;
-        }
         setIsTitleSaving(true);
         try {
             await onSaveTitle(title);
