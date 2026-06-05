@@ -27,25 +27,27 @@ export default function BlogPostCard({ post }: { post: BlogResponse }) {
           ))}
         </div>
 
-
+        {post.linkedTemplate && (
+          <span className="inline-flex w-fit items-center gap-1.5 font-mono text-xs text-muted-foreground">
+            <FileCode2 className="size-3.5" />
+            Linking to template
+            <Link
+              href={`/templates/${post.linkedTemplate.id}`}
+              className="transition-colors hover:text-primary"
+            >
+              <span>
+                "{post.linkedTemplate.title}"
+              </span>
+            </Link>
+          </span>
+        )}
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
           <span className="font-mono">@{post.author.username}</span>
           <span>{timeAgo(post.createdAt as unknown as string)}</span>
           <span className="inline-flex items-center gap-1">
             <MessageSquare className="size-3.5" /> {post.comments?.length ?? 0} Replies
           </span>
-          {post.linkedTemplate && (
-            <span className="inline-flex items-center gap-1">
-              Replying to
-              <Link
-                href={`/templates/${post.linkedTemplate.id}`}
-                className="transition-colors hover:text-primary"
-              >
-                <FileCode2 className="size-3.5" />
-                {post.linkedTemplate.title}
-              </Link>
-            </span>
-          )}
+
         </div>
       </div>
 
