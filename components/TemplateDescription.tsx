@@ -18,20 +18,12 @@ export default function DescriptionSection({ template, isOwner, onSave }: Descri
   const [saving, setSaving] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Keep draft in sync if parent description changes (e.g. after a fresh fetch)
-  useEffect(() => { setDraft(description); }, [description]);
-
   // Auto-focus textarea when entering edit mode
   useEffect(() => {
     if (editing) textareaRef.current?.focus();
   }, [editing]);
 
-  const handleEdit = useCallback(() => {
-    setDraft(description);
-    setEditing(true);
-  }, [description]);
-
-  const handleCancel = useCallback(() => {
+  const handleCancelEdit = useCallback(() => {
     setDraft(description);
     setEditing(false);
   }, [description]);
@@ -57,7 +49,7 @@ export default function DescriptionSection({ template, isOwner, onSave }: Descri
         </span>
         {isOwner && !editing && (
           <button
-            onClick={handleEdit}
+            onClick={() => setEditing(true)}
             className="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Pencil className="size-3" /> Edit
@@ -66,7 +58,7 @@ export default function DescriptionSection({ template, isOwner, onSave }: Descri
         {isOwner && editing && (
           <div className="flex items-center gap-1">
             <button
-              onClick={handleCancel}
+              onClick={handleCancelEdit}
               disabled={saving}
               className="flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
             >
@@ -95,7 +87,7 @@ export default function DescriptionSection({ template, isOwner, onSave }: Descri
           />
         ) : isEmpty ? (
           <div
-            onClick={isOwner ? handleEdit : undefined}
+            onClick={isOwner ? () => setEditing(true) : undefined}
             className={[
               "flex min-h-24 flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-center",
               isOwner ? "cursor-pointer transition-colors hover:border-muted-foreground hover:bg-muted/40" : "",
