@@ -17,6 +17,7 @@ import {
 import { useTagEdit } from "@/lib/useTagEdit";
 import { useState, useCallback } from 'react';
 import { Menu, Trash, Pencil } from 'lucide-react'
+import Textarea from "./ui/Textarea";
 
 
 export default function BlogHeader({
@@ -147,86 +148,125 @@ export default function BlogHeader({
                 </div>
 
                 {/* Title */}
-                <h1 className="font-serif text-3xl font-semibold tracking-tight break-all leading-tight">
-                    {post.title}
-                </h1>
-                {/* ── Tags ── */}
 
-                <div className="flex flex-col gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col items-start gap-2">
 
-                        {!isOwner && !isEditingTags && post.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                                {tags.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
-                                    >
-                                        #{tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                    </div>
-
-                    {isOwner && (
-                        <div className="flex flex-col gap-3">
-                            <div className="flex items-center justify-between gap-2">
-
-                                {isEditingTags ? (
-                                    <>
-                                        <Button variant="ghost" size="sm" onClick={cancelTagsEdit} disabled={tagsSaving}>
-                                            Cancel
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={saveTags} disabled={tagsSaving}>
-                                            {tagsSaving ? 'Saving…' : 'Save'}
-                                        </Button>
-                                    </>
+                    <div className="flex flex-col gap-2 min-w-0">
+                        {isOwner ? (
+                            <div className="flex flex-col gap-2 w-full">
+                                {isEditingTitle ? (
+                                    <div className="flex gap-2">
+                                        <Textarea
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            className="text-3xl font-serif font-semibold tracking-tight border-0 bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-transparent resize-none overflow-hidden w-full leading-tight"
+                                            aria-label="Blog post title"
+                                            rows={1}
+                                        />
+                                        <div className="flex flex-col justify-end gap-2">
+                                            <Button variant="ghost" size="sm" onClick={cancelTitleEdit} disabled={isTitleSaving}>
+                                                Cancel
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={saveTitle} disabled={isTitleSaving || !title.trim()}>
+                                                {isTitleSaving ? 'Saving…' : 'Save'}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="edit" onClick={() => setIsEditingTags(true)}>
-                                            <Pencil className="size-3" /> Edit Tags
+                                    <div className="flex items-start gap-2">
+                                        <h1 className="font-serif text-3xl font-semibold tracking-tight break-all leading-tight">
+                                            {post.title}
+                                        </h1>
+                                        <Button variant="edit" onClick={() => setIsEditingTitle(true)}>
+                                            <Pencil className="size-3" /> Edit Title
                                         </Button>
                                     </div>
                                 )}
                             </div>
-                            {isEditingTags ? (
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                    <div className="flex flex-wrap gap-1">
-                                        {tags.map((tag) => (
-                                            <button
-                                                key={tag}
-                                                type="button"
-                                                onClick={() => removeTag(tag)}
-                                                className="mt-auto flex flex-wrap items-center gap-1.5 pt-1"
-                                            >
-                                                <TagBadge key={tag} label={tag} deleteMode={true} />
-                                            </button>
-                                        ))}
-                                    </div>
+                        ) : (
+                            <h1 className="font-serif text-3xl font-semibold tracking-tight break-all leading-tight">
+                                {post.title}
+                            </h1>
+                        )}
+                    </div>
+                    {/* ── Tags ── */}
 
-                                </div>
-                            ) : (
+                    <div className="flex flex-col gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+
+                            {!isOwner && !isEditingTags && post.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
-                                    {post.tags.map((tag) => (
-                                        <TagBadge key={tag.name} label={tag.name} />
+                                    {tags.map((tag) => (
+                                        <span
+                                            key={tag}
+                                            className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
+                                        >
+                                            #{tag}
+                                        </span>
                                     ))}
                                 </div>
                             )}
 
-                            {isEditingTags && <div className="min-w-0 flex-1">
-                                <Input
-                                    id="template-tags-input"
-                                    value={tagDraft}
-                                    onChange={(e) => setTagDraft(e.target.value)}
-                                    onKeyDown={(e) => addTag(e, tagDraft)}
-                                    placeholder="Add a tag and press Enter"
-                                />
-
-                            </div>}
                         </div>
-                    )}
+
+                        {isOwner && (
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between gap-2">
+
+                                    {isEditingTags ? (
+                                        <>
+                                            <Button variant="ghost" size="sm" onClick={cancelTagsEdit} disabled={tagsSaving}>
+                                                Cancel
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={saveTags} disabled={tagsSaving}>
+                                                {tagsSaving ? 'Saving…' : 'Save'}
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <Button variant="edit" onClick={() => setIsEditingTags(true)}>
+                                                <Pencil className="size-3" /> Edit Tags
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                                {isEditingTags ? (
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div className="flex flex-wrap gap-1">
+                                            {tags.map((tag) => (
+                                                <button
+                                                    key={tag}
+                                                    type="button"
+                                                    onClick={() => removeTag(tag)}
+                                                    className="mt-auto flex flex-wrap items-center gap-1.5 pt-1"
+                                                >
+                                                    <TagBadge key={tag} label={tag} deleteMode={true} />
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-wrap gap-1">
+                                        {post.tags.map((tag) => (
+                                            <TagBadge key={tag.name} label={tag.name} />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {isEditingTags && <div className="min-w-0 flex-1">
+                                    <Input
+                                        id="template-tags-input"
+                                        value={tagDraft}
+                                        onChange={(e) => setTagDraft(e.target.value)}
+                                        onKeyDown={(e) => addTag(e, tagDraft)}
+                                        placeholder="Add a tag and press Enter"
+                                    />
+
+                                </div>}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>
