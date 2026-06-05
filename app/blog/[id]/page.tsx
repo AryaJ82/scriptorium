@@ -7,6 +7,7 @@ import { BlogResponse } from '@/utils/interfaces'
 import ReactMarkdown from "react-markdown";
 import BlogHeader from '@/components/BlogHeader'
 import { VoteButtons } from "@/components/ui/VoteButtons";
+import BlogContent from "@/components/BlogContent";
 
 export default function BlogPostPage() {
   const params = useParams();
@@ -134,10 +135,13 @@ export default function BlogPostPage() {
         {/* ── Body ── */}
         {!loading && post && (
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <ReactMarkdown>{post.content}</ReactMarkdown>
+            <BlogContent
+              post={post}
+              isOwner={isOwner}
+              onSave={(newContent: string) => updatePost({ content: newContent })}
+            />
           </div>
         )}
-
 
 
         {/* ── Footer ── */}
