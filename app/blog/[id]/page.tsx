@@ -1,20 +1,27 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from "next/navigation";
 import { useUserSession } from '@/contexts/UserSessionContext'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { BlogResponse } from '@/utils/interfaces'
 import ReactMarkdown from "react-markdown";
 import BlogHeader from '@/components/BlogHeader'
+import { VoteButtons } from "@/components/ui/VoteButtons";
 
 export default function BlogPostPage() {
   const params = useParams();
   const id = params?.id;
-  const { baseUrl } = useUserSession();
+  const { session, baseUrl, authFetch } = useUserSession();
 
   const [post, setPost] = useState<BlogResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [actionError, setActionError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const isOwner = !!session && post?.authorId === session.id;
+
+
 
   useEffect(() => {
     if (!id) return;
@@ -45,12 +52,74 @@ export default function BlogPostPage() {
     return () => { controller.abort() };
   }, [id, baseUrl])
 
+  // ---------------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------------
+
+
+  const updatePost = useCallback(async (updatePayload: { title?: string, content?: string, tags?: string[] }) => {
+    if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
+      throw new Error("Invalid post or session")
+    }
+    setActionError(null);
+    setLoading(true);
+
+    authFetch(`${baseUrl}/api/blogs/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...updatePayload
+      }),
+    }).then(async (response) => {
+
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body.error ?? 'Unable to update blog post.');
+      }
+
+      setPost(body.post);
+    }).catch((error) => {
+      setActionError(error instanceof Error ? error.message : 'Unable to save blog post changes.');
+      return
+    }).finally(() => {
+      setLoading(false);
+    })
+  }, [id, authFetch, baseUrl, session, post]);
+
+  const deletePost = useCallback(async () => {
+    if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
+      throw new Error("Invalid post or session")
+    }
+    setActionError(null);
+
+    authFetch(`${baseUrl}/api/blogs/${post.id}`, {
+      method: 'DELETE',
+    }).then(async (response) => {
+
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body.error ?? 'Unable to delete blog post.');
+      }
+
+      router.push(`/blogs`);
+
+    }).catch((error) => {
+      setActionError(error instanceof Error ? error.message : 'Unable to delete blog post.');
+    });
+  }, [authFetch, baseUrl, post, session]);
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <article className="flex flex-col gap-0">
 
         {/* ── Header ── */}
-        {post ? (<BlogHeader post={post}></BlogHeader>
+        {post ? (<BlogHeader
+          post={post}
+          onSaveTitle={(title) => updatePost({ title })}
+          onSaveTags={(tags) => updatePost({ tags })}
+          onDelete={deletePost}
+          isOwner={isOwner}
+        ></BlogHeader>
         ) : (
           <div className="mb-6 flex flex-col gap-2 animate-pulse">
             <div className="h-8 w-64 rounded-md bg-muted" />
@@ -97,7 +166,16 @@ export default function BlogPostPage() {
             {readTime} min read
           </span>
         </div> */}
+        <hr className="my-6 border-border/30" />
 
+        {/* Desktop vote */}
+        <div className="hidden shrink-0 sm:block">
+          <VoteButtons
+            upvotes={post?.upvoteCount ?? 0}
+            downvotes={post?.downvoteCount ?? 0}
+            orientation="horizontal"
+          />
+        </div>
       </article>
     </div>
   );
