@@ -18,6 +18,7 @@ import { useTagEdit } from "@/lib/useTagEdit";
 import { useState, useCallback } from 'react';
 import { Menu, Trash, Pencil } from 'lucide-react'
 import Textarea from "./ui/Textarea";
+import ActionDialogue from "./ui/ActionDialog";
 
 
 export default function BlogHeader({
@@ -189,6 +190,19 @@ export default function BlogHeader({
                             </h1>
                         )}
                     </div>
+
+                    {/* ── Delete Dialog ── */}
+                    {isDeleteOpen && (
+                        <ActionDialogue
+                            title={`Delete template "${post.title}"?`}
+                            description="Are you sure you want to delete this template? This action cannot be undone."
+                            confirmAction={confirmDelete}
+                            isOpen={isDeleteOpen}
+                            setIsOpen={setIsDeleteOpen}
+                            actionLoading={deleteLoading}
+                        />
+                    )}
+
                     {/* ── Tags ── */}
 
                     <div className="flex flex-col gap-2">

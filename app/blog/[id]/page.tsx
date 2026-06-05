@@ -102,7 +102,7 @@ export default function BlogPostPage() {
         throw new Error(body.error ?? 'Unable to delete blog post.');
       }
 
-      router.push(`/blogs`);
+      router.push(`/blog`);
 
     }).catch((error) => {
       setActionError(error instanceof Error ? error.message : 'Unable to delete blog post.');
