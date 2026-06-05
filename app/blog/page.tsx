@@ -24,23 +24,23 @@ import { BlogResponse, validBlogSortFields, validSortOrders } from '@/utils/inte
 import { validateTagValue } from '@/utils/inputValidation/generalValidation'
 
 export default function BlogPage() {
-  const [titleQuery, setTitleQuery] = useState<string>('')
-  const [contentQuery, setContentQuery] = useState<string>('')
-  const [authorQuery, setAuthorQuery] = useState<string>('')
-  const [tagsQuery, setTagsQuery] = useState<string[]>([])
-  const [tagDraft, setTagDraft] = useState<string>('')
+  const [titleQuery, setTitleQuery] = useState<string>('');
+  const [contentQuery, setContentQuery] = useState<string>('');
+  const [authorQuery, setAuthorQuery] = useState<string>('');
+  const [tagsQuery, setTagsQuery] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState<string>('');
 
-  const [page, setPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(10)
-  const [sortByQuery, setSortByQuery] = useState<string>('createdAt')
-  const [orderByQuery, setOrderByQuery] = useState<string>('desc')
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [sortByQuery, setSortByQuery] = useState<string>('createdAt');
+  const [orderByQuery, setOrderByQuery] = useState<string>('desc');
 
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const [results, setResults] = useState<BlogResponse[]>([])
-  const [totalResults, setTotalResults] = useState<number>(0)
-  const [totalPages, setTotalPages] = useState<number>(1)
+  const [results, setResults] = useState<BlogResponse[]>([]);
+  const [totalResults, setTotalResults] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   const addTag = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
@@ -63,50 +63,50 @@ export default function BlogPage() {
   )
 
   useEffect(() => {
-    setPage(1)
+    setPage(1);
   }, [titleQuery, contentQuery, authorQuery, tagsQuery, pageSize, sortByQuery, orderByQuery])
 
   useEffect(() => {
-    setError(null)
-    setLoading(true)
+    setError(null);
+    setLoading(true);
 
-    const params = new URLSearchParams()
-    if (titleQuery) params.append('title', titleQuery)
-    if (contentQuery) params.append('content', contentQuery)
-    if (authorQuery) params.append('author', authorQuery)
-    if (tagsQuery.length > 0) params.append('tags', tagsQuery.join(','))
-    params.append('sortBy', sortByQuery)
-    params.append('sortOrder', orderByQuery)
-    params.append('page', page.toString())
-    params.append('pageSize', pageSize.toString())
+    const queryParams = new URLSearchParams();
+    if (titleQuery) queryParams.append('title', titleQuery);
+    if (contentQuery) queryParams.append('content', contentQuery);
+    if (authorQuery) queryParams.append('author', authorQuery);
+    if (tagsQuery.length > 0) queryParams.append('tags', tagsQuery.join(','));
+    queryParams.append('sortBy', sortByQuery);
+    queryParams.append('sortOrder', orderByQuery);
+    queryParams.append('page', page.toString());
+    queryParams.append('pageSize', pageSize.toString());
 
-    const controller = new AbortController()
+    const controller = new AbortController();
 
-    fetch(`/api/blogs?${params.toString()}`, {
+    fetch(`/api/blogs?${queryParams.toString()}`, {
       method: 'GET',
       signal: controller.signal,
     })
       .then(async (res) => {
-        const body = await res.json()
-        if (!res.ok) throw new Error(body.error ?? 'Failed to fetch blog posts')
-        setResults(body.blogs ?? [])
-        setTotalResults(body.pagination?.totalSize ?? 0)
-        setTotalPages(body.pagination?.totalPages ?? 1)
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error ?? 'Failed to fetch blog posts');
+        setResults(body.blogs ?? []);
+        setTotalResults(body.pagination?.totalSize ?? 0);
+        setTotalPages(body.pagination?.totalPages ?? 1);
       })
       .catch((err) => {
-        if (err.name === 'AbortError') return
-        console.error(err)
-        setError(err instanceof Error ? err.message : 'Failed to fetch blog posts. Please try again later.')
+        if (err.name === 'AbortError') return;
+        console.error(err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch blog posts. Please try again later.');
       })
       .finally(() => {
-        setLoading(false)
+        setLoading(false);
       })
 
     return () => controller.abort()
-  }, [titleQuery, contentQuery, authorQuery, tagsQuery, sortByQuery, orderByQuery, page, pageSize])
+  }, [titleQuery, contentQuery, authorQuery, tagsQuery, sortByQuery, orderByQuery, page, pageSize]);
 
-  const startIndex = (page - 1) * pageSize
-  const endIndex = Math.min(startIndex + results.length, totalResults)
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(startIndex + results.length, totalResults);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
