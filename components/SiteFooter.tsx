@@ -13,8 +13,7 @@ const COLUMNS = [
   {
     heading: 'Community',
     links: [
-    //   { href: '/blog', label: 'Blog' },
-      { href: '/blog/new', label: 'Write a post' },
+      { href: '/blog', label: 'Discuss' },
     ],
   },
   {
