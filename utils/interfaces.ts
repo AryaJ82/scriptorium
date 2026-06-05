@@ -83,6 +83,18 @@ export function blogResponseInclude({ currentUserId, }: { currentUserId?: string
     }
 };
 
+export function commentResponseInclude({ currentUserId, }: { currentUserId?: string; }) {
+    return {
+        include: {
+            author: limitedAuthorSelect,
+            replies: { select: { id: true } },
+            ...(currentUserId && {
+                upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } },
+                downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } }
+            })
+        }
+    }
+};
 // ----------------------- Response interfaces
 interface Author {
     id: string;
@@ -100,15 +112,8 @@ export interface TemplateResponse extends Template {
     author: Author;
     parentTemplate?: { id: string; title: string };
     tags: Tag[];
-    savers: {id: string}[]; // This will contain at most one element
+    savers: { id: string }[]; // This will contain at most one element
 }
-
-
-import type { Comment } from "@/app/generated/prisma/client"
-export interface CommentResponse extends Comment {
-    author: Author;
-}
-
 
 import type { BlogPost } from "@/app/generated/prisma/client";
 export interface BlogResponse extends BlogPost {
@@ -116,8 +121,17 @@ export interface BlogResponse extends BlogPost {
     tags: Tag[];
     comments?: CommentResponse[];
     linkedTemplate?: TemplateResponse;
-    upvotingUsers: { id: string }[]; // This will contain at most one element
-    downvotingUsers: { id: string }[]; // This will contain at most one element
+    upvotingUsers: { id: string }[]; // This will contain at most one element, representing whether the current used has liked this element
+    downvotingUsers: { id: string }[]; // This will contain at most one element, representing whether the current used has diliked this element
+}
+
+import type { Comment } from "@/app/generated/prisma/client";
+export interface CommentResponse extends Comment {
+    author: Author;
+    replies?: CommentResponse[];
+    numReplies: number;
+    upvotingUsers: { id: string }[]; // This will contain at most one element, representing whether the current used has liked this element
+    downvotingUsers: { id: string }[]; // This will contain at most one element, representing whether the current used has diliked this element
 }
 
 // Return type for requests to profile under api/users/[id] and 

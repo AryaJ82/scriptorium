@@ -1,8 +1,8 @@
 
-import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
+import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
-import { limitedAuthorSelect } from "@/utils/interfaces";
+import { commentResponseInclude, limitedAuthorSelect } from "@/utils/interfaces";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 
 
@@ -13,20 +13,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             return NextResponse.json({ error: "Invalid Comment id." }, { status: 400 });
         }
 
+        const currentUser = await getOptionalUser(request);
+        const currentUserId = currentUser?.id;
         const comment = await prisma.comment.findUnique({
             where: { id: parseInt(id) },
-            include: {
-                author: limitedAuthorSelect,
-                parentComment: true,
-                blogPost: {
-                    select: {
-                        id: true,
-                        author: limitedAuthorSelect,
-                        title: true,
-                        createdAt: true,
-                    }
-                },
-            },
+            ...commentResponseInclude({ currentUserId })
         });
 
         if (!comment) {

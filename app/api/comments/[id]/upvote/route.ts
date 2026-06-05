@@ -1,8 +1,9 @@
 
-import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
+import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
+import { commentResponseInclude, limitedAuthorSelect } from "@/utils/interfaces";
 
 
 // Increment upvote count for a comment
@@ -33,6 +34,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             // Check if user has already upvoted this comment
             const hasUpvoted = comment.upvotingUsers.length > 0;
 
+            const currentUser = await getOptionalUser(request);
+            const currentUserId = currentUser?.id;
             // increment upvoteCount and create upvote connection
             const updatedComment = await prisma.comment.update({
                 where: { id: comment.id },
@@ -42,6 +45,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                         ? { disconnect: { id: user.id } }
                         : { connect: { id: user.id } },
                 },
+                ...commentResponseInclude({ currentUserId })
             });
 
             return NextResponse.json({ comment: updatedComment }, { status: 200 });
