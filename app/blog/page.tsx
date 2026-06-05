@@ -280,8 +280,13 @@ export default function BlogPage() {
 
           {results.length > 0 ? (
             <div className="mt-6 flex flex-col gap-4">
-              {results.map((post) => (
-                <BlogPostCard key={post.id} post={post} />
+              {results.map((post, index) => (
+                <BlogPostCard
+                  key={post.id}
+                  post={post}
+                  updatePost={(updated: BlogResponse) => setResults(prev => prev.map((post, i) => (i === index ? updated : post))
+                  )}
+                />
               ))}
             </div>
           ) : (

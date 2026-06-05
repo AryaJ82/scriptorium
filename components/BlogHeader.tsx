@@ -35,7 +35,7 @@ export default function BlogHeader({
     onDelete: () => Promise<void>;
 }) {
     const [title, setTitle] = useState(post.title);
-    const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit(post.tags.map((tag) => tag.name));
+    const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit(post?.tags ? post.tags.map((tag) => tag.name) : []);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingTags, setIsEditingTags] = useState(false);

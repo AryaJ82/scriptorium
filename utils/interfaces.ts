@@ -100,7 +100,7 @@ export interface TemplateResponse extends Template {
     author: Author;
     parentTemplate?: { id: string; title: string };
     tags: Tag[];
-    savers: string[]; // This will contain at most one element
+    savers: {id: string}[]; // This will contain at most one element
 }
 
 
@@ -115,7 +115,9 @@ export interface BlogResponse extends BlogPost {
     author: Author;
     tags: Tag[];
     comments?: CommentResponse[];
-    linkedTemplate?: TemplateResponse
+    linkedTemplate?: TemplateResponse;
+    upvotingUsers: { id: string }[]; // This will contain at most one element
+    downvotingUsers: { id: string }[]; // This will contain at most one element
 }
 
 // Return type for requests to profile under api/users/[id] and 

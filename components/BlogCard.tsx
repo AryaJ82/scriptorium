@@ -5,12 +5,10 @@ import { VoteButtons } from './ui/VoteButtons'
 import { BlogResponse } from '@/utils/interfaces';
 import { timeAgo } from '@/utils/timeAgo';
 
-export default function BlogPostCard({ post }: { post: BlogResponse }) {
+export default function BlogPostCard({ post, updatePost }: { post: BlogResponse, updatePost: (newVal: BlogResponse) => void }) {
   return (
     <article className="flex gap-4 rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50">
-      <div className="hidden shrink-0 sm:block">
-        <VoteButtons upvotes={post.upvoteCount} downvotes={post.downvoteCount} />
-      </div>
+
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <h3 className="text-balance font-serif text-xl font-medium leading-snug">
@@ -50,7 +48,14 @@ export default function BlogPostCard({ post }: { post: BlogResponse }) {
 
         </div>
       </div>
+      <div className="mt-2 flex flex-wrap items-center shrink-0 sm:block">
+        <VoteButtons
+          post={post}
+          type="blog"
+          updatePost={updatePost}
 
+        />
+      </div>
     </article>
   )
 }

@@ -3,6 +3,7 @@ import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
+import { blogResponseInclude } from "@/utils/interfaces";
 
 
 // Increment downvote count for a blog
@@ -44,6 +45,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                         ? { disconnect: { id: user.id } }
                         : { connect: { id: user.id } },
                 },
+                ...blogResponseInclude({ currentUserId: user.id }),
             });
 
             return NextResponse.json({ blog: updatedBlog }, { status: 200 });

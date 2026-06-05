@@ -57,7 +57,7 @@ export default function BlogPostPage() {
   // Actions
   // ---------------------------------------------------------------------------
 
-
+  
   const updatePost = useCallback(async (updatePayload: { title?: string, content?: string, tags?: string[] }) => {
     if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
       throw new Error("Invalid post or session")
@@ -173,13 +173,15 @@ export default function BlogPostPage() {
         <hr className="my-6 border-border/30" />
 
         {/* Desktop vote */}
-        <div className="hidden shrink-0 sm:block">
-          <VoteButtons
-            upvotes={post?.upvoteCount ?? 0}
-            downvotes={post?.downvoteCount ?? 0}
-            orientation="horizontal"
+          {post && <div className="hidden shrink-0 sm:block">
+            <VoteButtons
+              post={post}
+              type="blog"
+              orientation="horizontal"
+              updatePost={setPost}
+              setActionError={setActionError}
           />
-        </div>
+        </div>}
       </article>
     </div>
   );
