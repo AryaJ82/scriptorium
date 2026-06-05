@@ -3,11 +3,14 @@
 import { useParams, useRouter } from "next/navigation";
 import { useUserSession } from '@/contexts/UserSessionContext'
 import { useCallback, useEffect, useState } from 'react'
-import { BlogResponse } from '@/utils/interfaces'
+import { BlogResponse, CommentResponse } from '@/utils/interfaces'
 import ReactMarkdown from "react-markdown";
 import BlogHeader from '@/components/BlogHeader'
 import { VoteButtons } from "@/components/ui/VoteButtons";
 import BlogContent from "@/components/BlogContent";
+import Input from "@/components/ui/Input";
+import { Label } from "@/components/Label";
+import BlogCommentSection from "@/components/BlogCommentSection";
 
 export default function BlogPostPage() {
   const params = useParams();
@@ -57,7 +60,7 @@ export default function BlogPostPage() {
   // Actions
   // ---------------------------------------------------------------------------
 
-  
+
   const updatePost = useCallback(async (updatePayload: { title?: string, content?: string, tags?: string[] }) => {
     if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
       throw new Error("Invalid post or session")
@@ -173,16 +176,20 @@ export default function BlogPostPage() {
         <hr className="my-6 border-border/30" />
 
         {/* Desktop vote */}
-          {post && <div className="hidden shrink-0 sm:block">
-            <VoteButtons
-              post={post}
-              type="blog"
-              orientation="horizontal"
-              updatePost={setPost}
-              setActionError={setActionError}
+        {post && <div className="hidden shrink-0 sm:block">
+          <VoteButtons
+            post={post}
+            type="blog"
+            orientation="horizontal"
+            updatePost={setPost as ((p: BlogResponse | CommentResponse) => void)}
+            setActionError={setActionError}
           />
         </div>}
       </article>
+
+      {post && <BlogCommentSection
+        blog={post}
+      />}
     </div>
   );
 }
