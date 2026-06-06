@@ -7,7 +7,7 @@ import { Label } from "./Label";
 import Input from "./ui/Input";
 import { Button } from "./ui/Button";
 import CommentCard from "./CommentCard";
-import { ChevronDown, SendHorizonal } from "lucide-react";
+import { ChevronDown, MessagesSquare, SendHorizonal } from "lucide-react";
 import Textarea from "./ui/Textarea";
 
 const pageSize = 10;
@@ -129,8 +129,16 @@ export default function BlogCommentSection({
     }, [blog.id, session, authFetch, replyDraft]);
 
     return (
-        <div>
-      {session.isAuthenticated ? (
+        <section className="mt-8 flex flex-col gap-6">
+
+            {/* ── Section heading ── */}
+            <div className="flex items-center gap-2 border-t border-border pt-6">
+                <MessagesSquare className="size-4 text-muted-foreground" />
+                <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    {totalComments > 0 ? `${totalComments} Comments` : 'Comments'}
+                </h2>
+            </div>
+            {session.isAuthenticated ? (
                 <div className="flex flex-col gap-2">
                     <Textarea
                         id="comment-draft"
@@ -182,14 +190,14 @@ export default function BlogCommentSection({
                     No comments yet. Be the first!
                 </p>
             )}
-            
+
             {/* Loading indicator */}
             {loading && (
                 <p className="pl-1 text-xs text-muted-foreground animate-pulse">
                     Loading comments…
                 </p>
             )}
-            
+
             {/* Error state */}
             {error && !replySubmitting && (
                 <p className="text-xs text-destructive">{error}</p>
@@ -210,6 +218,6 @@ export default function BlogCommentSection({
                 </div>
             )}
 
-        </div>
+        </section>
     );
 }
