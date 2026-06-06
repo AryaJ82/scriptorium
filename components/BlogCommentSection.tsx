@@ -7,7 +7,7 @@ import { Label } from "./Label";
 import Input from "./ui/Input";
 import { Button } from "./ui/Button";
 import CommentCard from "./CommentCard";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 const pageSize = 10;
 export default function BlogCommentSection({
@@ -162,17 +162,15 @@ export default function BlogCommentSection({
             {/* Fetch more replies */}
             {hasMoreComments && !loading && (
                 <div className="flex justify-center">
-                <Button
-                    onClick={handleFetchMore}
-                    variant="destructive"
-                    size="lg"
-                    
-                >
-                    <ChevronDownIcon className="size-4" />
-                    See {totalComments - comments.length} more{' '}
-                    {totalComments - comments.length === 1 ? 'reply' : 'replies'}…
-                    <ChevronDownIcon className="size-4" />
-                </Button>
+                    <Button
+                        onClick={handleFetchMore}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                    >
+                        <ChevronDown className="size-3.5" />
+                        Load {Math.min(pageSize, totalComments - comments.length)} more comment{Math.min(pageSize, totalComments - comments.length) === 1 ? '' : 's'}
+                    </Button>
                 </div>
             )}
 
