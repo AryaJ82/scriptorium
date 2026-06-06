@@ -14,7 +14,7 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { Button } from "./ui/Button";
-import { Menu, Trash, Edit, MessageCircle, X, SendHorizonal, Flag, Pencil, ArrowDownFromLine, MoveDownRight } from "lucide-react";
+import { Menu, Trash, MessageCircle, X, SendHorizonal, Flag, Pencil, MoveDownRight } from "lucide-react";
 import Textarea from "./ui/Textarea";
 import ActionDialogue from "./ui/ActionDialog";
 
@@ -76,10 +76,9 @@ export default function CommentCard({
             .then(async (res) => {
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
+
                 setReplies(prev => [...prev, ...body.comments]);
-
                 setPage(p => p + 1);
-
                 updateComment({
                     ...comment,
                     numReplies: body.pagination.totalSize,
@@ -106,7 +105,7 @@ export default function CommentCard({
         setError(null);
         setReplySubmitting(true);
 
-        authFetch(`${baseUrl}/api/blogs/${comment.blogPostId}/comments`, {
+        authFetch(`/api/blogs/${comment.blogPostId}/comments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -119,11 +118,11 @@ export default function CommentCard({
                 throw new Error(body.error ?? 'Unable to post reply.');
             }
 
-            setReplies(prev => [...prev, ...body.comments]);
+            setReplies(prev => [...prev, body.comment]);
 
             updateComment({
                 ...comment,
-                numReplies: body.pagination.totalSize,
+                numReplies: 0,
                 author: { ...comment.author },
             });
 
