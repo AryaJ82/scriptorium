@@ -14,7 +14,7 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { Button } from "./ui/Button";
-import { Menu, Trash, Edit, MessageCircle, X, SendHorizonal } from "lucide-react";
+import { Menu, Trash, Edit, MessageCircle, X, SendHorizonal, Flag, Pencil, ArrowDownFromLine, MoveDownRight } from "lucide-react";
 import Textarea from "./ui/Textarea";
 
 const pageSize = 10;
@@ -41,6 +41,7 @@ export default function CommentCard({
 
     const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
+    const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
     const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
 
@@ -153,23 +154,67 @@ export default function CommentCard({
             <div className="rounded-lg border border-border bg-card px-4 py-3 flex flex-col gap-3">
 
                 {/* Author row */}
-                <div className="flex items-center gap-3">
-                    <DisplayAvatar user={comment.author} size="md" />
-
-                    <div className="flex flex-col gap-0.5">
-                        <div className="text-sm text-muted-foreground">
-                            <span className="font-mono font-medium text-foreground">
-                                @{comment.author.username}
-                            </span>
-                            {comment.author.role && comment.author.role !== 'USER' && (
-                                <span className="ml-1.5 rounded-full border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
-                                    {comment.author.role}
+                <div className="flex flex-row items-center justify-between gap-3">
+                    <div className="flex flex-row items-center gap-1">
+                        <DisplayAvatar user={comment.author} size="md" />
+                        <div className="flex flex-col gap-0.5">
+                            <div className="text-sm text-muted-foreground">
+                                <span className="font-mono font-medium text-foreground">
+                                    @{comment.author.username}
                                 </span>
-                            )}
-                            
-                            {`  Posted ${timeAgo(comment.createdAt as unknown as string)}`}
+                                {comment.author.role && comment.author.role !== 'USER' && (
+                                    <span className="ml-1.5 rounded-full border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
+                                        {comment.author.role}
+                                    </span>
+                                )}
+                                <p>
+                                {`Posted ${timeAgo(comment.createdAt as unknown as string)}`}
+                                </p>
+                            </div>
                         </div>
                     </div>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                className="flex items-center justify-center rounded-md border border-border p-2 outline-none hover:bg-accent"
+                                aria-label="Template actions"
+                            >
+                                <Menu className="size-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end">
+                            {!isOwner && (
+                                <DropdownMenuItem
+                                    variant="default"
+                                    onClick={() => setIsReportOpen(true)}
+                                    disabled={deleteLoading || isDeleteOpen}
+                                >
+                                    <Flag className="size-3" /> Report
+                                </DropdownMenuItem>
+                            )}
+                            {isOwner && (
+                                <DropdownMenuItem
+                                    variant='default'
+                                    onClick={() => setIsEditOpen(true)}
+                                    disabled={deleteLoading || isDeleteOpen}
+                                >
+                                    <Pencil className="size-3" /> Edit
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            {isOwner && (
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => setIsDeleteOpen(true)}
+                                    disabled={deleteLoading || isDeleteOpen}
+                                >
+                                    <Trash className="size-3" /> Delete
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 {/* Comment body */}
@@ -271,8 +316,9 @@ export default function CommentCard({
             {hasMoreReplies && !loading && (
                 <button
                     onClick={handleFetchReplies}
-                    className="mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground "
                 >
+                    <MoveDownRight className="size-4"/>
                     See {comment.numReplies - replies.length} more{' '}
                     {comment.numReplies - replies.length === 1 ? 'reply' : 'replies'}…
                 </button>
