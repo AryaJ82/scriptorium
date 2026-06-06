@@ -57,8 +57,8 @@ export default function CommentCard({
             .then(async (res) => {
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
-                setReplies(prev => [...prev, ...body.replies]);
-                setPage(p => p + 1);
+                setReplies(prev => [...prev, ...body.comments]);
+                setPage(body.pagination.totalSize);
             })
             .catch((err) => {
                 if (err.name === 'AbortError') return;
@@ -93,7 +93,7 @@ export default function CommentCard({
                 throw new Error(body.error ?? 'Unable to post reply.');
             }
 
-            setReplies(prev => [...prev, body.comment]);
+            setReplies(prev => [...prev, ...body.comments]);
 
             updateComment({
                 ...comment,
@@ -230,7 +230,7 @@ export default function CommentCard({
             )}
 
             {/* ── Nested replies ── */}
-            {replies.length > 0 && (
+            {replies.length > 0 && !loading && (
                 <div className="mt-3 flex flex-col gap-3">
                     {replies.map((reply, index) => (
                         <CommentCard
