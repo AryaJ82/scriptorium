@@ -122,7 +122,7 @@ export default function CommentCard({
 
             updateComment({
                 ...comment,
-                numReplies: 0,
+                numReplies: comment.numReplies + 1,
                 author: { ...comment.author },
             });
 
