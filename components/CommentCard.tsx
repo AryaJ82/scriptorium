@@ -203,12 +203,13 @@ export default function CommentCard({
 
     const deleteComment = useCallback(async () => {
         if (!comment || !session.isAuthenticated || comment.authorId !== session?.id) {
-            throw new Error("Invalid comment or session")
+            setError("Invalid comment or session");
+            return;
         }
         setDeleteLoading(true);
         setError(null);
 
-        authFetch(`${baseUrl}/api/blogs/${comment.id}`, {
+        authFetch(`/api/comments/${comment.id}`, {
             method: 'DELETE',
         }).then(async (response) => {
 
