@@ -7,7 +7,8 @@ import { Label } from "./Label";
 import Input from "./ui/Input";
 import { Button } from "./ui/Button";
 import CommentCard from "./CommentCard";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, SendHorizonal } from "lucide-react";
+import Textarea from "./ui/Textarea";
 
 const pageSize = 10;
 export default function BlogCommentSection({
@@ -20,7 +21,7 @@ export default function BlogCommentSection({
     const [totalComments, setTotalComments] = useState<number>(0);
     const [page, setPage] = useState<number>(1);
     const [replyDraft, setReplyDraft] = useState<string>('');
-
+    const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
 
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -97,17 +98,18 @@ export default function BlogCommentSection({
             });
     }, [baseUrl, blog, page])
 
-    const handleReply = useCallback(async (reply: string) => {
+    const handleReply = useCallback(async () => {
         // Reply to blog post with comment
         if (!blog || !session.isAuthenticated) {
             throw new Error("Invalid post or session")
         }
         setError(null);
+        setReplySubmitting(true);
 
         return authFetch(`${baseUrl}/api/blogs/${blog.id}/comments`, {
             method: 'POST',
             body: JSON.stringify({
-                content: reply
+                content: replyDraft
             })
         }).then(async (response) => {
 
@@ -116,25 +118,48 @@ export default function BlogCommentSection({
                 throw new Error(body.error ?? 'Unable to make comment post.');
             }
 
-            setComments([body.comment, ...comments]);
+            setComments((prev) => [body.comment, ...prev]);
             setReplyDraft('');
         }).catch((error) => {
             setError(error instanceof Error ? error.message : 'Unable to make commentpost.');
+        }).finally(() => {
+            setReplySubmitting(false);
         });
 
-    }, [blog, comments, session, authFetch]);
+    }, [blog.id, session, authFetch, replyDraft]);
 
     return (
         <div>
-            <div className="mt-6 flex items-center justify-between border-t border-border/30 pt-5">
-                <div className="flex items-center gap-2">
-                    <Input id="blog-title" placeholder="Join in on the dicussion" value={replyDraft} onChange={(e) => setReplyDraft(e.target.value)} />
-                    <Button
-                        onClick={() => handleReply(replyDraft)}>
-                        Reply
-                    </Button>
+      {session.isAuthenticated ? (
+                <div className="flex flex-col gap-2">
+                    <Textarea
+                        id="comment-draft"
+                        placeholder="Join in on the discussion…"
+                        value={replyDraft}
+                        onChange={(e) => setReplyDraft(e.target.value)}
+                        rows={3}
+                        className="resize-none text-sm"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                        {error && (
+                            <p className="text-xs text-destructive">{error}</p>
+                        )}
+                        <Button
+                            onClick={handleReply}
+                            disabled={replySubmitting || !replyDraft.trim()}
+                            size="sm"
+                            className="ml-auto flex items-center gap-1.5 text-xs"
+                        >
+                            <SendHorizonal className="size-3.5" />
+                            {replySubmitting ? 'Posting…' : 'Post Comment'}
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <p className="text-sm text-muted-foreground">
+                    Sign in to leave a comment.
+                </p>
+            )}
             {comments.length > 0 && (
                 <div className="mt-3 flex flex-col gap-3">
                     {comments.map((reply, index) => (
