@@ -189,6 +189,11 @@ export default function BlogCommentSection({
                     Loading comments…
                 </p>
             )}
+            
+            {/* Error state */}
+            {error && !replySubmitting && (
+                <p className="text-xs text-destructive">{error}</p>
+            )}
 
             {/* Fetch more replies */}
             {hasMoreComments && !loading && (
