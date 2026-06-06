@@ -153,15 +153,15 @@ export default function CommentCard({
                                     {comment.author.role}
                                 </span>
                             )}
-                            <span className="mx-1.5 opacity-40">·</span>
+                            <span className="flex flex-wrap mx-1.5 opacity-40">·</span>
                             Posted {timeAgo(comment.createdAt as unknown as string)}
                             {comment.updatedAt !== comment.createdAt && (
-                                <>
+                                <div className="flex flex-wrap gap-0.5">
                                     <span className="mx-1.5 opacity-40">·</span>
                                     <span className="italic opacity-60">
                                         edited {timeAgo(comment.updatedAt as unknown as string)}
                                     </span>
-                                </>
+                                </div>
                             )}
                         </p>
                     </div>
@@ -173,7 +173,7 @@ export default function CommentCard({
                 </p>
 
                 {/* Bottom action row: votes + reply button */}
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-row items-center justify-between gap-2">
                     <VoteButtons
                         post={comment}
                         type="comment"
