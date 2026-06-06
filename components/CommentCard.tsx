@@ -58,7 +58,14 @@ export default function CommentCard({
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
                 setReplies(prev => [...prev, ...body.comments]);
-                setPage(body.pagination.totalSize);
+
+                setPage(p => p + 1);
+
+                updateComment({
+                    ...comment,
+                    numReplies: body.pagination.totalSize,
+                    author: { ...comment.author },
+                });
             })
             .catch((err) => {
                 if (err.name === 'AbortError') return;
@@ -97,7 +104,7 @@ export default function CommentCard({
 
             updateComment({
                 ...comment,
-                numReplies: comment.numReplies + 1,
+                numReplies: body.pagination.totalSize,
                 author: { ...comment.author },
             });
 
