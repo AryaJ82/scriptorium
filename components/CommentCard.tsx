@@ -180,11 +180,7 @@ export default function CommentCard({
                 throw new Error(body.error ?? 'Unable to update comment.');
             }
 
-            updateComment({
-                ...comment,
-                content: body.comment.content,
-                author: { ...comment.author },
-            });
+            updateComment(body.comment);
             resetCommentEdit();
 
         }).catch((error) => {
@@ -198,6 +194,7 @@ export default function CommentCard({
     const resetCommentEdit = useCallback(() => {
         setEditDraft(comment.content);
         setIsEditOpen(false);
+        setIsEditSaving(false);
     }, [comment.content]);
 
 
@@ -215,19 +212,17 @@ export default function CommentCard({
 
             const body = await response.json();
             if (!response.ok) {
-                throw new Error(body.error ?? 'Unable to delete comment post.');
+                throw new Error(body.error ?? 'Unable to delete comment.');
             }
 
             setIsDeleteOpen(false);
 
         }).catch((error) => {
-            setError(error instanceof Error ? error.message : 'Unable to delete comment post.');
+            setError(error instanceof Error ? error.message : 'Unable to delete comment.');
         }).finally(() => {
             setDeleteLoading(false);
-
         })
     }, [authFetch, baseUrl, comment, session]);
-
 
 
     return (
@@ -237,7 +232,7 @@ export default function CommentCard({
 
                 {/* Author row */}
                 <div className="flex flex-row items-center justify-between gap-3">
-                    <div className="flex flex-row items-center gap-1">
+                    <div className="flex flex-row items-center gap-2">
                         <DisplayAvatar user={comment.author} size="md" />
                         <div className="flex flex-col gap-0.5">
                             <div className="text-sm text-muted-foreground">
@@ -249,10 +244,15 @@ export default function CommentCard({
                                         {comment.author.role}
                                     </span>
                                 )}
-                                <p>
-                                    {`Posted ${timeAgo(comment.createdAt as unknown as string)}`}
-                                </p>
                             </div>
+                            <p className="text-xs text-muted-foreground">
+                                {`Posted ${timeAgo(comment.createdAt as unknown as string)}`}
+                                {comment.updatedAt !== comment.createdAt && (
+                                    <span className="italic opacity-60">
+                                        {' · '}edited {timeAgo(comment.updatedAt as unknown as string)}
+                                    </span>
+                                )}
+                            </p>
                         </div>
                     </div>
 
@@ -260,7 +260,7 @@ export default function CommentCard({
                         <DropdownMenuTrigger asChild>
                             <button
                                 className="flex items-center justify-center rounded-md border border-border p-2 outline-none hover:bg-accent"
-                                aria-label="Template actions"
+                                aria-label="Comment actions"
                             >
                                 <Menu className="size-4" />
                             </button>
@@ -271,14 +271,13 @@ export default function CommentCard({
                                 <DropdownMenuItem
                                     variant="default"
                                     onClick={() => setIsReportOpen(true)}
-                                    disabled={deleteLoading || isDeleteOpen}
                                 >
                                     <Flag className="size-3" /> Report
                                 </DropdownMenuItem>
                             )}
                             {isOwner && (
                                 <DropdownMenuItem
-                                    variant='default'
+                                    variant="default"
                                     onClick={() => setIsEditOpen(true)}
                                     disabled={deleteLoading || isDeleteOpen}
                                 >
@@ -299,40 +298,30 @@ export default function CommentCard({
                     </DropdownMenu>
                 </div>
 
-                {/* Comment body */}
-
-                {isOwner ? (
-                    <div className="flex flex-col gap-2 w-full">
-                        {isEditOpen ? (
-                            <div className="flex gap-2">
-                                <Textarea
-                                    value={editDraft}
-                                    onChange={(e) => setEditDraft(e.target.value)}
-                                    className="text-3xl font-serif font-semibold tracking-tight border-0 bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-transparent resize-none overflow-hidden w-full leading-tight"
-                                    aria-label="Blog post title"
-                                    rows={1}
-                                />
-                                <div className="flex flex-col justify-end gap-2">
-                                    <Button variant="ghost" size="sm" onClick={resetCommentEdit} disabled={isEditSaving}>
-                                        Cancel
-                                    </Button>
-                                    <Button variant="outline" size="sm" onClick={editComment} disabled={isEditSaving || !editDraft.trim()}>
-                                        {isEditSaving ? 'Saving…' : 'Save'}
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-start gap-2">
-                                <p className="text-sm leading-relaxed text-foreground">
-                                    {comment.content}
-                                </p>
-                            </div>
-                        )}
+                {/* Comment body / edit form */}
+                {isOwner && isEditOpen ? (
+                    <div className="flex flex-col gap-2">
+                        <Textarea
+                            value={editDraft}
+                            onChange={(e) => setEditDraft(e.target.value)}
+                            className="resize-none text-sm"
+                            aria-label="Edit comment"
+                            rows={3}
+                        />
+                        <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={resetCommentEdit} disabled={isEditSaving}>
+                                <X className="size-3.5" /> Cancel
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={editComment} disabled={isEditSaving || !editDraft.trim()}>
+                                {isEditSaving ? 'Saving…' : 'Save'}
+                            </Button>
+                        </div>
                     </div>
-                ) : (<p className="text-sm leading-relaxed text-foreground">
-                    {comment.content}
-                </p>)
-                }
+                ) : (
+                    <p className="text-sm leading-relaxed text-foreground">
+                        {comment.content}
+                    </p>
+                )}
 
                 {/* Bottom action row: votes + reply button */}
                 <div className="flex flex-row items-center justify-between gap-2">
@@ -383,7 +372,6 @@ export default function CommentCard({
                             <X className="size-3.5" />
                             Cancel
                         </Button>
-
                         <Button
                             variant="outline"
                             size="sm"
@@ -398,8 +386,7 @@ export default function CommentCard({
                 </div>
             )}
 
-            {/* ── Nested replies ── */}
-            {replies.length > 0 && !loading && (
+            {replies.length > 0 && (
                 <div className="mt-3 flex flex-col gap-3">
                     {replies.map((reply, index) => (
                         <CommentCard
@@ -427,7 +414,7 @@ export default function CommentCard({
             {/* ── Delete Dialog ── */}
             {isDeleteOpen && (
                 <ActionDialogue
-                    title={`Delete this comment?`}
+                    title="Delete this comment?"
                     description="This action cannot be undone."
                     confirmAction={deleteComment}
                     isOpen={isDeleteOpen}
@@ -436,12 +423,11 @@ export default function CommentCard({
                 />
             )}
 
-
             {/* Fetch more replies */}
             {hasMoreReplies && !loading && (
                 <button
                     onClick={handleFetchReplies}
-                    className="mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground "
+                    className="mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                     <MoveDownRight className="size-4" />
                     See {comment.numReplies - replies.length} more{' '}
