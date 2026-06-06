@@ -68,7 +68,7 @@ export default function BlogPostPage() {
     setActionError(null);
     setLoading(true);
 
-    authFetch(`${baseUrl}/api/blogs/${id}`, {
+    authFetch(`/api/blogs/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -88,7 +88,7 @@ export default function BlogPostPage() {
     }).finally(() => {
       setLoading(false);
     })
-  }, [id, authFetch, baseUrl, session, post]);
+  }, [id, authFetch, session, post]);
 
   const deletePost = useCallback(async () => {
     if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
