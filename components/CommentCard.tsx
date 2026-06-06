@@ -22,7 +22,7 @@ export default function CommentCard({
     ancestors?: number;
 }) {
     const { session, baseUrl, authFetch } = useUserSession();
-    const [replies, setReplies] = useState<CommentResponse[]>(comment.replies ?? []);
+    const [replies, setReplies] = useState<CommentResponse[]>([]);
     const [page, setPage] = useState<number>(1);
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -98,7 +98,6 @@ export default function CommentCard({
             updateComment({
                 ...comment,
                 numReplies: comment.numReplies + 1,
-                replies: [...replies, body.comment],
                 author: { ...comment.author },
             });
 
@@ -124,7 +123,6 @@ export default function CommentCard({
             downvoteCount: newComment.downvoteCount,
             upvotingUsers: newComment.upvotingUsers,
             downvotingUsers: newComment.downvotingUsers,
-            replies: replies,
             author: { ...comment.author },
         });
     }, [comment, replies, updateComment]);

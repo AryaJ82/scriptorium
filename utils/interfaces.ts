@@ -128,7 +128,6 @@ export interface BlogResponse extends BlogPost {
 import type { Comment } from "@/app/generated/prisma/client";
 export interface CommentResponse extends Comment {
     author: Author;
-    replies?: CommentResponse[];
     numReplies: number;
     upvotingUsers: { id: string }[]; // This will contain at most one element, representing whether the current used has liked this element
     downvotingUsers: { id: string }[]; // This will contain at most one element, representing whether the current used has diliked this element
