@@ -37,7 +37,7 @@ export default function CommentCard({
     const [error, setError] = useState<string | null>(null);
 
     const [isReplyOpen, setIsReplyOpen] = useState<boolean>(false);
-    const [replyDraft, setreplyDraft] = useState<string>('');
+    const [replyDraft, setReplyDraft] = useState<string>('');
     const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
 
     const [editDraft, setEditDraft] = useState<string>(comment.content)
@@ -138,7 +138,7 @@ export default function CommentCard({
 
     const cancelReply = useCallback(() => {
         setIsReplyOpen(false);
-        setreplyDraft('');
+        setReplyDraft('');
         setError(null);
     }, []);
 
@@ -174,10 +174,12 @@ export default function CommentCard({
             }
 
             updateComment({
-                ...body.comment,
-                numReplies: comment.numReplies
-            }
-            );
+                ...comment,
+                content: body.comment.content,
+                author: { ...comment.author },
+            });
+            setIsEditOpen(false);
+
         }).catch((error) => {
             setError(error instanceof Error ? error.message : 'Unable to edit comment changes.');
             return
@@ -296,7 +298,7 @@ export default function CommentCard({
                         {isEditOpen ? (
                             <div className="flex gap-2">
                                 <Textarea
-                                    value={comment.content}
+                                    value={editDraft}
                                     onChange={(e) => setEditDraft(e.target.value)}
                                     className="text-3xl font-serif font-semibold tracking-tight border-0 bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-transparent resize-none overflow-hidden w-full leading-tight"
                                     aria-label="Blog post title"
@@ -357,7 +359,7 @@ export default function CommentCard({
                 <div className="mt-2 pl-4 border-l-2 border-border flex flex-col gap-2">
                     <Textarea
                         value={replyDraft}
-                        onChange={(e) => setreplyDraft(e.target.value)}
+                        onChange={(e) => setReplyDraft(e.target.value)}
                         placeholder={`Replying to @${comment.author.username}…`}
                         rows={3}
                         className="resize-none text-sm"

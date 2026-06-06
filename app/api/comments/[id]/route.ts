@@ -58,11 +58,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 return NextResponse.json({ error: "Forbidden" }, { status: 403 });
             }
 
-            const newComment = prisma.comment.update({
+            const newComment = await prisma.comment.update({
                 where: { id: parseInt(id) },
                 data: { content: content },
-                ...commentResponseInclude({ currentUserId: user.id })
-            })
+                include: {
+                    author: limitedAuthorSelect,
+                    upvotingUsers: { where: { id: { equals: user.id } }, select: { id: true } },
+                    downvotingUsers: { where: { id: { equals: user.id } }, select: { id: true } }
+                }
+            }
+            )
 
             return NextResponse.json({ comment: newComment }, { status: 200 });
 
