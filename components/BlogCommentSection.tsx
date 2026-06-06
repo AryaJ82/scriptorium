@@ -17,7 +17,7 @@ export default function BlogCommentSection({
     const { session, authFetch, baseUrl } = useUserSession();
     const [replies, setReplies] = useState<CommentResponse[]>([])
     const [page, setPage] = useState<number>(1);
-    const [reply, setReply] = useState<string>('')
+    const [replyDraft, setReplyDraft] = useState<string>('')
 
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -55,6 +55,7 @@ export default function BlogCommentSection({
     }, [baseUrl, blog])
 
     const handleReply = useCallback(async (reply: string) => {
+        // Reply to blog post with comment
         if (!blog || !session.isAuthenticated) {
             throw new Error("Invalid post or session")
         }
@@ -73,20 +74,20 @@ export default function BlogCommentSection({
             }
 
             setReplies([...replies, body.comment]);
-
+            setReplyDraft('');
         }).catch((error) => {
             setError(error instanceof Error ? error.message : 'Unable to make commentpost.');
         });
 
-    }, [blog, session, authFetch]);
+    }, [blog, replies, session, authFetch]);
 
     return (
         <div>
             <div className="mt-6 flex items-center justify-between border-t border-border/30 pt-5">
                 <div className="flex items-center gap-2">
-                    <Input id="blog-title" placeholder="Join in on the dicussion" value={reply} onChange={(e) => setReply(e.target.value)} />
+                    <Input id="blog-title" placeholder="Join in on the dicussion" value={replyDraft} onChange={(e) => setReplyDraft(e.target.value)} />
                 <Button
-                    onClick={() => handleReply(reply)}>
+                    onClick={() => handleReply(replyDraft)}>
                     Reply
                 </Button>
                 </div>
