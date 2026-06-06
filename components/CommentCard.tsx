@@ -6,6 +6,9 @@ import { useCallback, useState } from "react";
 import { VoteButtons } from "./ui/VoteButtons";
 import { DisplayAvatar } from "./ui/Avatar";
 import { timeAgo } from "@/utils/timeAgo";
+import { Button } from "./ui/Button";
+import { MessageCircle } from "lucide-react";
+import Textarea from "./ui/Textarea";
 
 const pageSize = 10; // Return 10 replies at a time
 
@@ -18,12 +21,15 @@ export default function CommentCard({
     updateComment: (newComment: CommentResponse) => void;
     ancestors?: number;
 }) {
-    const { session, baseUrl } = useUserSession();
+    const { session, baseUrl, authFetch } = useUserSession();
     const [replies, setReplies] = useState<CommentResponse[]>([]);
     const [page, setPage] = useState<number>(1);
 
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [isReplyOpen, setIsReplyOpen] = useState<boolean>(false);
+    const [reply, setReply] = useState<string>('');
 
     const hasMoreReplies = comment.numReplies > replies.length;
 
@@ -62,6 +68,38 @@ export default function CommentCard({
             })
     }, [comment, replies, updateComment]);
 
+    const handleReply = useCallback(() => {
+        if (!comment || !session.isAuthenticated) {
+            throw new Error("Invalid post or session")
+        }
+        setError(null);
+
+        authFetch(`${baseUrl}/api/comments/${comment.id}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                content: reply,
+                parent_comment_id: comment.id,
+            })
+        }).then(async (response) => {
+
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body.error ?? 'Unable to make comment post.');
+            }
+
+            setReplies([...replies, body.comment]);
+            cancelReply()
+        }).catch((error) => {
+            setError(error instanceof Error ? error.message : 'Unable to make commentpost.');
+        });
+
+    }, [comment, authFetch, replies, updateComment]);
+
+
+    const cancelReply = useCallback(()=>{
+        setIsReplyOpen(false);
+        setReply('');
+    }, [])
 
     const propagateUpdate = useCallback((newComment: CommentResponse) => {
         // Propagate update after reply val has been changed...
@@ -120,13 +158,30 @@ export default function CommentCard({
                         orientation="horizontal"
                         updatePost={propagateUpdate as (p: BlogResponse | CommentResponse) => void}
                     />
+
+                    {/* Reply to comment */}
+                    <Button
+                        onClick={() => setIsReplyOpen(true)}
+                    >
+                        <MessageCircle className="size-4" />
+                    </Button>
+
                     {/* Error message */}
                     {error && (
                         <p className="text-xs text-destructive">{error}</p>
                     )}
                 </div>
             </div>
-            
+
+            {isReplyOpen && (
+                <div>
+                    <Textarea onChange={(e) => setReply(e.target.value)}>
+
+                    </Textarea>
+                    <Button onClick={cancelReply}></Button>
+                </div>
+            )}
+
 
             {/* ── Replies ── */}
             {replies.length > 0 && (
