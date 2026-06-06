@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         ]);
 
         comments.forEach((c) => {
-            Object.assign(c, c.replies.length);
+            Object.assign(c, {numReplies: c.replies.length});
             c.replies = [];
         })
         return NextResponse.json({
