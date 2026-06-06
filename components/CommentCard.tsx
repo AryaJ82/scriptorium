@@ -95,7 +95,10 @@ export default function CommentCard({
     }, [comment.id, page]);
 
     const handleReply = useCallback(() => {
-        if (!comment || !session.isAuthenticated) return;
+        if (!comment || !session.isAuthenticated) {
+            setError("Invalid post or session");
+            return;
+        }
 
         if (!replyDraft.trim()) {
             setError('Reply cannot be empty.');
@@ -126,16 +129,16 @@ export default function CommentCard({
                 author: { ...comment.author },
             });
 
-            cancelReply();
+            resetReply();
         }).catch((error) => {
             setError(error instanceof Error ? error.message : 'Unable to post reply.');
         }).finally(() => {
             setReplySubmitting(false);
         });
 
-    }, [comment, authFetch, replyDraft, replies, updateComment]);
+    }, [comment, authFetch, replyDraft, updateComment]);
 
-    const cancelReply = useCallback(() => {
+    const resetReply = useCallback(() => {
         setIsReplyOpen(false);
         setReplyDraft('');
         setError(null);
@@ -150,11 +153,12 @@ export default function CommentCard({
             downvotingUsers: newComment.downvotingUsers,
             author: { ...comment.author },
         });
-    }, [comment, replies, updateComment]);
+    }, [comment, updateComment]);
 
     const editComment = useCallback(() => {
         if (!comment || !session.isAuthenticated || comment.authorId !== session?.id) {
-            throw new Error("Invalid post or session")
+            setError("Invalid post or session");
+            return;
         }
         setError(null);
         setIsEditSaving(true);
@@ -367,7 +371,7 @@ export default function CommentCard({
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={cancelReply}
+                            onClick={resetReply}
                             disabled={replySubmitting}
                             className="flex items-center gap-1.5 text-xs"
                         >
