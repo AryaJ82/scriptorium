@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         //     return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
         // }
         const { blog_id, parent_comment_id, page, pageSize, sortBy, sortOrder } = queryParams;
-
+        
         const pageNum = page ? parseInt(page) : 1;
         const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         }
 
         const orderBy = {
-            [sortBy ?? "createdAt"]: (sortOrder === 'desc') ? 'desc' : 'asc',
+            [sortBy ?? "upvoteCount"]: (sortOrder === 'desc') ? 'desc' : 'asc',
         } as Prisma.CommentOrderByWithRelationInput;
 
         const currentUser = await getOptionalUser(request);
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
             prisma.comment.count({ where }),
             prisma.comment.findMany({
                 where,
-                orderBy,
+                orderBy: { upvoteCount: 'desc'},
                 skip: (pageNum - 1) * pageSizeNum,
                 take: pageSizeNum,
                 include: {
