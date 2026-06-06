@@ -16,8 +16,8 @@ export default function BlogCommentSection({
     blog: BlogResponse;
 }) {
     const { session, authFetch, baseUrl } = useUserSession();
-    const [replies, setReplies] = useState<CommentResponse[]>([]);
-    const [totalReplies, setTotalReplies] = useState<number>(0);
+    const [comments, setComments] = useState<CommentResponse[]>([]);
+    const [totalComments, setTotalComments] = useState<number>(0);
     const [page, setPage] = useState<number>(1);
     const [replyDraft, setReplyDraft] = useState<string>('');
 
@@ -25,7 +25,7 @@ export default function BlogCommentSection({
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const hasMoreReplies = totalReplies > replies.length;
+    const hasMoreComments = totalComments > comments.length;
 
     useEffect(() => {
         const queryParams = new URLSearchParams();
@@ -48,8 +48,8 @@ export default function BlogCommentSection({
             .then(async (res) => {
                 if (!res.ok) throw new Error('Failed to fetch templates');
                 const body = await res.json();
-                setReplies(body.comments);
-                setTotalReplies(body.pagination.totalSize);
+                setComments(body.comments);
+                setTotalComments(body.pagination.totalSize);
                 setPage(p => p + 1);
             })
             .catch((err) => {
@@ -64,7 +64,7 @@ export default function BlogCommentSection({
     }, [baseUrl, blog.id])
 
 
-    const handleFetchReplies = useCallback(() => {
+    const handleFetchMore = useCallback(() => {
         const queryParams = new URLSearchParams();
 
         queryParams.append('blog_id', blog.id.toString());
@@ -84,9 +84,9 @@ export default function BlogCommentSection({
             .then(async (res) => {
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
-                setReplies(prev => [...prev, ...body.comments]);
+                setComments(prev => [...prev, ...body.comments]);
                 setPage(p => p + 1);
-                setTotalReplies(body.pagination.totalSize);
+                setTotalComments(body.pagination.totalSize);
             })
             .catch((err) => {
                 if (err.name === 'AbortError') return;
@@ -116,13 +116,13 @@ export default function BlogCommentSection({
                 throw new Error(body.error ?? 'Unable to make comment post.');
             }
 
-            setReplies([body.comment, ...replies]);
+            setComments([body.comment, ...comments]);
             setReplyDraft('');
         }).catch((error) => {
             setError(error instanceof Error ? error.message : 'Unable to make commentpost.');
         });
 
-    }, [blog, replies, session, authFetch]);
+    }, [blog, comments, session, authFetch]);
 
     return (
         <div>
@@ -135,15 +135,15 @@ export default function BlogCommentSection({
                     </Button>
                 </div>
             </div>
-            {replies.length > 0 && (
+            {comments.length > 0 && (
                 <div className="mt-3 flex flex-col gap-3">
-                    {replies.map((reply, index) => (
+                    {comments.map((reply, index) => (
                         <CommentCard
                             key={reply.id}
                             comment={reply}
                             ancestors={0}
                             updateComment={(updated: CommentResponse) => {
-                                setReplies(prev =>
+                                setComments(prev =>
                                     prev.map((r, i) => (i === index ? updated : r))
                                 );
                             }}
@@ -160,17 +160,17 @@ export default function BlogCommentSection({
             )}
 
             {/* Fetch more replies */}
-            {hasMoreReplies && !loading && (
+            {hasMoreComments && !loading && (
                 <div className="flex justify-center">
                 <Button
-                    onClick={handleFetchReplies}
+                    onClick={handleFetchMore}
                     variant="destructive"
                     size="lg"
                     
                 >
                     <ChevronDownIcon className="size-4" />
-                    See {totalReplies - replies.length} more{' '}
-                    {totalReplies - replies.length === 1 ? 'reply' : 'replies'}…
+                    See {totalComments - comments.length} more{' '}
+                    {totalComments - comments.length === 1 ? 'reply' : 'replies'}…
                     <ChevronDownIcon className="size-4" />
                 </Button>
                 </div>
