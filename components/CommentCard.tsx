@@ -7,10 +7,10 @@ import { VoteButtons } from "./ui/VoteButtons";
 import { DisplayAvatar } from "./ui/Avatar";
 import { timeAgo } from "@/utils/timeAgo";
 import { Button } from "./ui/Button";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, X, SendHorizonal } from "lucide-react";
 import Textarea from "./ui/Textarea";
 
-const pageSize = 10; // Return 10 replies at a time
+const pageSize = 10;
 
 export default function CommentCard({
     comment,
@@ -22,14 +22,15 @@ export default function CommentCard({
     ancestors?: number;
 }) {
     const { session, baseUrl, authFetch } = useUserSession();
-    const [replies, setReplies] = useState<CommentResponse[]>([]);
+    const [replies, setReplies] = useState<CommentResponse[]>(comment.replies ?? []);
     const [page, setPage] = useState<number>(1);
 
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const [isReplyOpen, setIsReplyOpen] = useState<boolean>(false);
-    const [reply, setReply] = useState<string>('');
+    const [replyDraft, setreplyDraft] = useState<string>('');
+    const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
 
     const hasMoreReplies = comment.numReplies > replies.length;
 
@@ -61,49 +62,62 @@ export default function CommentCard({
             })
             .catch((err) => {
                 if (err.name === 'AbortError') return;
-                setError(err instanceof Error ? err.message : 'Failed to fetch replies. Please try again later.')
+                setError(err instanceof Error ? err.message : 'Failed to fetch replies. Please try again later.');
             })
             .finally(() => {
                 setLoading(false);
-            })
-    }, [comment, replies, updateComment]);
+            });
+    }, [comment.id, page]);
 
     const handleReply = useCallback(() => {
-        if (!comment || !session.isAuthenticated) {
-            throw new Error("Invalid post or session")
+        if (!comment || !session.isAuthenticated) return;
+
+        if (!replyDraft.trim()) {
+            setError('Reply cannot be empty.');
+            return;
         }
+
         setError(null);
+        setReplySubmitting(true);
 
-        authFetch(`${baseUrl}/api/comments/${comment.id}`, {
+        authFetch(`${baseUrl}/api/blogs/${comment.blogPostId}/comments`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content: reply,
+                content: replyDraft,
                 parent_comment_id: comment.id,
-            })
+            }),
         }).then(async (response) => {
-
             const body = await response.json();
             if (!response.ok) {
-                throw new Error(body.error ?? 'Unable to make comment post.');
+                throw new Error(body.error ?? 'Unable to post reply.');
             }
 
-            setReplies([...replies, body.comment]);
-            cancelReply()
+            setReplies(prev => [...prev, body.comment]);
+
+            updateComment({
+                ...comment,
+                numReplies: comment.numReplies + 1,
+                replies: [...replies, body.comment],
+                author: { ...comment.author },
+            });
+
+            cancelReply();
         }).catch((error) => {
-            setError(error instanceof Error ? error.message : 'Unable to make commentpost.');
+            setError(error instanceof Error ? error.message : 'Unable to post reply.');
+        }).finally(() => {
+            setReplySubmitting(false);
         });
 
-    }, [comment, authFetch, replies, updateComment]);
+    }, [comment, authFetch, replyDraft, replies, updateComment]);
 
-
-    const cancelReply = useCallback(()=>{
+    const cancelReply = useCallback(() => {
         setIsReplyOpen(false);
-        setReply('');
-    }, [])
+        setreplyDraft('');
+        setError(null);
+    }, []);
 
     const propagateUpdate = useCallback((newComment: CommentResponse) => {
-        // Propagate update after reply val has been changed...
-        // Used for showing likes and telling the parent more replies have been created
         updateComment({
             ...comment,
             upvoteCount: newComment.upvoteCount,
@@ -112,13 +126,15 @@ export default function CommentCard({
             downvotingUsers: newComment.downvotingUsers,
             replies: replies,
             author: { ...comment.author },
-        })
-    }, [comment, replies, updateComment])
+        });
+    }, [comment, replies, updateComment]);
 
     return (
         <div className={indentClass}>
-            {/* Author row */}
+            {/* ── Comment card ── */}
             <div className="rounded-lg border border-border bg-card px-4 py-3 flex flex-col gap-3">
+
+                {/* Author row */}
                 <div className="flex items-center gap-3">
                     <DisplayAvatar user={comment.author} size="md" />
 
@@ -144,14 +160,15 @@ export default function CommentCard({
                             )}
                         </p>
                     </div>
+                </div>
 
+                {/* Comment body */}
+                <p className="text-sm leading-relaxed text-foreground">
+                    {comment.content}
+                </p>
 
-                    {/* Comment body */}
-                    <p className="text-sm leading-relaxed text-foreground">
-                        {comment.content}
-                    </p>
-
-                    {/* Vote buttons */}
+                {/* Bottom action row: votes + reply button */}
+                <div className="flex items-center justify-between gap-2">
                     <VoteButtons
                         post={comment}
                         type="comment"
@@ -159,31 +176,62 @@ export default function CommentCard({
                         updatePost={propagateUpdate as (p: BlogResponse | CommentResponse) => void}
                     />
 
-                    {/* Reply to comment */}
-                    <Button
-                        onClick={() => setIsReplyOpen(true)}
-                    >
-                        <MessageCircle className="size-4" />
-                    </Button>
-
-                    {/* Error message */}
-                    {error && (
-                        <p className="text-xs text-destructive">{error}</p>
+                    {session.isAuthenticated && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsReplyOpen(o => !o)}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                            <MessageCircle className="size-3.5" />
+                            Reply
+                        </Button>
                     )}
                 </div>
+
+                {/* Error message */}
+                {error && (
+                    <p className="text-xs text-destructive">{error}</p>
+                )}
             </div>
 
+            {/* ── Reply composer ── */}
             {isReplyOpen && (
-                <div>
-                    <Textarea onChange={(e) => setReply(e.target.value)}>
+                <div className="mt-2 pl-4 border-l-2 border-border flex flex-col gap-2">
+                    <Textarea
+                        value={replyDraft}
+                        onChange={(e) => setreplyDraft(e.target.value)}
+                        placeholder={`Replying to @${comment.author.username}…`}
+                        rows={3}
+                        className="resize-none text-sm"
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={cancelReply}
+                            disabled={replySubmitting}
+                            className="flex items-center gap-1.5 text-xs"
+                        >
+                            <X className="size-3.5" />
+                            Cancel
+                        </Button>
 
-                    </Textarea>
-                    <Button onClick={cancelReply}></Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleReply}
+                            disabled={replySubmitting || !replyDraft.trim()}
+                            className="flex items-center gap-1.5 text-xs"
+                        >
+                            <SendHorizonal className="size-3.5" />
+                            {replySubmitting ? 'Posting…' : 'Post Reply'}
+                        </Button>
+                    </div>
                 </div>
             )}
 
-
-            {/* ── Replies ── */}
+            {/* ── Nested replies ── */}
             {replies.length > 0 && (
                 <div className="mt-3 flex flex-col gap-3">
                     {replies.map((reply, index) => (
@@ -209,7 +257,7 @@ export default function CommentCard({
                 </p>
             )}
 
-
+            {/* Fetch more replies */}
             {hasMoreReplies && !loading && (
                 <button
                     onClick={handleFetchReplies}
