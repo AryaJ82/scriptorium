@@ -152,10 +152,16 @@ export default function BlogCommentSection({
                 </div>
             )}
 
+            {!loading && !error && comments.length === 0 && (
+                <p className="text-center text-sm text-muted-foreground py-8">
+                    No comments yet. Be the first!
+                </p>
+            )}
+            
             {/* Loading indicator */}
             {loading && (
-                <p className="mt-2 pl-1 text-xs text-muted-foreground animate-pulse">
-                    Loading replies…
+                <p className="pl-1 text-xs text-muted-foreground animate-pulse">
+                    Loading comments…
                 </p>
             )}
 
