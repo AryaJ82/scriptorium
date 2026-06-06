@@ -123,7 +123,7 @@ export default function BlogPostPage() {
           onSaveTags={(tags) => updatePost({ tags })}
           onDelete={deletePost}
           isOwner={isOwner}
-        ></BlogHeader>
+        />
         ) : (
           <div className="mb-6 flex flex-col gap-2 animate-pulse">
             <div className="h-8 w-64 rounded-md bg-muted" />
@@ -145,37 +145,6 @@ export default function BlogPostPage() {
             />
           </div>
         )}
-
-
-        {/* ── Footer ── */}
-        {/* <div className="mt-6 flex items-center justify-between border-t border-border/30 pt-5">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setBookmarked((b) => !b)}
-              aria-label={bookmarked ? "Remove bookmark" : "Bookmark post"}
-              className="flex items-center gap-1.5 rounded-lg border border-border/30 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            >
-              <BookmarkIcon filled={bookmarked} size={14} />
-              {bookmarked ? "Saved" : "Save"}
-            </button>
-
-            <button
-              aria-label="Share post"
-              className="flex items-center gap-1.5 rounded-lg border border-border/30 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            >
-              <ShareIcon size={14} />
-              Share
-            </button>
-          </div>
-
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <ClockIcon size={12} />
-            {readTime} min read
-          </span>
-        </div> */}
-        <hr className="my-6 border-border/30" />
-
-        {/* Desktop vote */}
         {post && <div className="hidden shrink-0 sm:block">
           <VoteButtons
             post={post}

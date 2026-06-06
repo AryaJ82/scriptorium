@@ -106,6 +106,7 @@ export default function BlogHeader({
             <div className="flex min-w-0 flex-1 flex-col gap-2">
                 {post.linkedTemplate && (<p>This post is linked to the template,</p>)}
                 {post.linkedTemplate && (<TemplateCard template={post.linkedTemplate} />)}
+                <hr className="my-6 border-border/30" />
                 {/* Author row */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
