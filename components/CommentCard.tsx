@@ -160,6 +160,10 @@ export default function CommentCard({
             setError("Invalid post or session");
             return;
         }
+        if (!editDraft.trim()) {
+            setError('Comment cannot be empty.');
+            return;
+        }
         setError(null);
         setIsEditSaving(true);
 
@@ -173,7 +177,7 @@ export default function CommentCard({
 
             const body = await response.json();
             if (!response.ok) {
-                throw new Error(body.error ?? 'Unable to update comment post.');
+                throw new Error(body.error ?? 'Unable to update comment.');
             }
 
             updateComment({
@@ -181,7 +185,7 @@ export default function CommentCard({
                 content: body.comment.content,
                 author: { ...comment.author },
             });
-            setIsEditOpen(false);
+            resetCommentEdit();
 
         }).catch((error) => {
             setError(error instanceof Error ? error.message : 'Unable to edit comment changes.');
@@ -189,9 +193,9 @@ export default function CommentCard({
         }).finally(() => {
             setLoading(false);
         })
-    }, [comment, session, editDraft])
+    }, [comment, session, editDraft, authFetch, updateComment])
 
-    const cancelCommentEdit = useCallback(() => {
+    const resetCommentEdit = useCallback(() => {
         setEditDraft(comment.content);
         setIsEditOpen(false);
     }, [comment.content]);
@@ -308,7 +312,7 @@ export default function CommentCard({
                                     rows={1}
                                 />
                                 <div className="flex flex-col justify-end gap-2">
-                                    <Button variant="ghost" size="sm" onClick={cancelCommentEdit} disabled={isEditSaving}>
+                                    <Button variant="ghost" size="sm" onClick={resetCommentEdit} disabled={isEditSaving}>
                                         Cancel
                                     </Button>
                                     <Button variant="outline" size="sm" onClick={editComment} disabled={isEditSaving || !editDraft.trim()}>
