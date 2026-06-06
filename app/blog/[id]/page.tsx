@@ -123,6 +123,8 @@ export default function BlogPostPage() {
           onSaveTags={(tags) => updatePost({ tags })}
           onDelete={deletePost}
           isOwner={isOwner}
+          setPost={setPost}
+          setActionError={setActionError}
         />
         ) : (
           <div className="mb-6 flex flex-col gap-2 animate-pulse">

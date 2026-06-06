@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { DisplayAvatar } from '@/components/ui/Avatar'
 import { timeAgo } from '@/utils/timeAgo'
-import type { BlogResponse } from "@/utils/interfaces"
+import type { BlogResponse, CommentResponse } from "@/utils/interfaces"
 import { TagBadge } from './TagBadge'
 import { TemplateCard } from './TemplateCard'
 import {
@@ -19,6 +19,7 @@ import { useState, useCallback } from 'react';
 import { Menu, Trash, Pencil } from 'lucide-react'
 import Textarea from "./ui/Textarea";
 import ActionDialogue from "./ui/ActionDialog";
+import { VoteButtons } from "./ui/VoteButtons";
 
 
 export default function BlogHeader({
@@ -27,12 +28,16 @@ export default function BlogHeader({
     onSaveTitle,
     onSaveTags,
     onDelete,
+    setPost,
+    setActionError,
 }: {
     post: BlogResponse
     isOwner: boolean;
     onSaveTitle: (title: string) => Promise<void>;
     onSaveTags: (tags: string[]) => Promise<void>;
     onDelete: () => Promise<void>;
+    setPost: (b: BlogResponse) => void;
+    setActionError: (s: string | null) => void;
 }) {
     const [title, setTitle] = useState(post.title);
     const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit(post?.tags ? post.tags.map((tag) => tag.name) : []);
@@ -124,29 +129,42 @@ export default function BlogHeader({
                     </div>
 
                     {/* Burger Menu */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button
-                                className="flex items-center justify-center rounded-md border border-border p-2 outline-none hover:bg-accent"
-                                aria-label="Template actions"
-                            >
-                                <Menu className="size-4" />
-                            </button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuSeparator />
-                            {isOwner && (
-                                <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={() => setIsDeleteOpen(true)}
-                                    disabled={deleteLoading || isDeleteOpen}
+                    <div className="flex flex-row gap-1 items-end">
+                        <div className="hidden shrink-0 sm:block">
+                            <VoteButtons
+                                post={post}
+                                type="blog"
+                                orientation="horizontal"
+                                updatePost={setPost as ((p: BlogResponse | CommentResponse) => void)}
+                                setActionError={setActionError}
+                            />
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    className="flex items-center justify-center rounded-md border border-border p-2 outline-none hover:bg-accent"
+                                    aria-label="Template actions"
                                 >
-                                    <Trash className="size-3" /> Delete
-                                </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                    <Menu className="size-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuSeparator />
+                                {isOwner && (
+                                    <DropdownMenuItem
+                                        variant="destructive"
+                                        onClick={() => setIsDeleteOpen(true)}
+                                        disabled={deleteLoading || isDeleteOpen}
+                                    >
+                                        <Trash className="size-3" /> Delete
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+
+                    </div>
                 </div>
 
                 {/* Title */}
