@@ -82,6 +82,15 @@ export default function BlogCommentSection({
 
     return (
         <div>
+            <div className="mt-6 flex items-center justify-between border-t border-border/30 pt-5">
+                <div className="flex items-center gap-2">
+                    <Input id="blog-title" placeholder="Join in on the dicussion" value={reply} onChange={(e) => setReply(e.target.value)} />
+                <Button
+                    onClick={() => handleReply(reply)}>
+                    Reply
+                </Button>
+                </div>
+            </div>
             {replies.length > 0 && (
                 <div className="mt-3 flex flex-col gap-3">
                     {replies.map((reply, index) => (
@@ -98,17 +107,7 @@ export default function BlogCommentSection({
                     ))}
                 </div>
             )}
-            <div className="mt-6 flex items-center justify-between border-t border-border/30 pt-5">
-                <div className="flex items-center gap-2">
-                    <Label htmlFor="blog-title">Title</Label>
-                    <Input id="blog-title" placeholder="e.g. Why binary search matters" value={reply} onChange={(e) => setReply(e.target.value)} />
-                </div>
-                <Button
-                    onClick={() => handleReply(reply)}
 
-                />
-
-            </div>
         </div>
     );
 }
