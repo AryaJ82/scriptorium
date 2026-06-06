@@ -231,6 +231,15 @@ export interface BlogPATCHBody {
 }
 
 // --------------------- Comments
+
+export interface CommentGETQuery {
+    blog_id?: string;
+    parent_comment_id?: string;
+    page?: string;
+    pageSize?: string;
+    sortBy?: ValidSortFields;
+    sortOrder?: ValidSortOrder;
+}
 export interface CommentPOSTBody {
     content: string;
     parent_comment_id?: string;

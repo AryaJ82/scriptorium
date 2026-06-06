@@ -106,6 +106,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             }
 
             await prisma.comment.delete({ where: { id: comment.id } });
+            
             return NextResponse.json({ message: "Comment deleted successfully" }, { status: 200 });
 
         } catch (error) {
