@@ -61,7 +61,7 @@ export default function BlogCommentSection({
 
         return () => controller.abort();
 
-    }, [baseUrl, blog])
+    }, [baseUrl, blog.id])
 
 
     const handleFetchReplies = useCallback(() => {
@@ -85,7 +85,8 @@ export default function BlogCommentSection({
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
                 setReplies(prev => [...prev, ...body.comments]);
-                setPage(body.pagination.totalSize);
+                setPage(p => p + 1);
+                setTotalReplies(body.pagination.totalSize);
             })
             .catch((err) => {
                 if (err.name === 'AbortError') return;
