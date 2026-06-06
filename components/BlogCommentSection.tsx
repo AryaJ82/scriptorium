@@ -3,12 +3,10 @@
 import { useUserSession } from "@/contexts/UserSessionContext"
 import { BlogResponse, CommentResponse } from "@/utils/interfaces"
 import { useState, useEffect, useCallback } from "react"
-import { Label } from "./Label";
-import Input from "./ui/Input";
 import { Button } from "./ui/Button";
+import Textarea from "./ui/Textarea";
 import CommentCard from "./CommentCard";
 import { ChevronDown, MessagesSquare, SendHorizonal } from "lucide-react";
-import Textarea from "./ui/Textarea";
 
 const pageSize = 10;
 export default function BlogCommentSection({
@@ -47,14 +45,16 @@ export default function BlogCommentSection({
             signal: controller.signal
         })
             .then(async (res) => {
-                if (!res.ok) throw new Error('Failed to fetch templates');
                 const body = await res.json();
+                if (!res.ok) throw new Error(body.error ?? 'Failed to fetch comments');
+
                 setComments(body.comments);
                 setTotalComments(body.pagination.totalSize);
                 setPage(p => p + 1);
             })
             .catch((err) => {
                 if (controller.signal.aborted) return;
+                setError(err instanceof Error ? err.message : 'Failed to load comments.');
             })
             .finally(() => {
                 setLoading(false);
@@ -62,7 +62,7 @@ export default function BlogCommentSection({
 
         return () => controller.abort();
 
-    }, [baseUrl, blog.id])
+    }, [blog.id])
 
 
     const handleFetchMore = useCallback(() => {
@@ -96,7 +96,7 @@ export default function BlogCommentSection({
             .finally(() => {
                 setLoading(false);
             });
-    }, [baseUrl, blog, page])
+    }, [blog.id])
 
     const handleReply = useCallback(async () => {
         // Reply to blog post with comment
