@@ -6,18 +6,19 @@ import { useState, useEffect, useCallback } from "react"
 import { Button } from "./ui/Button";
 import Textarea from "./ui/Textarea";
 import CommentCard from "./CommentCard";
-import { ChevronDown, MessagesSquare, SendHorizonal } from "lucide-react";
+import { ChevronDown, MessageSquare, SendHorizonal } from "lucide-react";
 
 const pageSize = 10;
+
 export default function BlogCommentSection({
     blog,
 }: {
     blog: BlogResponse;
 }) {
-    const { session, authFetch, baseUrl } = useUserSession();
+    const { session, authFetch } = useUserSession();
     const [comments, setComments] = useState<CommentResponse[]>([]);
     const [totalComments, setTotalComments] = useState<number>(0);
-    const [page, setPage] = useState<number>(1);
+    const [page, setPage] = useState<number>(2); // initial load fetches page 1; next fetch starts at 2
     const [replyDraft, setReplyDraft] = useState<string>('');
     const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
 
@@ -28,16 +29,14 @@ export default function BlogCommentSection({
 
     useEffect(() => {
         const queryParams = new URLSearchParams();
-
         queryParams.append('blog_id', blog.id.toString());
-        queryParams.append('page', page.toString());
+        queryParams.append('page', '1');
         queryParams.append('pageSize', pageSize.toString());
         queryParams.append('sortBy', 'upvoteCount');
         queryParams.append('orderBy', 'desc');
 
         setLoading(true);
         setError(null);
-
 
         const controller = new AbortController();
         fetch(`/api/comments/?${queryParams.toString()}`, {
@@ -47,7 +46,6 @@ export default function BlogCommentSection({
             .then(async (res) => {
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch comments');
-
                 setComments(body.comments);
                 setTotalComments(body.pagination.totalSize);
                 setPage(p => p + 1);
@@ -61,13 +59,10 @@ export default function BlogCommentSection({
             });
 
         return () => controller.abort();
-
-    }, [blog.id])
-
+    }, [blog.id]);
 
     const handleFetchMore = useCallback(() => {
         const queryParams = new URLSearchParams();
-
         queryParams.append('blog_id', blog.id.toString());
         queryParams.append('page', page.toString());
         queryParams.append('pageSize', pageSize.toString());
@@ -84,60 +79,64 @@ export default function BlogCommentSection({
         })
             .then(async (res) => {
                 const body = await res.json();
-                if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
+                if (!res.ok) throw new Error(body.error ?? 'Failed to fetch comments');
                 setComments(prev => [...prev, ...body.comments]);
                 setPage(p => p + 1);
-                setTotalComments(body.pagination.totalSize);
             })
             .catch((err) => {
                 if (err.name === 'AbortError') return;
-                setError(err instanceof Error ? err.message : 'Failed to fetch replies. Please try again later.');
+                setError(err instanceof Error ? err.message : 'Failed to fetch more comments.');
             })
             .finally(() => {
                 setLoading(false);
             });
-    }, [blog.id])
+    }, [blog.id, page]);
 
-    const handleReply = useCallback(async () => {
-        // Reply to blog post with comment
-        if (!blog || !session.isAuthenticated) {
-            throw new Error("Invalid post or session")
+    const handleReply = useCallback(() => {
+
+        if (!session.isAuthenticated) {
+            setError('You must be signed in to comment.');
+            return;
         }
+
+        if (!replyDraft.trim()) {
+            setError('Comment cannot be empty.');
+            return;
+        }
+
         setError(null);
         setReplySubmitting(true);
 
-        return authFetch(`${baseUrl}/api/blogs/${blog.id}/comments`, {
+        authFetch(`/api/blogs/${blog.id}/comments`, {
             method: 'POST',
-            body: JSON.stringify({
-                content: replyDraft
-            })
+            body: JSON.stringify({ content: replyDraft })
         }).then(async (response) => {
-
             const body = await response.json();
             if (!response.ok) {
-                throw new Error(body.error ?? 'Unable to make comment post.');
+                throw new Error(body.error ?? 'Unable to post comment.');
             }
-
-            setComments((prev) => [body.comment, ...prev]);
+            setComments(prev => [body.comment, ...prev]);
+            setTotalComments(prev => prev + 1);
             setReplyDraft('');
-        }).catch((error) => {
-            setError(error instanceof Error ? error.message : 'Unable to make commentpost.');
+        }).catch((err) => {
+            setError(err instanceof Error ? err.message : 'Unable to post comment.');
         }).finally(() => {
             setReplySubmitting(false);
         });
-
-    }, [blog.id, session, authFetch, replyDraft]);
+    }, [blog.id, replyDraft, session, authFetch]);
 
     return (
         <section className="mt-8 flex flex-col gap-6">
 
             {/* ── Section heading ── */}
             <div className="flex items-center gap-2 border-t border-border pt-6">
-                <MessagesSquare className="size-4 text-muted-foreground" />
+                <MessageSquare className="size-4 text-muted-foreground" />
                 <h2 className="font-mono text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                     {totalComments > 0 ? `${totalComments} Comments` : 'Comments'}
                 </h2>
             </div>
+
+            {/* ── Compose box ── */}
             {session.isAuthenticated ? (
                 <div className="flex flex-col gap-2">
                     <Textarea
@@ -168,16 +167,18 @@ export default function BlogCommentSection({
                     Sign in to leave a comment.
                 </p>
             )}
+
+            {/* ── Comment list ── */}
             {comments.length > 0 && (
-                <div className="mt-3 flex flex-col gap-3">
-                    {comments.map((reply, index) => (
+                <div className="flex flex-col gap-3">
+                    {comments.map((comment, index) => (
                         <CommentCard
-                            key={reply.id}
-                            comment={reply}
+                            key={comment.id}
+                            comment={comment}
                             ancestors={0}
                             updateComment={(updated: CommentResponse) => {
                                 setComments(prev =>
-                                    prev.map((r, i) => (i === index ? updated : r))
+                                    prev.map((c, i) => (i === index ? updated : c))
                                 );
                             }}
                         />
@@ -203,7 +204,6 @@ export default function BlogCommentSection({
                 <p className="text-xs text-destructive">{error}</p>
             )}
 
-            {/* Fetch more replies */}
             {hasMoreComments && !loading && (
                 <div className="flex justify-center">
                     <Button
@@ -217,7 +217,6 @@ export default function BlogCommentSection({
                     </Button>
                 </div>
             )}
-
         </section>
     );
 }
