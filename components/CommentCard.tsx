@@ -16,6 +16,7 @@ import {
 import { Button } from "./ui/Button";
 import { Menu, Trash, Edit, MessageCircle, X, SendHorizonal, Flag, Pencil, ArrowDownFromLine, MoveDownRight } from "lucide-react";
 import Textarea from "./ui/Textarea";
+import ActionDialogue from "./ui/ActionDialog";
 
 const pageSize = 10;
 
@@ -39,10 +40,14 @@ export default function CommentCard({
     const [replyDraft, setreplyDraft] = useState<string>('');
     const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
 
+    const [editDraft, setEditDraft] = useState<string>(comment.content)
     const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
+    const [isEditSaving, setIsEditSaving] = useState<boolean>(false);
+
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
-    const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
     const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+
+    const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
 
 
     const hasMoreReplies = comment.numReplies > replies.length;
@@ -148,6 +153,73 @@ export default function CommentCard({
         });
     }, [comment, replies, updateComment]);
 
+    const editComment = useCallback(() => {
+        if (!comment || !session.isAuthenticated || comment.authorId !== session?.id) {
+            throw new Error("Invalid post or session")
+        }
+        setError(null);
+        setIsEditSaving(true);
+
+        authFetch(`/api/comments/${comment.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                content: editDraft
+            }),
+        }).then(async (response) => {
+
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body.error ?? 'Unable to update comment post.');
+            }
+
+            updateComment({
+                ...body.comment,
+                numReplies: comment.numReplies
+            }
+            );
+        }).catch((error) => {
+            setError(error instanceof Error ? error.message : 'Unable to edit comment changes.');
+            return
+        }).finally(() => {
+            setLoading(false);
+        })
+    }, [comment, session, editDraft])
+
+    const cancelCommentEdit = useCallback(() => {
+        setEditDraft(comment.content);
+        setIsEditOpen(false);
+    }, [comment.content]);
+
+
+    const deleteComment = useCallback(async () => {
+        if (!comment || !session.isAuthenticated || comment.authorId !== session?.id) {
+            throw new Error("Invalid comment or session")
+        }
+        setDeleteLoading(true);
+        setError(null);
+
+        authFetch(`${baseUrl}/api/blogs/${comment.id}`, {
+            method: 'DELETE',
+        }).then(async (response) => {
+
+            const body = await response.json();
+            if (!response.ok) {
+                throw new Error(body.error ?? 'Unable to delete comment post.');
+            }
+
+            setIsDeleteOpen(false);
+
+        }).catch((error) => {
+            setError(error instanceof Error ? error.message : 'Unable to delete comment post.');
+        }).finally(() => {
+            setDeleteLoading(false);
+
+        })
+    }, [authFetch, baseUrl, comment, session]);
+
+
+
     return (
         <div className={indentClass}>
             {/* ── Comment card ── */}
@@ -168,7 +240,7 @@ export default function CommentCard({
                                     </span>
                                 )}
                                 <p>
-                                {`Posted ${timeAgo(comment.createdAt as unknown as string)}`}
+                                    {`Posted ${timeAgo(comment.createdAt as unknown as string)}`}
                                 </p>
                             </div>
                         </div>
@@ -218,9 +290,39 @@ export default function CommentCard({
                 </div>
 
                 {/* Comment body */}
-                <p className="text-sm leading-relaxed text-foreground">
+
+                {isOwner ? (
+                    <div className="flex flex-col gap-2 w-full">
+                        {isEditOpen ? (
+                            <div className="flex gap-2">
+                                <Textarea
+                                    value={comment.content}
+                                    onChange={(e) => setEditDraft(e.target.value)}
+                                    className="text-3xl font-serif font-semibold tracking-tight border-0 bg-transparent px-0 py-0 focus-visible:ring-0 focus-visible:border-transparent resize-none overflow-hidden w-full leading-tight"
+                                    aria-label="Blog post title"
+                                    rows={1}
+                                />
+                                <div className="flex flex-col justify-end gap-2">
+                                    <Button variant="ghost" size="sm" onClick={cancelCommentEdit} disabled={isEditSaving}>
+                                        Cancel
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={editComment} disabled={isEditSaving || !editDraft.trim()}>
+                                        {isEditSaving ? 'Saving…' : 'Save'}
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-start gap-2">
+                                <p className="text-sm leading-relaxed text-foreground">
+                                    {comment.content}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                ) : (<p className="text-sm leading-relaxed text-foreground">
                     {comment.content}
-                </p>
+                </p>)
+                }
 
                 {/* Bottom action row: votes + reply button */}
                 <div className="flex flex-row items-center justify-between gap-2">
@@ -312,13 +414,26 @@ export default function CommentCard({
                 </p>
             )}
 
+            {/* ── Delete Dialog ── */}
+            {isDeleteOpen && (
+                <ActionDialogue
+                    title={`Delete this comment?`}
+                    description="This action cannot be undone."
+                    confirmAction={deleteComment}
+                    isOpen={isDeleteOpen}
+                    setIsOpen={setIsDeleteOpen}
+                    actionLoading={deleteLoading}
+                />
+            )}
+
+
             {/* Fetch more replies */}
             {hasMoreReplies && !loading && (
                 <button
                     onClick={handleFetchReplies}
                     className="mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground "
                 >
-                    <MoveDownRight className="size-4"/>
+                    <MoveDownRight className="size-4" />
                     See {comment.numReplies - replies.length} more{' '}
                     {comment.numReplies - replies.length === 1 ? 'reply' : 'replies'}…
                 </button>
