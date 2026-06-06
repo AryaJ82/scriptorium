@@ -6,8 +6,15 @@ import { useCallback, useState } from "react";
 import { VoteButtons } from "./ui/VoteButtons";
 import { DisplayAvatar } from "./ui/Avatar";
 import { timeAgo } from "@/utils/timeAgo";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/components/ui/DropdownMenu";
 import { Button } from "./ui/Button";
-import { MessageCircle, X, SendHorizonal } from "lucide-react";
+import { Menu, Trash, Edit, MessageCircle, X, SendHorizonal } from "lucide-react";
 import Textarea from "./ui/Textarea";
 
 const pageSize = 10;
@@ -32,7 +39,13 @@ export default function CommentCard({
     const [replyDraft, setreplyDraft] = useState<string>('');
     const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
 
+    const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
+    const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+
+
     const hasMoreReplies = comment.numReplies > replies.length;
+    const isOwner = comment.authorId === session.id;
 
     const indentClass = ancestors > 0
         ? `pl-${Math.min(ancestors * 4, 16)} border-l border-border`
@@ -144,7 +157,7 @@ export default function CommentCard({
                     <DisplayAvatar user={comment.author} size="md" />
 
                     <div className="flex flex-col gap-0.5">
-                        <p className="text-sm text-muted-foreground">
+                        <div className="text-sm text-muted-foreground">
                             <span className="font-mono font-medium text-foreground">
                                 @{comment.author.username}
                             </span>
@@ -153,17 +166,9 @@ export default function CommentCard({
                                     {comment.author.role}
                                 </span>
                             )}
-                            <span className="flex flex-wrap mx-1.5 opacity-40">·</span>
-                            Posted {timeAgo(comment.createdAt as unknown as string)}
-                            {comment.updatedAt !== comment.createdAt && (
-                                <div className="flex flex-wrap gap-0.5">
-                                    <span className="mx-1.5 opacity-40">·</span>
-                                    <span className="italic opacity-60">
-                                        edited {timeAgo(comment.updatedAt as unknown as string)}
-                                    </span>
-                                </div>
-                            )}
-                        </p>
+                            
+                            {`  Posted ${timeAgo(comment.createdAt as unknown as string)}`}
+                        </div>
                     </div>
                 </div>
 
