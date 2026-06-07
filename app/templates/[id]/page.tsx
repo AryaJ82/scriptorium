@@ -9,6 +9,7 @@ import DescriptionSection from "@/components/TemplateDescription";
 
 import TemplateHeader from "@/components/TemplateHeader";
 import TemplateCodeBody from "@/components/TemplateCodeBody";
+import NotFound from "@/components/NotFounds";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -265,6 +266,9 @@ export default function TemplatePage() {
                 )}
             </div>
 
+                {!loading && !template && (
+                    <NotFound/>
+                )}
 
         </div>
     );

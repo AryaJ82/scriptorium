@@ -11,6 +11,7 @@ import BlogContent from "@/components/BlogContent";
 import Input from "@/components/ui/Input";
 import { Label } from "@/components/Label";
 import BlogCommentSection from "@/components/BlogCommentSection";
+import NotFound from "@/components/NotFounds";
 
 export default function BlogPostPage() {
   const params = useParams();
@@ -117,7 +118,7 @@ export default function BlogPostPage() {
       <article className="flex flex-col gap-0">
 
         {/* ── Header ── */}
-        {post ? (<BlogHeader
+        {post && (<BlogHeader
           post={post}
           onSaveTitle={(title) => updatePost({ title })}
           onSaveTags={(tags) => updatePost({ tags })}
@@ -125,13 +126,7 @@ export default function BlogPostPage() {
           isOwner={isOwner}
           setPost={setPost}
           setActionError={setActionError}
-        />
-        ) : (
-          <div className="mb-6 flex flex-col gap-2 animate-pulse">
-            <div className="h-8 w-64 rounded-md bg-muted" />
-            <div className="h-4 w-40 rounded-md bg-muted" />
-          </div>
-        )}
+        />)}
 
         {/* ── Divider ── */}
         <hr className="my-6 border-border/30" />
@@ -161,6 +156,11 @@ export default function BlogPostPage() {
       {post && <BlogCommentSection
         blog={post}
       />}
+
+      {!loading && !post && (
+        <NotFound />
+      )}
+
     </div>
   );
 }
