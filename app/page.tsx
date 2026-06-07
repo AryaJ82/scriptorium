@@ -1,65 +1,255 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import Link from 'next/link'
+import {
+  ArrowRight,
+  GitFork,
+  MessagesSquare,
+  Play,
+  Save,
+  SquareTerminal,
+  TerminalSquare,
+} from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { TemplateCard } from '@/components/TemplateCard'
+import BlogCard from '@/components/BlogCard'
+import { useEffect, useState } from 'react'
+import { BlogResponse, TemplateResponse } from '@/utils/interfaces'
+
+
+const FEATURES = [
+  {
+    icon: SquareTerminal,
+    title: 'Many languages, one editor',
+    body: 'Write and run Python, JavaScript, TypeScript, C, C++, and Java with syntax highlighting tuned to each language.',
+  },
+  {
+    icon: Play,
+    title: 'Execute in real time',
+    body: 'Run code instantly, pipe in standard input, and read stdout, compile errors, runtime errors, and timeouts as they happen.',
+  },
+  {
+    icon: Save,
+    title: 'Save reusable templates',
+    body: 'Keep your best snippets organized with a title, explanation, and tags — then reuse them whenever you need.',
+  },
+  {
+    icon: GitFork,
+    title: 'Fork and build on others',
+    body: 'Start from a community template, modify it, and save your own forked version with full attribution.',
+  },
+]
+
+export default function HomePage() {
+
+  const [templates, setTemplates] = useState<TemplateResponse[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState<boolean>(false);
+  const [templatesError, setTemplatesError] = useState<string | null>(null);
+
+  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
+  const [blogsLoading, setBlogsLoading] = useState<boolean>(false);
+  const [blogsError, setBlogsError] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    setTemplatesLoading(true);
+
+    // Build query params
+    const params = new URLSearchParams();
+
+    params.append('sortBy', 'createdAt');
+    params.append('sortOrder', 'desc');
+    params.append('page', '1');
+    params.append('pageSize', '4');
+
+    const controller = new AbortController();
+    fetch(`/api/templates?${params.toString()}`,
+      {
+        method: 'GET',
+        signal: controller.signal,
+      })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to fetch templates');
+        const data = await res.json();
+        setTemplates(data.templates);
+      })
+      .catch(err => {
+        if (controller.signal.aborted) return;
+        setTemplatesError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
+      }).finally(() => {
+        setTemplatesLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [])
+
+  
+  useEffect(() => {
+    setBlogsLoading(true);
+
+    // Build query params
+    const params = new URLSearchParams();
+
+    params.append('sortBy', 'createdAt');
+    params.append('sortOrder', 'desc');
+    params.append('page', '1');
+    params.append('pageSize', '3');
+
+    const controller = new AbortController();
+    fetch(`/api/blogs?${params.toString()}`,
+      {
+        method: 'GET',
+        signal: controller.signal,
+      })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to fetch blogs');
+        const data = await res.json();
+        setBlogs(data.blogs);
+      })
+      .catch(err => {
+        if (controller.signal.aborted) return;
+        setBlogsError(err instanceof Error ? err.message : 'Failed to fetch blogs. Please try again later.');
+      }).finally(() => {
+        setBlogsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [])
+
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0 bg-grid opacity-40 mask-[radial-gradient(ellipse_at_top,black,transparent_70%)]" />
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-28">
+          <div className="flex flex-col gap-6">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-xs text-muted-foreground">
+              <TerminalSquare className="size-3.5 text-primary" />
+              write · execute · preserve
+            </span>
+            <h1 className="text-balance font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+              A modern scriptorium for your code
+            </h1>
+            <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
+              Write, run, and share code in many languages. Experiment freely,
+              refine your work, and preserve it as reusable templates — no setup
+              required.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button asChild size="lg">
+                <Link href="/playground">
+                  Open the Playground <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="/templates">Browse templates</Link>
+              </Button>
+            </div>
+            <p className="font-mono text-xs text-muted-foreground">
+              No account needed to write and run code.
+            </p>
+          </div>
+
+          {/* Code window */}
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+              <span className="flex gap-1.5" aria-hidden>
+                <span className="size-3 rounded-full bg-destructive/70" />
+                <span className="size-3 rounded-full bg-chart-4/70" />
+                <span className="size-3 rounded-full bg-chart-2/70" />
+              </span>
+              <span className="font-mono text-xs text-muted-foreground">
+                main.py
+              </span>
+            </div>
+            <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-foreground">
+              {`def fib(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+
+
+print([fib(i) for i in range(10)])`}
+            </pre>
+            <div className="border-t border-border bg-secondary/40 px-5 py-3 font-mono text-[13px] text-muted-foreground">
+              <span className="text-chart-2">→</span> [0, 1, 1, 2, 3, 5, 8, 13,
+              21, 34]
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-39.5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid hover:bg-black/4 px-5 transition-colors hover:border-transparent dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-39.5"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-24">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className="flex flex-col gap-3 rounded-lg border border-border bg-card p-6"
+            >
+              <span className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <f.icon className="size-5" />
+              </span>
+              <h3 className="font-serif text-lg font-medium">{f.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {f.body}
+              </p>
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
-  );
+      </section>
+
+      {/* Featured templates */}
+      <section className="border-t border-border bg-secondary/30">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-3xl font-semibold tracking-tight">
+                Newest templates
+              </h2>
+              <p className="mt-1 text-muted-foreground">
+                Snippets from the community.
+              </p>
+            </div>
+            <Button asChild variant="ghost">
+              <Link href="/templates">
+                View all <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {templates.map((t) => (
+              <TemplateCard key={t.id} template={t} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Latest posts */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="font-serif text-3xl font-semibold tracking-tight">
+              From the blog
+            </h2>
+            <p className="mt-1 flex items-center gap-2 text-muted-foreground">
+              <MessagesSquare className="size-4" /> Learn from how others build.
+            </p>
+          </div>
+          <Button asChild variant="ghost">
+            <Link href="/blog">
+              Read more <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        </div>
+        <div className="flex flex-col gap-4">
+          {blogs.map((p) => (
+            <BlogCard key={p.id} post={p} updatePost={()=>{}}/>
+          ))}
+        </div>
+      </section>
+    </>
+  )
 }
