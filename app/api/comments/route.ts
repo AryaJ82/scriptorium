@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     try {
         const queryParams = Object.fromEntries(request.nextUrl.searchParams) as CommentGETQuery;
 
-        let error = verifyCommentGETParams(queryParams);
+        const error = verifyCommentGETParams(queryParams);
         if (error) {
             return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
         }

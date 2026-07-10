@@ -7,14 +7,14 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
 import { normalizeTags, verifyTemplatePOSTBody } from "@/utils/inputValidation/templateValidation";
 import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/interfaces";
-import { limitedAuthorSelect, templateGetInclude } from "@/utils/interfaces";
+import { templateGetInclude } from "@/utils/interfaces";
 
 
 export async function GET(request: NextRequest) {
     try {
         const queryParams = Object.fromEntries(request.nextUrl.searchParams) as TemplateGETQuery;
 
-        let error = verifyGETParams(queryParams);
+        const error = verifyGETParams(queryParams);
         if (error) {
             return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
         }
