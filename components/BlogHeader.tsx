@@ -45,7 +45,6 @@ export default function BlogHeader({
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [isEditingTags, setIsEditingTags] = useState(false);
 
-    const [isPostSaving, setIsPostSaving] = useState(false);
     const [isTitleSaving, setIsTitleSaving] = useState(false);
     const [tagsSaving, setTagsSaving] = useState(false);
 
@@ -64,7 +63,7 @@ export default function BlogHeader({
         setTags(post.tags.map((tag) => tag.name));
         setTagDraft('');
         setIsEditingTags(false);
-    }, [post.tags]);
+    }, [post.tags, setTags, setTagDraft]);
 
     const saveTags = useCallback(async () => {
         setTagsSaving(true);
@@ -292,7 +291,7 @@ export default function BlogHeader({
                                         id="template-tags-input"
                                         value={tagDraft}
                                         onChange={(e) => setTagDraft(e.target.value)}
-                                        onKeyDown={(e) => addTag(e, tagDraft)}
+                                        onKeyDown={(e) => addTag(e)}
                                         placeholder="Add a tag and press Enter"
                                     />
 
