@@ -70,7 +70,7 @@ export function SaveBlogDialogue({
             setLoading(false);
         });
 
-    }, [authFetch]);
+    }, [authFetch, router]);
 
     if (!session.isAuthenticated) {
         return (
@@ -131,7 +131,7 @@ export function SaveBlogDialogue({
                             id="blog-tags"
                             value={tagDraft}
                             onChange={(e) => setTagDraft(e.target.value)}
-                            onKeyDown={(e) => addTag(e, tagDraft)}
+                            onKeyDown={(e) => addTag(e)}
                             placeholder="Type a tag and press Enter"
                         />
                         {tags.length > 0 && (

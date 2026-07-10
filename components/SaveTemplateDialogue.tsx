@@ -34,7 +34,7 @@ export function SaveTemplateDialogue({
 
     const [title, setTitle] = useState<string>("");
     const [desc, setDesc] = useState<string>("");
-    const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit();
+    const { tagDraft, setTagDraft, tags, addTag, removeTag } = useTagEdit();
 
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -74,7 +74,7 @@ export function SaveTemplateDialogue({
             setLoading(false);
         });
 
-    }, [authFetch, language, forkedParent]);
+    }, [authFetch, language, forkedParent, router]);
 
     if (!session.isAuthenticated) {
         return (
@@ -140,7 +140,7 @@ export function SaveTemplateDialogue({
                             id="tpl-tags"
                             value={tagDraft}
                             onChange={(e) => setTagDraft(e.target.value)}
-                            onKeyDown={(e) => addTag(e, tagDraft)}
+                            onKeyDown={(e) => addTag(e)}
                             placeholder="Type a tag and press Enter"
                         />
                         {tags.length > 0 && (
