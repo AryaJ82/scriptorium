@@ -2,7 +2,6 @@
 
 import { FileSearch, Loader, User, Tag, Search, FileText, X } from 'lucide-react'
 import { TemplateCard } from "@/components/TemplateCard";
-import { toast } from 'sonner'
 import {
     Empty,
     EmptyDescription,
@@ -19,7 +18,7 @@ import {
     SelectValue,
 } from "@/components/ui/Select";
 import { LANG_CONFIG, LANGUAGES, TemplateResponse, validSortOrders, validTemplateSortFields } from "@/utils/interfaces";
-import { useEffect, useState } from "react";
+import { type KeyboardEvent, useEffect, useState } from "react";
 import { useTagEdit } from '@/lib/useTagEdit';
 
 export default function TemplatesPage() {
@@ -38,55 +37,102 @@ export default function TemplatesPage() {
     const [orderByQuery, setOrderByQuery] = useState<string>('desc');
 
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
 
     const [results, setResults] = useState<TemplateResponse[]>([]);
 
-    useEffect(() => {
-        try {
-            setLoading(true);
-
-            // Build query params
-            const params = new URLSearchParams();
-            if (titleQuery) params.append('title', titleQuery);
-            if (contentQuery) params.append('content', contentQuery);
-            if (authorQuery) params.append('author', authorQuery);
-
-            if (languageQuery && languageQuery !== 'all') params.append('language', languageQuery);
-            if (tagsQuery.length > 0) params.append('tags', tagsQuery.join(','));
-            params.append('sortBy', sortByQuery);
-            params.append('sortOrder', orderByQuery);
-            params.append('page', page.toString());
-            params.append('pageSize', pageSize.toString());
-
-            const controller = new AbortController();
-            fetch(`/api/templates?${params.toString()}`,
-                {
-                    method: 'GET',
-                    signal: controller.signal,
-                })
-                .then(async (res) => {
-                    if (!res.ok) throw new Error('Failed to fetch templates');
-                    const data = await res.json();
-                    setResults(data.templates);
-                })
-                .catch(err => {
-                    if (controller.signal.aborted) return;
-                    setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
-                }).finally(() => {
-                    setLoading(false);
-                });
-
-            return () => controller.abort();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
-        }
-    }, [titleQuery, contentQuery, authorQuery, languageQuery, tagsQuery, sortByQuery, orderByQuery, page, pageSize]);
-
-    // Reset to first page when query or pageSize changes
-    useEffect(() => {
+    const beginSearch = () => {
         setPage(1);
-    }, [titleQuery, languageQuery, tagsQuery, pageSize]);
+        setLoading(true);
+        setError(null);
+    };
+
+    const handlePageChange = (nextPage: number) => {
+        setPage(nextPage);
+        setLoading(true);
+        setError(null);
+    };
+
+    const handleTitleChange = (value: string) => {
+        setTitleQuery(value);
+        beginSearch();
+    };
+
+    const handleContentChange = (value: string) => {
+        setContentQuery(value);
+        beginSearch();
+    };
+
+    const handleAuthorChange = (value: string) => {
+        setAuthorQuery(value);
+        beginSearch();
+    };
+
+    const handleLanguageChange = (value: string) => {
+        setLanguageQuery(value);
+        beginSearch();
+    };
+
+    const handleSortByChange = (value: string) => {
+        setSortByQuery(value);
+        beginSearch();
+    };
+
+    const handleOrderChange = (value: string) => {
+        setOrderByQuery(value);
+        beginSearch();
+    };
+
+    const handlePageSizeChange = (value: string) => {
+        setPageSize(Number(value));
+        beginSearch();
+    };
+
+    const handleAddTag = (event: KeyboardEvent<HTMLInputElement>) => {
+        addTag(event);
+        beginSearch();
+    };
+
+    const handleRemoveTag = (tag: string) => {
+        removeTag(tag);
+        beginSearch();
+    };
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        // Build query params
+        const params = new URLSearchParams();
+        if (titleQuery) params.append('title', titleQuery);
+        if (contentQuery) params.append('content', contentQuery);
+        if (authorQuery) params.append('author', authorQuery);
+
+        if (languageQuery && languageQuery !== 'all') params.append('language', languageQuery);
+        if (tagsQuery.length > 0) params.append('tags', tagsQuery.join(','));
+        params.append('sortBy', sortByQuery);
+        params.append('sortOrder', orderByQuery);
+        params.append('page', page.toString());
+        params.append('pageSize', pageSize.toString());
+
+        fetch(`/api/templates?${params.toString()}`, {
+            method: 'GET',
+            signal: controller.signal,
+        })
+            .then(async (res) => {
+                if (!res.ok) throw new Error('Failed to fetch templates');
+                const data = await res.json();
+                setResults(data.templates);
+            })
+            .catch((err) => {
+                if (controller.signal.aborted) return;
+                setError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+
+        return () => controller.abort();
+    }, [titleQuery, contentQuery, authorQuery, languageQuery, tagsQuery, sortByQuery, orderByQuery, page, pageSize]);
 
     const totalResults = results.length;
     const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
@@ -114,7 +160,7 @@ export default function TemplatesPage() {
                 <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Title</label>
                     <div className="relative">
-                        <SearchBar value={titleQuery} onChange={setTitleQuery}
+                        <SearchBar value={titleQuery} onChange={handleTitleChange}
                             placeholder="e.g. binary search" className="pl-8"
                             icon={Search} />
                     </div>
@@ -122,7 +168,7 @@ export default function TemplatesPage() {
                 <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Author</label>
                     <div className="relative">
-                        <SearchBar value={authorQuery} onChange={setAuthorQuery}
+                        <SearchBar value={authorQuery} onChange={handleAuthorChange}
                             placeholder="e.g. @johndoe" className="pl-8"
                             icon={User} />
                     </div>
@@ -134,7 +180,7 @@ export default function TemplatesPage() {
                 <label className="text-xs font-medium text-muted-foreground">Content</label>
                 <div className="relative">
 
-                    <SearchBar value={contentQuery} onChange={setContentQuery}
+                    <SearchBar value={contentQuery} onChange={handleContentChange}
                         placeholder="Search within content…" className="pl-8"
                         icon={FileText} />
                 </div>
@@ -145,7 +191,7 @@ export default function TemplatesPage() {
                 <label className="text-xs font-medium text-muted-foreground">Tags</label>
                 <div className="relative">
                     <SearchBar value={tagDraft} onChange={setTagDraft}
-                        onKeyDown={(e) => addTag(e)}
+                        onKeyDown={handleAddTag}
                         placeholder="Type a tag and press Enter…" className="pl-8"
                         icon={Tag} />
                 </div>
@@ -153,7 +199,7 @@ export default function TemplatesPage() {
                     <div className="flex flex-wrap gap-1.5 mt-1">
                         {tagsQuery.map((t) => (
                             <button key={t} type="button"
-                                onClick={() => removeTag(t)}
+                                onClick={() => handleRemoveTag(t)}
                                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-border text-xs font-medium hover:bg-muted transition-colors">
                                 {t} <X className="h-3 w-3 opacity-50" />
                             </button>
@@ -171,7 +217,7 @@ export default function TemplatesPage() {
             <div className="grid grid-cols-3 gap-2.5">
                 <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Language</label>
-                    <Select value={languageQuery} onValueChange={setLanguageQuery}>
+                    <Select value={languageQuery} onValueChange={handleLanguageChange}>
                         <SelectTrigger><SelectValue placeholder="All languages" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All languages</SelectItem>
@@ -183,7 +229,7 @@ export default function TemplatesPage() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Sort by</label>
-                    <Select value={sortByQuery} onValueChange={setSortByQuery}>
+                    <Select value={sortByQuery} onValueChange={handleSortByChange}>
                         <SelectTrigger><SelectValue placeholder="Sort by" /></SelectTrigger>
                         <SelectContent>
                             {validTemplateSortFields.map((s) => (
@@ -194,7 +240,7 @@ export default function TemplatesPage() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-medium text-muted-foreground">Order</label>
-                    <Select value={orderByQuery} onValueChange={setOrderByQuery}>
+                    <Select value={orderByQuery} onValueChange={handleOrderChange}>
                         <SelectTrigger><SelectValue placeholder="Order" /></SelectTrigger>
                         <SelectContent>
                             {validSortOrders.map((o) => (
@@ -226,7 +272,7 @@ export default function TemplatesPage() {
                         </p>
 
                         <div className="flex items-center gap-3">
-                            <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                            <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
                                 <SelectTrigger className="w-36">
                                     <SelectValue placeholder="Per page" />
                                 </SelectTrigger>
@@ -240,7 +286,7 @@ export default function TemplatesPage() {
                             <div className="inline-flex items-center gap-2">
                                 <button
                                     className="px-3 py-1 rounded border bg-background text-sm disabled:opacity-50"
-                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                    onClick={() => handlePageChange(Math.max(1, page - 1))}
                                     disabled={page <= 1}
                                 >
                                     Prev
@@ -250,7 +296,7 @@ export default function TemplatesPage() {
 
                                 <button
                                     className="px-3 py-1 rounded border bg-background text-sm disabled:opacity-50"
-                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                    onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
                                     disabled={page >= totalPages}
                                 >
                                     Next
