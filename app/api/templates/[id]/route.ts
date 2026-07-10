@@ -5,7 +5,7 @@ import prisma from "@/utils/client";
 import { normalizeTags, verifyTemplatePATCHBody } from "@/utils/inputValidation/templateValidation";
 import type { TemplatePATCHBody } from "@/utils/interfaces";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
-import { limitedAuthorSelect, templateGetInclude } from "@/utils/interfaces";
+import { templateGetInclude } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {

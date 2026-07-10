@@ -2,6 +2,7 @@ import { withAuth } from "@/utils/middlewareAuth";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return withAuth(async (request: NextRequest) => {
         try {
             // Note: JTI not implemented because It's not required and I'm too burnt out to be bothered

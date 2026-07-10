@@ -5,22 +5,18 @@ import path from "path";
 import Docker from 'dockerode';
 import { PassThrough } from 'stream';
 import type { ExecutionRequestPOSTBody } from '@/utils/interfaces'
+import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionValidation";
 
 import { LANG_CONFIG } from "@/utils/interfaces";
 
 const TIME_LIMIT = !isNaN(Number(process.env.EXECUTION_TIMELIMIT_MS)) ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
 const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
 const CPU_LIMIT = !isNaN(Number(process.env.CPU_LIMIT)) ? Number(process.env.CPU_LIMIT) : 0.5; // 0.5 CPU
-import { MAX_CODE_SIZE, MAX_STDIN_SIZE } from "@/utils/inputValidation/generalValidation";
-import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionValidation";
+
 
 const MAX_OUTPUT_SIZE = !isNaN(Number(process.env.MAX_OUTPUT_SIZE_KB)) ? Number(process.env.MAX_OUTPUT_SIZE_KB) * 1024 : 64 * 1024;
 
 const docker = new Docker();
-
-export async function GET(request: NextRequest) {
-    return NextResponse.json({ message: "Hello from the execution API!" });
-}
 
 export async function POST(request: NextRequest) {
     const body: ExecutionRequestPOSTBody = await request.json();

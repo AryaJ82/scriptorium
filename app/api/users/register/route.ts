@@ -4,10 +4,6 @@ import { hashPassword } from "@/utils/passwordAuth";
 import { verifyUsername, verifyPassword } from "@/utils/inputValidation/userValidation";
 import type { UserRegisterPOSTBody } from "@/utils/interfaces";
 
-export async function GET(request: NextRequest) {
-    return NextResponse.json({ message: "Hello from the registration API!" });
-}
-
 export async function POST(request: NextRequest) {
     const body: UserRegisterPOSTBody = await request.json();
     const { username, password } = body;

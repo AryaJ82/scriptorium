@@ -6,13 +6,13 @@ import prisma from "@/utils/client";
 import type { BlogPOSTBody, BlogGETQuery } from "@/utils/interfaces";
 import { normalizeTags, verifyGETParams, verifyPOSTBody } from "@/utils/inputValidation/blogValidation";
 import { Prisma } from "@/app/generated/prisma/client";
-import { blogResponseInclude, limitedAuthorSelect } from "@/utils/interfaces";
+import { blogResponseInclude } from "@/utils/interfaces";
 
 export async function GET(request: NextRequest) {
     try {
         const queryParams = Object.fromEntries(request.nextUrl.searchParams) as BlogGETQuery;
 
-        let error = verifyGETParams(queryParams);
+        const error = verifyGETParams(queryParams);
         if (error) {
             return NextResponse.json({ error: error.message }, { status: error.status });
         }

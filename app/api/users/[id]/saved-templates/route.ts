@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
             }
             const queryParams = request.nextUrl.searchParams as TemplateGETQuery;
 
-            let error = verifyGETParams(queryParams);
+            const error = verifyGETParams(queryParams);
             if (error) {
                 return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
             }

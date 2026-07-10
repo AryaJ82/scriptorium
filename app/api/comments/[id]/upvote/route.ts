@@ -3,7 +3,7 @@ import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlew
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
-import { commentResponseInclude, limitedAuthorSelect } from "@/utils/interfaces";
+import { commentResponseInclude } from "@/utils/interfaces";
 
 
 // Increment upvote count for a comment

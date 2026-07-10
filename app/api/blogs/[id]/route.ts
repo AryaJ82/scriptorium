@@ -4,7 +4,6 @@ import { normalizeTags, verifyPATCHBody } from "@/utils/inputValidation/blogVali
 import type { BlogPATCHBody } from "@/utils/interfaces";
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/utils/client"
-import { limitedAuthorSelect } from "@/utils/interfaces";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { blogResponseInclude } from "@/utils/interfaces";
 

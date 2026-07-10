@@ -5,15 +5,11 @@ import { setAccessCookie, setRefreshCookie } from "@/utils/tokenAuth";
 import { verifyUsername, verifyPassword } from "@/utils/inputValidation/userValidation";
 import type { UserLoginPOSTBody } from "@/utils/interfaces";
 
-export async function GET(request: NextRequest) {
-    return NextResponse.json({ message: "Hello from the login API!" });
-}
-
 export async function POST(request: NextRequest) {
     try {
         const body: UserLoginPOSTBody = await request.json();
         const { username, password } = body;
-        let error = verifyUsername(username) || verifyPassword(password);
+        const error = verifyUsername(username) || verifyPassword(password);
         if (!error) {
             return NextResponse.json({ error: "Invalid credentials." }, { status: 400 });
         }
