@@ -8,7 +8,7 @@ export function useTagEdit(initialTags?: string[]) {
     const [tagDraft, setTagDraft] = useState<string>('');
     const [tags, setTags] = useState<string[]>(initialTags || []);
 
-    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
+    const addTag = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if ((e.key === 'Enter' || e.key === ',' || e.key === "#" || e.key === ' ' || e.key === '&' || e.key === '$') && tagDraft.trim()) {
             e.preventDefault();
             const newTag = tagDraft.trim().toLowerCase();

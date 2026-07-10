@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
-import { GitFork, X, Menu, Pencil, GitBranch, Trash, Bookmark, MessageSquare } from "lucide-react";
+import { GitFork, Menu, Pencil, GitBranch, Trash, Bookmark, MessageSquare } from "lucide-react";
 import { TemplateResponse } from "@/utils/interfaces";
 import {
     DropdownMenu,
@@ -71,7 +71,7 @@ export default function TemplateHeader({
         setTags(template.tags.map((tag) => tag.name));
         setTagDraft('');
         setIsEditingTags(false);
-    }, [template.tags]);
+    }, [template.tags, setTags, setTagDraft]);
 
     const saveTags = useCallback(async () => {
         setTagsSaving(true);
@@ -214,7 +214,9 @@ export default function TemplateHeader({
                     setIsOpen={setIsForkOpen}
                     actionLoading={forkLoading}
                 />
-            )}<SaveBlogDialogue
+            )}
+            
+            <SaveBlogDialogue
                 key={isBlogReplyOpen} // Force remount to reset internal state when reopening
                 linkedTemplateId={template.id}
                 defaultOpen={!!isBlogReplyOpen}
@@ -345,7 +347,7 @@ export default function TemplateHeader({
                                 id="template-tags-input"
                                 value={tagDraft}
                                 onChange={(e) => setTagDraft(e.target.value)}
-                                onKeyDown={(e) => addTag(e, tagDraft)}
+                                onKeyDown={(e) => addTag(e)}
                                 placeholder="Add a tag and press Enter"
                             />
 
