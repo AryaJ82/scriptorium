@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import prisma from "./client";
-import { Prisma } from "@/app/generated/prisma/client";
 
 
 // -------------------- Language

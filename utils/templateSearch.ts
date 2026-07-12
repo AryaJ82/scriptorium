@@ -1,6 +1,6 @@
 import prisma from "@/utils/client";
 import { Prisma } from "@/app/generated/prisma/client";
-import { limitedAuthorSelect, templateGetInclude } from "./interfaces";
+import { templateGetInclude } from "./interfaces";
 
 export { verifyTemplateGETParams as verifyGETParams, normalizeTags } from "./inputValidation/templateValidation";
 

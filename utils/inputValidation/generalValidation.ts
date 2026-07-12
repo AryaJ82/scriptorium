@@ -73,7 +73,7 @@ export function validateTagsArray(tags: unknown): ValidationError | null {
         return createError("Tags should be an array of strings");
     }
     for (const tag of tags) {
-        let error = validateTagValue(tag);
+        const error = validateTagValue(tag);
         if (error) {
             return error;
         }

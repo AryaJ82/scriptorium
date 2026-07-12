@@ -52,7 +52,6 @@ export default function HomePage() {
 
 
   useEffect(() => {
-    setTemplatesLoading(true);
 
     // Build query params
     const params = new URLSearchParams();
@@ -85,7 +84,6 @@ export default function HomePage() {
 
   
   useEffect(() => {
-    setBlogsLoading(true);
 
     // Build query params
     const params = new URLSearchParams();
