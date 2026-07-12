@@ -18,7 +18,7 @@ import {
     SelectValue,
 } from "@/components/ui/Select";
 import { LANG_CONFIG, LANGUAGES, TemplateResponse, validSortOrders, validTemplateSortFields } from "@/utils/interfaces";
-import { type KeyboardEvent, useEffect, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { useTagEdit } from '@/lib/useTagEdit';
 
 export default function TemplatesPage() {
@@ -41,62 +41,62 @@ export default function TemplatesPage() {
 
     const [results, setResults] = useState<TemplateResponse[]>([]);
 
-    const beginSearch = () => {
+    const beginSearch = useCallback(() => {
         setPage(1);
         setLoading(true);
         setError(null);
-    };
+    }, []);
 
-    const handlePageChange = (nextPage: number) => {
+    const handlePageChange = useCallback((nextPage: number) => {
         setPage(nextPage);
         setLoading(true);
         setError(null);
-    };
+    }, []);
 
-    const handleTitleChange = (value: string) => {
+    const handleTitleChange = useCallback( (value: string) => {
         setTitleQuery(value);
         beginSearch();
-    };
+    }, [beginSearch]);
 
-    const handleContentChange = (value: string) => {
+    const handleContentChange = useCallback((value: string) => {
         setContentQuery(value);
         beginSearch();
-    };
+    }, [beginSearch]);
 
-    const handleAuthorChange = (value: string) => {
+    const handleAuthorChange = useCallback((value: string) => {
         setAuthorQuery(value);
         beginSearch();
-    };
+    }, [beginSearch]);
 
-    const handleLanguageChange = (value: string) => {
+    const handleLanguageChange = useCallback((value: string) => {
         setLanguageQuery(value);
         beginSearch();
-    };
+    }, [beginSearch]);
 
-    const handleSortByChange = (value: string) => {
+    const handleSortByChange = useCallback((value: string) => {
         setSortByQuery(value);
         beginSearch();
-    };
+    }, [beginSearch]);
 
-    const handleOrderChange = (value: string) => {
+    const handleOrderChange = useCallback((value: string) => {
         setOrderByQuery(value);
         beginSearch();
-    };
+    }, [beginSearch]);
 
-    const handlePageSizeChange = (value: string) => {
+    const handlePageSizeChange = useCallback((value: string) => {
         setPageSize(Number(value));
         beginSearch();
-    };
+    }, [beginSearch]);
 
-    const handleAddTag = (event: KeyboardEvent<HTMLInputElement>) => {
+    const handleAddTag = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
         addTag(event);
         beginSearch();
-    };
+    }, [beginSearch, addTag]);
 
-    const handleRemoveTag = (tag: string) => {
+    const handleRemoveTag = useCallback((tag: string) => {
         removeTag(tag);
         beginSearch();
-    };
+    }, [beginSearch, removeTag]);
 
     useEffect(() => {
         const controller = new AbortController();

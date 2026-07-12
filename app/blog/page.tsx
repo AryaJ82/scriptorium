@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { type KeyboardEvent, useCallback, useEffect, useState } from 'react'
 import { FileSearch, Loader, User, Tag, Search, FileText, X } from 'lucide-react'
 import SearchBar from '@/components/ui/SearchBar'
 import BlogPostCard from '@/components/BlogCard'
@@ -21,14 +21,15 @@ import {
 } from '@/components/ui/Empty'
 
 import { BlogResponse, validBlogSortFields, validSortOrders } from '@/utils/interfaces'
-import { validateTagValue } from '@/utils/inputValidation/generalValidation'
+import { useTagEdit } from '@/lib/useTagEdit'
 
 export default function BlogPage() {
   const [titleQuery, setTitleQuery] = useState<string>('');
   const [contentQuery, setContentQuery] = useState<string>('');
   const [authorQuery, setAuthorQuery] = useState<string>('');
-  const [tagsQuery, setTagsQuery] = useState<string[]>([]);
-  const [tagDraft, setTagDraft] = useState<string>('');
+
+  const { tagDraft, setTagDraft, tags, addTag, removeTag } = useTagEdit();
+  const tagsQuery = tags;
 
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -42,33 +43,60 @@ export default function BlogPage() {
   const [totalResults, setTotalResults] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const addTag = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>, tagDraft: string) => {
-      if (
-        (e.key === 'Enter' || e.key === ',' || e.key === '#' || e.key === ' ' || e.key === '&' || e.key === '$') &&
-        tagDraft.trim()
-      ) {
-        e.preventDefault()
-        const newTag = tagDraft.trim().toLowerCase()
-        const error = validateTagValue(newTag)
-        if (error) {
-          return
-        }
-
-        if (!tagsQuery.includes(newTag)) setTagsQuery([...tagsQuery, newTag])
-        setTagDraft('')
-      }
-    },
-    [tagDraft, tagsQuery],
-  )
-
-  useEffect(() => {
+  const beginSearch = useCallback(() => {
     setPage(1);
-  }, [titleQuery, contentQuery, authorQuery, tagsQuery, pageSize, sortByQuery, orderByQuery])
+    setLoading(true);
+    setError(null);
+  }, []);
+
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage);
+    setLoading(true);
+    setError(null);
+  }, []);
+
+  const handleTitleChange = useCallback((value: string) => {
+    setTitleQuery(value);
+    beginSearch();
+  }, [beginSearch]);
+
+  const handleContentChange = useCallback((value: string) => {
+    setContentQuery(value);
+    beginSearch();
+  }, [beginSearch]);
+
+  const handleAuthorChange = useCallback((value: string) => {
+    setAuthorQuery(value);
+    beginSearch();
+  }, [beginSearch]);
+
+  const handleSortByChange = useCallback((value: string) => {
+    setSortByQuery(value);
+    beginSearch();
+  }, [beginSearch]);
+
+  const handleOrderChange = useCallback((value: string) => {
+    setOrderByQuery(value);
+    beginSearch();
+  }, [beginSearch]);
+
+  const handlePageSizeChange = useCallback((value: string) => {
+    setPageSize(Number(value));
+    beginSearch();
+  }, [beginSearch]);
+
+  const handleAddTag = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    addTag(event);
+    beginSearch();
+  }, [beginSearch, addTag]);
+
+  const handleRemoveTag = useCallback((tag: string) => {
+    removeTag(tag);
+    beginSearch();
+  }, [beginSearch, removeTag]);
 
   useEffect(() => {
-    setError(null);
-    setLoading(true);
+    const controller = new AbortController();
 
     const queryParams = new URLSearchParams();
     if (titleQuery) queryParams.append('title', titleQuery);
@@ -79,8 +107,6 @@ export default function BlogPage() {
     queryParams.append('sortOrder', orderByQuery);
     queryParams.append('page', page.toString());
     queryParams.append('pageSize', pageSize.toString());
-
-    const controller = new AbortController();
 
     fetch(`/api/blogs?${queryParams.toString()}`, {
       method: 'GET',
@@ -127,7 +153,7 @@ export default function BlogPage() {
           <div className="relative">
             <SearchBar
               value={titleQuery}
-              onChange={setTitleQuery}
+              onChange={handleTitleChange}
               placeholder="e.g. binary search"
               className="pl-8"
               icon={Search}
@@ -139,7 +165,7 @@ export default function BlogPage() {
           <div className="relative">
             <SearchBar
               value={authorQuery}
-              onChange={setAuthorQuery}
+              onChange={handleAuthorChange}
               placeholder="e.g. @johndoe"
               className="pl-8"
               icon={User}
@@ -153,7 +179,7 @@ export default function BlogPage() {
         <div className="relative">
           <SearchBar
             value={contentQuery}
-            onChange={setContentQuery}
+            onChange={handleContentChange}
             placeholder="Search within content…"
             className="pl-8"
             icon={FileText}
@@ -167,7 +193,7 @@ export default function BlogPage() {
           <SearchBar
             value={tagDraft}
             onChange={setTagDraft}
-            onKeyDown={(e) => addTag(e, tagDraft)}
+            onKeyDown={(e) => handleAddTag(e)}
             placeholder="Type a tag and press Enter…"
             className="pl-8"
             icon={Tag}
@@ -179,7 +205,7 @@ export default function BlogPage() {
               <button
                 key={t}
                 type="button"
-                onClick={() => setTagsQuery(tagsQuery.filter((x) => x !== t))}
+                onClick={() => handleRemoveTag(t)}
                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-border text-xs font-medium hover:bg-muted transition-colors"
               >
                 {t} <X className="h-3 w-3 opacity-50" />
@@ -197,7 +223,7 @@ export default function BlogPage() {
       <div className="grid grid-cols-3 gap-2.5">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium text-muted-foreground">Sort by</label>
-          <Select value={sortByQuery} onValueChange={setSortByQuery}>
+          <Select value={sortByQuery} onValueChange={handleSortByChange}>
             <SelectTrigger>
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -212,7 +238,7 @@ export default function BlogPage() {
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium text-muted-foreground">Order</label>
-          <Select value={orderByQuery} onValueChange={setOrderByQuery}>
+          <Select value={orderByQuery} onValueChange={handleOrderChange}>
             <SelectTrigger>
               <SelectValue placeholder="Order" />
             </SelectTrigger>
@@ -227,7 +253,7 @@ export default function BlogPage() {
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium text-muted-foreground">Page size</label>
-          <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+          <Select value={String(pageSize)} onValueChange={(value) => handlePageSizeChange(value)}>
             <SelectTrigger>
               <SelectValue placeholder="Per page" />
             </SelectTrigger>
@@ -262,15 +288,17 @@ export default function BlogPage() {
             <div className="inline-flex items-center gap-2">
               <button
                 className="px-3 py-1 rounded border bg-background text-sm disabled:opacity-50"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                onClick={() => handlePageChange(Math.max(1, page - 1))}
                 disabled={page <= 1}
               >
                 Prev
               </button>
+
               <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+
               <button
                 className="px-3 py-1 rounded border bg-background text-sm disabled:opacity-50"
-                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
               >
                 Next
