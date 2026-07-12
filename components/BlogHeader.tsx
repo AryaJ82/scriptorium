@@ -29,7 +29,7 @@ export default function BlogHeader({
     onSaveTags,
     onDelete,
     setPost,
-    setActionError,
+    handleActionError,
 }: {
     post: BlogResponse
     isOwner: boolean;
@@ -37,7 +37,7 @@ export default function BlogHeader({
     onSaveTags: (tags: string[]) => Promise<void>;
     onDelete: () => Promise<void>;
     setPost: (b: BlogResponse) => void;
-    setActionError: (s: string | null) => void;
+    handleActionError: (s: string) => void;
 }) {
     const [title, setTitle] = useState(post.title);
     const { tagDraft, setTagDraft, tags, setTags, addTag, removeTag } = useTagEdit(post?.tags ? post.tags.map((tag) => tag.name) : []);
@@ -132,10 +132,10 @@ export default function BlogHeader({
                         <div className="hidden shrink-0 sm:block">
                             <VoteButtons
                                 post={post}
-                                type="blog"
+                                postType="blog"
                                 orientation="horizontal"
                                 updatePost={setPost as ((p: BlogResponse | CommentResponse) => void)}
-                                setActionError={setActionError}
+                                handleActionError={handleActionError}
                             />
                         </div>
                         <DropdownMenu>

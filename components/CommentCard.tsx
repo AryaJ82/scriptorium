@@ -29,7 +29,7 @@ export default function CommentCard({
     updateComment: (newComment: CommentResponse) => void;
     ancestors?: number;
 }) {
-    const { session, baseUrl, authFetch } = useUserSession();
+    const { session, authFetch } = useUserSession();
     const [replies, setReplies] = useState<CommentResponse[]>([]);
     const [page, setPage] = useState<number>(1);
 
@@ -56,6 +56,18 @@ export default function CommentCard({
     const indentClass = ancestors > 0
         ? `pl-${Math.min(ancestors * 4, 16)} border-l border-border`
         : '';
+
+    const resetReply = useCallback(() => {
+        setIsReplyOpen(false);
+        setReplyDraft('');
+        setError(null);
+    }, []);
+
+    const resetCommentEdit = useCallback(() => {
+        setEditDraft(comment.content);
+        setIsEditOpen(false);
+        setIsEditSaving(false);
+    }, [comment.content]);
 
     const handleFetchReplies = useCallback(() => {
         const queryParams = new URLSearchParams();
@@ -92,7 +104,7 @@ export default function CommentCard({
             .finally(() => {
                 setLoading(false);
             });
-    }, [comment.id, page]);
+    }, [page, comment, updateComment]);
 
     const handleReply = useCallback(() => {
         if (!comment || !session.isAuthenticated) {
@@ -136,13 +148,7 @@ export default function CommentCard({
             setReplySubmitting(false);
         });
 
-    }, [comment, authFetch, replyDraft, updateComment]);
-
-    const resetReply = useCallback(() => {
-        setIsReplyOpen(false);
-        setReplyDraft('');
-        setError(null);
-    }, []);
+    }, [session.isAuthenticated, resetReply, comment, authFetch, replyDraft, updateComment]);
 
     const propagateUpdate = useCallback((newComment: CommentResponse) => {
         updateComment({
@@ -189,14 +195,7 @@ export default function CommentCard({
         }).finally(() => {
             setLoading(false);
         })
-    }, [comment, session, editDraft, authFetch, updateComment])
-
-    const resetCommentEdit = useCallback(() => {
-        setEditDraft(comment.content);
-        setIsEditOpen(false);
-        setIsEditSaving(false);
-    }, [comment.content]);
-
+    }, [comment, session, resetCommentEdit, editDraft, authFetch, updateComment])
 
     const deleteComment = useCallback(async () => {
         if (!comment || !session.isAuthenticated || comment.authorId !== session?.id) {
@@ -222,7 +221,7 @@ export default function CommentCard({
         }).finally(() => {
             setDeleteLoading(false);
         })
-    }, [authFetch, baseUrl, comment, session]);
+    }, [authFetch, comment, session]);
 
 
     return (
@@ -327,9 +326,10 @@ export default function CommentCard({
                 <div className="flex flex-row items-center justify-between gap-2">
                     <VoteButtons
                         post={comment}
-                        type="comment"
+                        postType="comment"
                         orientation="horizontal"
                         updatePost={propagateUpdate as (p: BlogResponse | CommentResponse) => void}
+                        handleActionError={(msg) => setError(msg)}
                     />
 
                     {session.isAuthenticated && (

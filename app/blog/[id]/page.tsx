@@ -1,15 +1,13 @@
 'use client'
 
 import { useParams, useRouter } from "next/navigation";
-import { useUserSession } from '@/contexts/UserSessionContext'
-import { useCallback, useEffect, useState } from 'react'
-import { BlogResponse, CommentResponse } from '@/utils/interfaces'
-import ReactMarkdown from "react-markdown";
-import BlogHeader from '@/components/BlogHeader'
+import { toast } from 'sonner';
+import { useUserSession } from '@/contexts/UserSessionContext';
+import { useCallback, useEffect, useState } from 'react';
+import { BlogResponse, CommentResponse } from '@/utils/interfaces';
+import BlogHeader from '@/components/BlogHeader';
 import { VoteButtons } from "@/components/ui/VoteButtons";
 import BlogContent from "@/components/BlogContent";
-import Input from "@/components/ui/Input";
-import { Label } from "@/components/Label";
 import BlogCommentSection from "@/components/BlogCommentSection";
 import NotFound from "@/components/NotFounds";
 
@@ -21,7 +19,6 @@ export default function BlogPostPage() {
   const [post, setPost] = useState<BlogResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [actionError, setActionError] = useState<string | null>(null);
   const router = useRouter();
 
   const isOwner = !!session && post?.authorId === session.id;
@@ -30,8 +27,6 @@ export default function BlogPostPage() {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    setActionError(null);
 
     const controller = new AbortController();
     fetch(`${baseUrl}/api/blogs/${id}`, {
@@ -48,7 +43,7 @@ export default function BlogPostPage() {
     })
       .catch((err) => {
         if (controller.signal.aborted) return;
-        setActionError(err instanceof Error ? err.message : 'Unable to load post');
+        toast.error(err instanceof Error ? err.message : 'Unable to load post');
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -61,12 +56,15 @@ export default function BlogPostPage() {
   // Actions
   // ---------------------------------------------------------------------------
 
+  const handleActionError = useCallback((error: string) => {
+    toast.error(error ?? 'An error occurred while performing the action.');
+  }, []);
+
 
   const updatePost = useCallback(async (updatePayload: { title?: string, content?: string, tags?: string[] }) => {
     if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
       throw new Error("Invalid post or session")
     }
-    setActionError(null);
     setLoading(true);
 
     authFetch(`/api/blogs/${id}`, {
@@ -84,18 +82,17 @@ export default function BlogPostPage() {
 
       setPost(body.post);
     }).catch((error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to save blog post changes.');
+      handleActionError(error instanceof Error ? error.message : 'Unable to update blog post.');
       return
     }).finally(() => {
       setLoading(false);
     })
-  }, [id, authFetch, session, post]);
+  }, [id, authFetch, session, post, handleActionError]);
 
   const deletePost = useCallback(async () => {
     if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
       throw new Error("Invalid post or session")
     }
-    setActionError(null);
 
     authFetch(`${baseUrl}/api/blogs/${post.id}`, {
       method: 'DELETE',
@@ -108,10 +105,10 @@ export default function BlogPostPage() {
 
       router.push(`/blog`);
 
-    }).catch((error) => {
-      setActionError(error instanceof Error ? error.message : 'Unable to delete blog post.');
+    }).catch((err) => {
+      handleActionError(err instanceof Error ? err.message : 'Unable to delete blog post.');
     });
-  }, [authFetch, baseUrl, post, session]);
+  }, [authFetch, baseUrl, post, session, router, handleActionError]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -125,7 +122,7 @@ export default function BlogPostPage() {
           onDelete={deletePost}
           isOwner={isOwner}
           setPost={setPost}
-          setActionError={setActionError}
+          handleActionError={handleActionError}
         />)}
 
         {/* ── Divider ── */}
@@ -145,10 +142,10 @@ export default function BlogPostPage() {
         {post && <div className="hidden shrink-0 sm:block">
           <VoteButtons
             post={post}
-            type="blog"
+            postType="blog"
             orientation="horizontal"
             updatePost={setPost as ((p: BlogResponse | CommentResponse) => void)}
-            setActionError={setActionError}
+            handleActionError={handleActionError}
           />
         </div>}
       </article>

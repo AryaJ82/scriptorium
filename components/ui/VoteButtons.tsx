@@ -1,7 +1,7 @@
 'use client'
 
 import { useUserSession } from '@/contexts/UserSessionContext';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback} from 'react';
 import { ArrowBigDown, ArrowBigUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BlogResponse, CommentResponse } from '@/utils/interfaces';;
@@ -15,16 +15,16 @@ export function VoteButtons({
   post,
   orientation = 'vertical',
   className,
-  type = 'blog',
+  postType = 'blog',
   updatePost,
-  setActionError,
+  handleActionError,
 }: {
   post: BlogResponse| CommentResponse;
   orientation?: 'vertical' | 'horizontal';
-  type?: 'blog' | 'comment';
+  postType?: 'blog' | 'comment';
   className?: string;
   updatePost: (newObject: BlogResponse | CommentResponse) => void;
-  setActionError?: (err: string | null) => void;
+  handleActionError: (err: string) => void;
 }) {
   const { session, baseUrl, authFetch } = useUserSession();
 
@@ -38,9 +38,8 @@ export function VoteButtons({
     if (!post || !session.isAuthenticated) {
       throw new Error("Invalid post or session")
     }
-    if (setActionError) setActionError(null);
 
-    authFetch(`${baseUrl}/api/${type}s/${post.id}/upvote`, {
+    authFetch(`${baseUrl}/api/${postType}s/${post.id}/upvote`, {
       method: 'PATCH',
     }).then(async (response) => {
 
@@ -49,20 +48,19 @@ export function VoteButtons({
         throw new Error(body.error ?? 'Unable to upvote blog post.');
       }
 
-      updatePost(body[type]);
+      updatePost(body[postType]);
 
     }).catch((error) => {
-      if (setActionError) setActionError(error instanceof Error ? error.message : 'Unable to upvote blog post.');
+      if (handleActionError) handleActionError(error instanceof Error ? error.message : 'Unable to upvote blog post.');
     });
-  }, [authFetch, baseUrl, post, session]);
+  }, [authFetch, baseUrl, post, postType, updatePost, session, handleActionError]);
 
   const handleDownvote = useCallback(async () => {
     if (!post || !session.isAuthenticated) {
       throw new Error("Invalid post or session")
     }
-    if (setActionError) setActionError(null);
 
-    authFetch(`${baseUrl}/api/${type}s/${post.id}/downvote`, {
+    authFetch(`${baseUrl}/api/${postType}s/${post.id}/downvote`, {
       method: 'PATCH',
     }).then(async (response) => {
 
@@ -71,12 +69,12 @@ export function VoteButtons({
         throw new Error(body.error ?? 'Unable to downvote blog post.');
       }
 
-      updatePost(body[type]);
+      updatePost(body[postType]);
 
     }).catch((error) => {
-      if (setActionError) setActionError(error instanceof Error ? error.message : 'Unable to downvote blog post.');
+      if (handleActionError) handleActionError(error instanceof Error ? error.message : 'Unable to downvote blog post.');
     });
-  }, [authFetch, baseUrl, post, session]);
+  }, [authFetch, baseUrl, post, postType, updatePost, session, handleActionError]);
 
 
   return (
