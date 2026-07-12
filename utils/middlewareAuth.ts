@@ -6,9 +6,9 @@ import prisma from '@/utils/client';
 import type { AuthenticatedRequest } from "./interfaces";
 export type { AuthenticatedRequest } from "./interfaces";
 
-export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<{}>>)): (request: NextRequest) => (Promise<NextResponse<{}>>) {
+export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<object>>)): (request: NextRequest) => (Promise<NextResponse<object>>) {
     return async (request: NextRequest) => {
-        
+
         try {
             const accessToken = request.cookies.get('accessToken')?.value ?? null;
             if (!accessToken) {
@@ -21,7 +21,7 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
             if (!authPayload) {
                 console.error("AccessToken failed verification");
                 return NextResponse.json(
-                    { error: "Unauthorized"},
+                    { error: "Unauthorized" },
                     { status: 401 },
                 );
             }
@@ -45,14 +45,6 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
                 );
             }
 
-
-            if (request.url.includes("/api/admin") && user.role !== "ADMIN") {
-                return NextResponse.json(
-                    { error: "Forbidden" },
-                    { status: 403 }
-                );
-            }
-
             Object.assign(request, { user });
             return handler(request as AuthenticatedRequest);
 
@@ -65,6 +57,29 @@ export function withAuth(handler: (request: AuthenticatedRequest) => (Promise<Ne
         }
     }
 }
+
+export function withAdmin(handler: (request: AuthenticatedRequest) => (Promise<NextResponse<object>>)): (request: NextRequest) => (Promise<NextResponse<object>>) {
+    return withAuth((authRequest: AuthenticatedRequest) => {
+        try {
+            const { user } = authRequest;
+            if (!user || user.role !== "ADMIN") {
+                return new Promise(() => NextResponse.json(
+                    { error: "Unauthorized" },
+                    { status: 401 }
+                ));
+            }
+            return handler(authRequest);
+            
+        } catch (error) {
+            console.error("Error in withAdmin middleware:", error);
+            return new Promise(() => NextResponse.json(
+                { error: "Internal Server Error" },
+                { status: 500 }
+            ));
+        }
+    });
+}
+
 
 export async function getOptionalUser(request: NextRequest) {
     try {
