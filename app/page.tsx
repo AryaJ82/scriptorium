@@ -43,11 +43,11 @@ const FEATURES = [
 export default function HomePage() {
 
   const [templates, setTemplates] = useState<TemplateResponse[]>([]);
-  const [templatesLoading, setTemplatesLoading] = useState<boolean>(false);
+  const [templatesLoading, setTemplatesLoading] = useState<boolean>(true);
   const [templatesError, setTemplatesError] = useState<string | null>(null);
 
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
-  const [blogsLoading, setBlogsLoading] = useState<boolean>(false);
+  const [blogsLoading, setBlogsLoading] = useState<boolean>(true);
   const [blogsError, setBlogsError] = useState<string | null>(null);
 
 
@@ -62,6 +62,7 @@ export default function HomePage() {
     params.append('pageSize', '4');
 
     const controller = new AbortController();
+
     fetch(`/api/templates?${params.toString()}`,
       {
         method: 'GET',
@@ -94,6 +95,7 @@ export default function HomePage() {
     params.append('pageSize', '3');
 
     const controller = new AbortController();
+
     fetch(`/api/blogs?${params.toString()}`,
       {
         method: 'GET',
@@ -218,9 +220,21 @@ print([fib(i) for i in range(10)])`}
             </Button>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {templates.map((t) => (
-              <TemplateCard key={t.id} template={t} />
-            ))}
+            {templatesLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={`template-skeleton-${index}`}
+                  className="h-48 animate-pulse rounded-lg border border-border bg-card"
+                />
+              ))
+            ) : templatesError ? (
+              <div className="col-span-full rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-sm text-destructive">
+                <p className="font-medium">Unable to load templates right now.</p>
+                <p className="mt-1">{templatesError}</p>
+              </div>
+            ) : (
+              templates.map((t) => <TemplateCard key={t.id} template={t} />)
+            )}
           </div>
         </div>
       </section>
@@ -243,9 +257,21 @@ print([fib(i) for i in range(10)])`}
           </Button>
         </div>
         <div className="flex flex-col gap-4">
-          {blogs.map((p) => (
-            <BlogCard key={p.id} post={p} updatePost={()=>{}}/>
-          ))}
+          {blogsLoading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={`blog-skeleton-${index}`}
+                className="h-28 animate-pulse rounded-lg border border-border bg-card"
+              />
+            ))
+          ) : blogsError ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-sm text-destructive">
+              <p className="font-medium">Unable to load the latest posts right now.</p>
+              <p className="mt-1">{blogsError}</p>
+            </div>
+          ) : (
+            blogs.map((p) => <BlogCard key={p.id} post={p} updatePost={()=>{}} />)
+          )}
         </div>
       </section>
     </>
