@@ -33,8 +33,6 @@ export default function UserProfile() {
         }
 
         const controller = new AbortController();
-        setLoading(true);
-        setActionError(null);
 
         authFetch(`${baseUrl}/api/users/${session.id}`, {
             method: 'GET',

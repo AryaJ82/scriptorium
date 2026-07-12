@@ -57,8 +57,6 @@ export default function TemplatePage() {
         if (!id) return;
 
         const controller = new AbortController();
-        setLoading(true);
-        setLoadError(null);
 
         fetch(`${baseUrl}/api/templates/${id}`, {
             signal: controller.signal,
@@ -118,7 +116,7 @@ export default function TemplatePage() {
         }).finally(() => {
             setSaveLoading(false);
         })
-    }, [id, authFetch, baseUrl, template]);
+    }, [id, authFetch, baseUrl, template, session]);
 
 
     const forkTemplate = useCallback(async () => {
@@ -150,7 +148,7 @@ export default function TemplatePage() {
         }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to fork template.');
         });
-    }, [authFetch, baseUrl, template]);
+    }, [authFetch, baseUrl, template, router]);
 
     const saveTemplate = useCallback(async () => {
         if (!template || !session.isAuthenticated) {
@@ -205,7 +203,7 @@ export default function TemplatePage() {
         }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to delete template.');
         });
-    }, [authFetch, baseUrl, template, session]);
+    }, [authFetch, baseUrl, template, session, router]);
 
 
 
