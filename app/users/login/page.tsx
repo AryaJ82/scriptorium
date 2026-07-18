@@ -7,12 +7,11 @@ export default function LoginPage() {
   const router = useRouter();
 
   return (
-    <main className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(45,212,191,0.25),transparent_35%),linear-gradient(180deg,#020617,#0f172a_55%,#111827)] px-4 py-12">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900/85 p-8 shadow-[0_25px_80px_rgba(15,23,42,0.55)] backdrop-blur">
+    <main className="relative flex min-h-[calc(100vh-3.5rem)] items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_38%),linear-gradient(135deg,var(--background),color-mix(in srgb,var(--background)_80%,var(--accent)))] px-4 py-12">
+      <div className="absolute inset-0 bg-grid opacity-20" />
+      <div className="relative w-full max-w-md rounded-[1.75rem] border border-border/70 bg-card/80 p-8 shadow-[0_30px_90px_rgba(0,0,0,0.18)] backdrop-blur-xl">
         <LoginForm
-          onSuccess={async () => {
-            router.push("/");
-          }}
+          onSuccess={async () => { router.push("/"); }}
           subtitle="Manage templates and collaborate with your team using your account credentials."
           title="Log in to your account"
         />
