@@ -22,7 +22,7 @@ export default function BlogCommentSection({
     const [replyDraft, setReplyDraft] = useState<string>('');
     const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
 
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
     const hasMoreComments = totalComments > comments.length;
@@ -34,9 +34,6 @@ export default function BlogCommentSection({
         queryParams.append('pageSize', pageSize.toString());
         queryParams.append('sortBy', 'upvoteCount');
         queryParams.append('orderBy', 'desc');
-
-        setLoading(true);
-        setError(null);
 
         const controller = new AbortController();
         fetch(`/api/comments/?${queryParams.toString()}`, {

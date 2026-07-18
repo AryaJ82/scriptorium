@@ -46,7 +46,7 @@ export default function TemplateCodeBody({
         if (!template) return;
         setCode(template.code);
         resetExecutionStatus();
-    }, [resetExecutionStatus, template.code]);
+    }, [resetExecutionStatus, template]);
 
 
     const cancelStdinEdit = useCallback(() => {

@@ -3,7 +3,6 @@
 import { useUserSession } from "@/contexts/UserSessionContext";
 import Link from "next/link";
 import { FileCode2, LogOut, PlusCircle, User } from 'lucide-react'
-import { useRouter } from "next/navigation";
 import { Button } from "./ui/Button";
 import {
   DropdownMenu,
@@ -17,7 +16,6 @@ import { DisplayAvatar } from "./ui/Avatar";
 
 export function UserMenu() {
   const { session, logout } = useUserSession();
-  const router = useRouter();
 
   if (!session.isAuthenticated) {
     return (

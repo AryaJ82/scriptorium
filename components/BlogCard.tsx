@@ -34,7 +34,7 @@ export default function BlogPostCard({ post, updatePost }: { post: BlogResponse,
               className="transition-colors hover:text-primary"
             >
               <span>
-                "{post.linkedTemplate.title}"
+                &quot;{post.linkedTemplate.title}&quot;
               </span>
             </Link>
           </span>
@@ -51,9 +51,9 @@ export default function BlogPostCard({ post, updatePost }: { post: BlogResponse,
       <div className="mt-2 flex flex-wrap items-center shrink-0 sm:block">
         <VoteButtons
           post={post}
-          type="blog"
+          postType="blog"
           updatePost={updatePost as ((p: BlogResponse | CommentResponse) => void)}
-
+          handleActionError={() => { }}
         />
       </div>
     </article>

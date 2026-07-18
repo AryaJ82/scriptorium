@@ -1,10 +1,9 @@
 'use client'
 
 
-import { Root, Image, Fallback } from '@radix-ui/react-avatar'
+import { Root, Image, Fallback } from '@radix-ui/react-avatar';
 
-import { cn } from '@/lib/utils'
-import { Button } from './Button'
+import { cn } from '@/lib/utils';
 
 function Avatar({
   className,
@@ -30,6 +29,7 @@ function AvatarImage({
     <Image
       data-slot="avatar-image"
       className={cn('aspect-square size-full', className)}
+      alt="Avatar"
       {...props}
     />
   )
