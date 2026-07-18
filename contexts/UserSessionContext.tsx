@@ -152,8 +152,6 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
             }
 
             try {
-                await logout();
-
                 const response = await fetch(`${baseUrl}/api/users/login`, {
                     method: "POST",
                     headers: {
@@ -163,7 +161,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 });
 
                 if (!response.ok) {
-                    throw new Error("Login Failed");
+                    throw new Error((await response.json()).error ?? "Login Failed");
                 }
 
                 const { id, avatarUrl, role } = await response.json();
