@@ -24,7 +24,7 @@ export function UserMenu() {
           <Link href="/users/login">Log in</Link>
         </Button>
         <Button asChild size="sm">
-          <Link href="/users/signup">Sign up</Link>
+          <Link href="/users/register">Sign up</Link>
         </Button>
       </div>
     )

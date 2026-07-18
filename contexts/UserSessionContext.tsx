@@ -185,7 +185,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                 dispatch({ type: "LOGOUT" });
                 throw error;
             }
-        }, [logout]);
+        }, []);
 
     // --------------------------- States and Callbacks finished
 
