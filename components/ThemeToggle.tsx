@@ -9,7 +9,10 @@ export function ThemeToggle() {
     const { setTheme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(true);
 
-    // useEffect(() => setMounted(true), []);
+    // Suppress hydration mismatch error.
+    // Linter complains about this, but it's the recommended way to handle this issue in Next.js
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => setMounted(true), []);
 
     const isDark = resolvedTheme === 'dark';
 
