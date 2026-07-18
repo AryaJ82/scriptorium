@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         const body: UserLoginPOSTBody = await request.json();
         const { username, password } = body;
         const error = verifyUsername(username) || verifyPassword(password);
-        if (!error) {
+        if (error) {
             return NextResponse.json({ error: "Invalid credentials." }, { status: 400 });
         }
 
