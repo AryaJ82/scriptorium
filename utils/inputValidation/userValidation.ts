@@ -26,7 +26,7 @@ export function verifyPassword(password: unknown): ValidationError | null {
 export function verifyUsername(username: unknown): ValidationError | null {
     if (!username || typeof username !== "string") {
         return createError("Invalid username: must be a string");
-    } else if (!/[@$!%*?&]/.test(username)) {
+    } else if (/[@$!%\s/*?&]/.test(username)) {
         return createError("Invalid username: must not contain special characters");
     } else if (username.length < 3 || username.length > MAX_USERNAME_LENGTH) {
         return createError(`Invalid username: must be between 3 and ${MAX_USERNAME_LENGTH} characters`);
