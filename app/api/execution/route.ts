@@ -10,7 +10,7 @@ import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionVali
 import { LANG_CONFIG } from "@/utils/interfaces";
 
 const TIME_LIMIT = !isNaN(Number(process.env.EXECUTION_TIMELIMIT_MS)) ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
-const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
+const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT_MB)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
 const CPU_LIMIT = !isNaN(Number(process.env.CPU_LIMIT)) ? Number(process.env.CPU_LIMIT) : 0.5; // 0.5 CPU
 
 
@@ -84,11 +84,24 @@ export async function POST(request: NextRequest) {
         const stdoutStream = new PassThrough();
         const stderrStream = new PassThrough();
         container.modem.demuxStream(stream, stdoutStream, stderrStream);
+
+        // Surface an output-limit breach as a rejected promise instead of throwing
+        // inside the stream handler (which would escape the surrounding try/catch).
+        let outputLimitExceeded = false;
+        let rejectOutputLimit: (err: Error) => void = () => { };
+        const outputLimitPromise = new Promise<never>((_, reject) => {
+            rejectOutputLimit = reject;
+        });
+
         stderrStream.on('data', (d: Buffer) => stderr += d.toString());
         stdoutStream.on('data', (d: Buffer) => {
             if (Buffer.byteLength(stdout) + d.length > MAX_OUTPUT_SIZE) {
-                container?.kill().catch(() => { });
-                throw new Error("OUTPUT_LIMIT_EXCEEDED");
+                if (!outputLimitExceeded) {
+                    outputLimitExceeded = true;
+                    container?.kill().catch(() => { });
+                    rejectOutputLimit(new Error("OUTPUT_LIMIT_EXCEEDED"));
+                }
+                return;
             }
             stdout += d.toString()
         });
@@ -101,6 +114,7 @@ export async function POST(request: NextRequest) {
             new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error('TIME_OUT')), TIME_LIMIT)
             ),
+            outputLimitPromise,
         ]);
 
         if (stderr.endsWith("EOFError: EOF when reading a line\n")) {
