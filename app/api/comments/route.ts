@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
             prisma.comment.count({ where }),
             prisma.comment.findMany({
                 where,
-                orderBy: { upvoteCount: 'desc' },
+                orderBy,
                 skip: (pageNum - 1) * pageSizeNum,
                 take: pageSizeNum,
                 include: {

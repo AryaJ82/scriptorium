@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
             if (!user) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
-            const queryParams = request.nextUrl.searchParams as TemplateGETQuery;
+            const queryParams = Object.fromEntries(request.nextUrl.searchParams) as TemplateGETQuery;
 
             const error = verifyGETParams(queryParams);
             if (error) {
