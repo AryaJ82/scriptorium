@@ -14,10 +14,8 @@ export function verifyCommentGETParams(params: CommentGETQuery) {
             return createError("Invalid parent id");
         }
     }
-    if (blog_id === undefined) {
-        if (!isPositiveIntegerString(parent_comment_id)) {
-            return createError("Invalid blog id");
-        }
+    if (blog_id === undefined || !isPositiveIntegerString(blog_id)) {
+        return createError("Invalid blog id");
     }
 
 
