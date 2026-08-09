@@ -114,7 +114,7 @@ export async function verifyTemplatePOSTBody(body: TemplatePOSTBody): Promise<Va
         if (!isValidCUID(forkedSourceId)) {
             return createError("forkedSourceId should be a valid CUID if provided");
         }
-        if (!templateExists(forkedSourceId)) {
+        if (!(await templateExists(forkedSourceId))) {
             return createError("No template found with the provided forkedSourceId", 404);
         }
     }
