@@ -45,11 +45,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })(request);
 }
 
-export async function PATCH(request: NextRequest) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
             if (!user) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
+            const { id } = await params;
+            if (user.id !== id) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
             const body: UserProfilePATCHBody = await request.json();
