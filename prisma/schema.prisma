@@ -44,7 +44,8 @@ model User {
   comments         Comment[]       @relation("CreatedComments")
   commentUpvotes   Comment[]       @relation("UpvotedComments")
   commentDownvotes Comment[]       @relation("DownvotedComments")
-  contentReports   ContentReport[] @relation("UserContentReports")
+  blogReports      BlogReport[]    @relation("UserBlogReports")
+  commentReports   CommentReport[] @relation("UserCommentReports")
 }
 
 model Template {
@@ -90,7 +91,7 @@ model BlogPost {
   upvotingUsers    User[]          @relation("UpvotedBlogPosts")
   downvotingUsers  User[]          @relation("DownvotedBlogPosts")
   isHidden         Boolean         @default(false)
-  contentReports   ContentReport[]
+  reports          BlogReport[]
 }
 
 model Comment {
@@ -110,18 +111,27 @@ model Comment {
   parentComment   Comment?        @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   parentCommentId Int?
   isHidden        Boolean         @default(false)
-  contentReports  ContentReport[]
+  reports         CommentReport[]
 }
 
-model ContentReport {
-  id         Int       @id @default(autoincrement())
-  createdAt  DateTime  @default(now())
-  author     User      @relation("UserContentReports", fields: [authorId], references: [id], onDelete: Cascade)
+model BlogReport {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  author     User     @relation("UserBlogReports", fields: [authorId], references: [id], onDelete: Cascade)
   authorId   String
   title      String
-  content    String    @default("")
-  blogPost   BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  content    String   @default("")
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
   blogPostId Int
-  comment    Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  commentId  Int
+}
+
+model CommentReport {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  author    User     @relation("UserCommentReports", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  title     String
+  content   String   @default("")
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId Int
 }
