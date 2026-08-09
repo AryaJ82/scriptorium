@@ -31,7 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                 return NextResponse.json({ error: "Blog not found" }, { status: 404 });
             }
 
-            const report = await prisma.contentReport.create({
+            const report = await prisma.blogReport.create({
                 data: {
                     author: { connect: { id: user.id } },
                     blogPost: { connect: { id: blogPost.id } },
