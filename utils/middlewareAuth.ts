@@ -63,7 +63,7 @@ export function withAdmin(handler: (request: AuthenticatedRequest) => (Promise<N
         try {
             const { user } = authRequest;
             if (!user || user.role !== "ADMIN") {
-                return new Promise(() => NextResponse.json(
+                return Promise.resolve(NextResponse.json(
                     { error: "Unauthorized" },
                     { status: 401 }
                 ));
@@ -72,7 +72,7 @@ export function withAdmin(handler: (request: AuthenticatedRequest) => (Promise<N
             
         } catch (error) {
             console.error("Error in withAdmin middleware:", error);
-            return new Promise(() => NextResponse.json(
+            return Promise.resolve(NextResponse.json(
                 { error: "Internal Server Error" },
                 { status: 500 }
             ));
