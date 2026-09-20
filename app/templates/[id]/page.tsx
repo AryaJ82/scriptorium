@@ -46,7 +46,7 @@ export default function TemplatePage() {
 
     const isOwner = !!session && template?.authorId === session.id;
 
-    const isSavedByCurrentUser = (!!template && template?.savers.length > 0);
+    const isSavedByCurrentUser = (!!template && template?.savers && template?.savers.length > 0);
 
     // ---------------------------------------------------------------------------
     // Fetch template
@@ -225,7 +225,7 @@ export default function TemplatePage() {
                     onSaveTags={(tags: string[]) => updateTemplate({ tags })}
                     onDelete={deleteTemplate}
                     onFork={forkTemplate}
-                    onToggleSaved={() => setSaveLoading(b => !b)}
+                    onToggleSaved={saveTemplate}
                     isSavedByCurrentUser={isSavedByCurrentUser}
                 />
             ) : null}
