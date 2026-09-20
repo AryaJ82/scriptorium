@@ -7,12 +7,22 @@ import { Button } from '@/components/ui/Button'
 
 export function ThemeToggle() {
     const { setTheme, resolvedTheme } = useTheme();
-    const [mounted, setMounted] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
     // Suppress hydration mismatch error.
     // Linter complains about this, but it's the recommended way to handle this issue in Next.js
     // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => setMounted(true), []);
+    if (!mounted) return (
+        <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Toggle Theme"
+            disabled
+        >
+            <span className="size-4.5" aria-hidden="true" />
+        </Button>
+    );
 
     const isDark = resolvedTheme === 'dark';
 
