@@ -40,7 +40,7 @@ export function VoteButtons({
     }
 
     authFetch(`${baseUrl}/api/${postType}s/${post.id}/upvote`, {
-      method: 'PATCH',
+      method: hasUpvoted ? 'DELETE' : 'PUT',
     }).then(async (response) => {
 
       const body = await response.json();
@@ -53,7 +53,7 @@ export function VoteButtons({
     }).catch((error) => {
       if (handleActionError) handleActionError(error instanceof Error ? error.message : 'Unable to upvote blog post.');
     });
-  }, [authFetch, baseUrl, post, postType, updatePost, session, handleActionError]);
+  }, [authFetch, baseUrl, post, postType, updatePost, session, handleActionError, hasUpvoted]);
 
   const handleDownvote = useCallback(async () => {
     if (!post || !session.isAuthenticated) {
@@ -61,7 +61,7 @@ export function VoteButtons({
     }
 
     authFetch(`${baseUrl}/api/${postType}s/${post.id}/downvote`, {
-      method: 'PATCH',
+      method: hasDownvoted ? 'DELETE' : 'PUT',
     }).then(async (response) => {
 
       const body = await response.json();
@@ -74,7 +74,7 @@ export function VoteButtons({
     }).catch((error) => {
       if (handleActionError) handleActionError(error instanceof Error ? error.message : 'Unable to downvote blog post.');
     });
-  }, [authFetch, baseUrl, post, postType, updatePost, session, handleActionError]);
+  }, [authFetch, baseUrl, post, postType, updatePost, session, handleActionError, hasDownvoted]);
 
 
   return (
