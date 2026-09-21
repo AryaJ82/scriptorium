@@ -150,6 +150,7 @@ export default function TemplatePage() {
         });
     }, [authFetch, baseUrl, template, router]);
 
+
     const saveTemplate = useCallback(async () => {
         if (!template || !session.isAuthenticated) {
             throw new Error("Invalid template or session.")
@@ -157,12 +158,12 @@ export default function TemplatePage() {
         setActionError(null);
         setSaveLoading(true);
 
-        authFetch(`${baseUrl}/api/users/${session.id}/saved-templates`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                template_id: template.id,
-                unsave: isSavedByCurrentUser,
+        const savedTemplateUrl = `${baseUrl}/api/users/${session.id}/saved-templates`;
+        authFetch(isSavedByCurrentUser ? `${savedTemplateUrl}/${template.id}` : savedTemplateUrl, {
+            method: isSavedByCurrentUser ? 'DELETE' : 'POST',
+            ...(isSavedByCurrentUser ? {} : {
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ template_id: template.id }),
             }),
         }).then(async (response) => {
             if (!response) {
@@ -174,7 +175,7 @@ export default function TemplatePage() {
                 throw new Error(body.error ?? 'Unable to update saved template.');
             }
 
-            setTemplate(body.template as TemplateResponse);
+            setTemplate(body.data as TemplateResponse);
 
         }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to save template to profile.');

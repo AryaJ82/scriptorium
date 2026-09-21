@@ -197,9 +197,8 @@ export interface TemplatePATCHBody {
     tags?: string[];
 }
 
-export interface SavedTemplateTogglePATCHBody {
+export interface SavedTemplateTogglePOSTBody {
     template_id: string;
-    unsave?: boolean;
 }
 
 //----------------------- Blogs

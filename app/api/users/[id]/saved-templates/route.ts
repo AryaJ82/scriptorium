@@ -4,7 +4,7 @@ import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams, normalizeTags } from "@/utils/templateSearch";
-import { type TemplateGETQuery, type SavedTemplateTogglePATCHBody, templateGetInclude } from "@/utils/interfaces";
+import { type TemplateGETQuery, type SavedTemplateTogglePOSTBody, templateGetInclude } from "@/utils/interfaces";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 
 
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 }
 
 
-export async function PATCH(request: NextRequest) {
+export async function POST(request: NextRequest) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
@@ -83,30 +83,25 @@ export async function PATCH(request: NextRequest) {
                 return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
-            const body: SavedTemplateTogglePATCHBody = await request.json();
-            const { template_id, unsave } = body;
+            const body: SavedTemplateTogglePOSTBody = await request.json();
+            const { template_id } = body;
 
             if (!isValidCUID(template_id)) {
                 return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
             }
 
-            const shouldUnsave = unsave === true;
-
-            // save by default, unsave if unsave is true
-            const prop = shouldUnsave ? { disconnect: { id: user.id } } : { connect: { id: user.id } };
-
-            const template = await prisma.template.update({
+            const updatedTemplate = await prisma.template.update({
                 where: { id: template_id },
-                data: { savers: prop },
+                data: { savers: { connect: { id: user.id } } },
                 ...templateGetInclude({ currentUserId: user.id })
             });
-            if (!template) {
+            if (!updatedTemplate) {
                 return NextResponse.json({ error: "Template not found" }, { status: 404 });
             }
 
             return NextResponse.json({
-                message: shouldUnsave ? "Template unsaved successfully" : "Template saved successfully",
-                template: template
+                message: "Template saved successfully",
+                data: updatedTemplate
             });
 
         } catch (error) {
