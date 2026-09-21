@@ -9,7 +9,7 @@ import BlogHeader from '@/components/BlogHeader';
 import { VoteButtons } from "@/components/ui/VoteButtons";
 import BlogContent from "@/components/BlogContent";
 import BlogCommentSection from "@/components/BlogCommentSection";
-import NotFound from "@/components/NotFounds";
+import NotFound from "@/components/NotFound";
 
 export default function BlogPostPage() {
   const params = useParams();
@@ -51,6 +51,7 @@ export default function BlogPostPage() {
 
     return () => { controller.abort() };
   }, [id, baseUrl])
+
 
   // ---------------------------------------------------------------------------
   // Actions
@@ -110,6 +111,11 @@ export default function BlogPostPage() {
     });
   }, [authFetch, baseUrl, post, session, router, handleActionError]);
 
+
+  if (!loading && !post) {
+    return <NotFound resource="blog post" title="Blog post not found" description="That blog post does not exist or is no longer available." />;
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <article className="flex flex-col gap-0">
@@ -153,11 +159,6 @@ export default function BlogPostPage() {
       {post && <BlogCommentSection
         blog={post}
       />}
-
-      {!loading && !post && (
-        <NotFound />
-      )}
-
     </div>
   );
 }

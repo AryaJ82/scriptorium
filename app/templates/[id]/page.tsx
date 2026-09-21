@@ -9,7 +9,7 @@ import DescriptionSection from "@/components/TemplateDescription";
 
 import TemplateHeader from "@/components/TemplateHeader";
 import TemplateCodeBody from "@/components/TemplateCodeBody";
-import NotFound from "@/components/NotFounds";
+import NotFound from "@/components/NotFound";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -212,6 +212,10 @@ export default function TemplatePage() {
     // Render
     // ---------------------------------------------------------------------------
 
+    if (!loading && !template) {
+        return <NotFound resource="template" title="Template not found" description="That template does not exist or is no longer available." />;
+    }
+
     return (
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
             {/* Header */}
@@ -263,11 +267,6 @@ export default function TemplatePage() {
                     />
                 )}
             </div>
-
-                {!loading && !template && (
-                    <NotFound/>
-                )}
-
         </div>
     );
 }
