@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "./client";
+import type { Dispatch, SetStateAction } from "react";
+
 
 
 // -------------------- Language
@@ -22,6 +24,38 @@ export type ValidationError = {
     message: string;
     status?: number;
 };
+
+export interface ApiPagination {
+    totalSize: number;
+    totalPages: number;
+    page: number;
+    pageSize: number;
+}
+
+export interface ApiResponse<T> {
+    data: T | null;
+    error: string | null;
+    pagination?: ApiPagination;
+}
+
+export type ApiFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+export interface UseApiGetOptions<TRaw, TData> {
+    fetcher?: ApiFetcher;
+    transform?: (raw: TRaw, previous: TData | null) => TData;
+    onSuccess?: (raw: TRaw) => void;
+    onError?: (message: string) => void;
+    notOkMessage?: string;
+    skip?: boolean;
+}
+
+export interface UseApiGetResult<TData> {
+    data: TData | null;
+    loading: boolean;
+    error: string | null;
+    setData: Dispatch<SetStateAction<TData | null>>;
+    refetch: () => void;
+}
 
 
 // ===================================================
