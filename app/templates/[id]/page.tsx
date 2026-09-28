@@ -68,7 +68,7 @@ export default function TemplatePage() {
                 throw new Error(body.error ?? "Unable to load template.");
             }
 
-            const t: TemplateResponse | undefined = body.template;
+            const t: TemplateResponse | undefined = body.data;
             if (!t) throw new Error('Template not found');
             setTemplate(t);
         })
@@ -109,7 +109,7 @@ export default function TemplatePage() {
                 throw new Error(body.error ?? 'Unable to save template changes.');
             }
 
-            setTemplate(body.template);
+            setTemplate(body.data);
         }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to save template changes.');
             return
@@ -142,8 +142,8 @@ export default function TemplatePage() {
                 throw new Error(body.error ?? 'Unable to fork template.');
             }
 
-            if (body.id) {
-                router.push(`/templates/${body.id}`);
+            if (body.data?.id) {
+                router.push(`/templates/${body.data.id}`);
             }
         }).catch((error) => {
             setActionError(error instanceof Error ? error.message : 'Unable to fork template.');

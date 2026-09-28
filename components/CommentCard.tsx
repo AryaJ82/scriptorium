@@ -89,11 +89,11 @@ export default function CommentCard({
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
 
-                setReplies(prev => [...prev, ...body.comments]);
+                setReplies(prev => [...prev, ...(body.data ?? [])]);
                 setPage(p => p + 1);
                 updateComment({
                     ...comment,
-                    numReplies: body.pagination.totalSize,
+                    numReplies: body.pagination?.totalSize ?? comment.numReplies,
                     author: { ...comment.author },
                 });
             })
@@ -133,7 +133,7 @@ export default function CommentCard({
                 throw new Error(body.error ?? 'Unable to post reply.');
             }
 
-            setReplies(prev => [...prev, body.comment]);
+            setReplies(prev => [...prev, body.data]);
 
             updateComment({
                 ...comment,
@@ -186,7 +186,7 @@ export default function CommentCard({
                 throw new Error(body.error ?? 'Unable to update comment.');
             }
 
-            updateComment(body.comment);
+            updateComment(body.data);
             resetCommentEdit();
 
         }).catch((error) => {

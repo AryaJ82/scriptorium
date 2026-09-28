@@ -43,8 +43,8 @@ export default function BlogCommentSection({
             .then(async (res) => {
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch comments');
-                setComments(body.comments);
-                setTotalComments(body.pagination.totalSize);
+                setComments(body.data ?? []);
+                setTotalComments(body.pagination?.totalSize ?? 0);
                 setPage(p => p + 1);
             })
             .catch((err) => {
@@ -77,7 +77,7 @@ export default function BlogCommentSection({
             .then(async (res) => {
                 const body = await res.json();
                 if (!res.ok) throw new Error(body.error ?? 'Failed to fetch comments');
-                setComments(prev => [...prev, ...body.comments]);
+                setComments(prev => [...prev, ...(body.data ?? [])]);
                 setPage(p => p + 1);
             })
             .catch((err) => {
@@ -112,7 +112,7 @@ export default function BlogCommentSection({
             if (!response.ok) {
                 throw new Error(body.error ?? 'Unable to post comment.');
             }
-            setComments(prev => [body.comment, ...prev]);
+            setComments(prev => [body.data, ...prev]);
             setTotalComments(prev => prev + 1);
             setReplyDraft('');
         }).catch((err) => {

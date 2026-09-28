@@ -5,8 +5,8 @@ export function apiSuccess<T>(data: T, status = 200, pagination?: ApiPagination)
   return NextResponse.json({ data, error: null, ...(pagination ? { pagination } : {}) } satisfies ApiResponse<T>, { status });
 }
 
-export function apiError(message: string, status = 500) {
-  return NextResponse.json({ data: null, error: message } satisfies ApiResponse<never>, { status });
+export function apiError<T = null>(message: string, status = 500, data: T | null = null) {
+  return NextResponse.json({ data, error: message } satisfies ApiResponse<T>, { status });
 }
 
 export function pagination(totalSize: number, page: number, pageSize: number): ApiPagination {

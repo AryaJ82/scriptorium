@@ -89,7 +89,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
         async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
             try {
                 if (!isAuthenticatedRef.current) {
-                    return Response.json({ error: "Not authenticated" }, { status: 401 });
+                    return Response.json({ data: null, error: "Not authenticated" }, { status: 401 });
                 }
                 const headers = new Headers(init?.headers);
                 const requestInit: RequestInit = {
@@ -121,7 +121,7 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                     return response;
                 }
             } catch (error) {
-                return Response.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 600 });
+                return Response.json({ data: null, error: error instanceof Error ? error.message : "Unknown error" }, { status: 600 });
             }
         },
         [isAuthenticatedRef, refreshAccessToken],
@@ -144,11 +144,11 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
             let error = null;
             error = verifyUsername(username);
             if (error) {
-                return Response.json({ error }, { status: 400 });
+                return Response.json({ data: null, error: error.message }, { status: 400 });
             }
             error = verifyPassword(password);
             if (error) {
-                return Response.json({ error }, { status: 400 });
+                return Response.json({ data: null, error: error.message }, { status: 400 });
             }
 
             try {
@@ -164,7 +164,8 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
                     throw new Error((await response.json()).error ?? "Login Failed");
                 }
 
-                const { id, avatarUrl, role } = await response.json();
+                const { data } = await response.json();
+                const { id, avatarUrl, role } = data ?? {};
                 if (!id || !role) {
                     throw new Error("Login Failed");
                 }
@@ -206,14 +207,14 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
             if (!response.ok || !isActive) {
                 return;
             }
-            const body = await response.json();
+            const { data } = await response.json();
             dispatch({
                 type: "LOGIN",
                 payload: {
-                    id: body.id,
-                    username: body.username,
-                    avatarUrl: body.avatarUrl ?? null,
-                    role: body.role,
+                    id: data.id,
+                    username: data.username,
+                    avatarUrl: data.avatarUrl ?? null,
+                    role: data.role,
                 }
             });
 

@@ -48,7 +48,7 @@ export function VoteButtons({
         throw new Error(body.error ?? 'Unable to upvote blog post.');
       }
 
-      updatePost(body[postType]);
+      updatePost(body.data);
 
     }).catch((error) => {
       if (handleActionError) handleActionError(error instanceof Error ? error.message : 'Unable to upvote blog post.');
@@ -69,7 +69,7 @@ export function VoteButtons({
         throw new Error(body.error ?? 'Unable to downvote blog post.');
       }
 
-      updatePost(body[postType]);
+      updatePost(body.data);
 
     }).catch((error) => {
       if (handleActionError) handleActionError(error instanceof Error ? error.message : 'Unable to downvote blog post.');

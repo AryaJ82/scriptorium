@@ -62,7 +62,7 @@ export function SaveBlogDialogue({
                 throw Error(body.error ?? "An error has occured when creating blog post");
             }
 
-            router.push(`/blog/${body.id}`);
+            router.push(`/blog/${body.data.id}`);
             setOpen(false);
         }).catch((err) => {
             toast.error(err instanceof Error ? err.message : "Unable to create blog post.");

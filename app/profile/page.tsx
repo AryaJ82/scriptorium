@@ -42,7 +42,7 @@ export default function UserProfile() {
                 const body = await res.json();
                 if (controller.signal.aborted) return;
                 if (!res.ok) throw new Error(body.error ?? 'Failed to load user data');
-                setUser(body.user ?? body);
+                setUser(body.data);
             })
             .catch((err) => {
                 if (controller.signal.aborted) return;
@@ -92,7 +92,7 @@ export default function UserProfile() {
             const body = await response.json();
             if (!response.ok) throw new Error(body.error ?? 'Unable to save profile.');
 
-            setUser(body.user ?? body);
+            setUser(body.data);
             setEditing(false);
         } catch (err) {
             setActionError(err instanceof Error ? err.message : 'Unable to save profile.');

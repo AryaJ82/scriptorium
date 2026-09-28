@@ -115,7 +115,7 @@ export default function BlogPage() {
       .then(async (res) => {
         const body = await res.json();
         if (!res.ok) throw new Error(body.error ?? 'Failed to fetch blog posts');
-        setResults(body.blogs ?? []);
+        setResults(body.data ?? []);
         setTotalResults(body.pagination?.totalSize ?? 0);
         setTotalPages(body.pagination?.totalPages ?? 1);
       })

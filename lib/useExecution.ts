@@ -28,21 +28,24 @@ export function useExecution(baseUrl: string) {
                 body: JSON.stringify({ code, language, stdin }),
             });
             const body = await res.json();
+            const result = body.data;
 
             if (res.ok) {
                 setStatus("success");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
+                setStdout(result.stdout);
+                setStderr(result.stderr);
             } else if (res.status === 408) {
                 setStatus("timeout");
-                setStdout(body.stdout);
-                setStderr(body.stderr);
+                setStdout(result?.stdout ?? '');
+                setStderr(result?.stderr ?? '');
             } else if (res.status === 413) {
                 setStatus("error");
-                setStdout(body.stdout);
+                setStdout(result?.stdout ?? '');
                 setStderr(body.error);
             } else {
                 setStatus("error");
+                setStdout(result?.stdout ?? '');
+                setStderr(result?.stderr ?? '');
                 setRunError(body.error ?? "An error has occurred.");
             }
         } catch {

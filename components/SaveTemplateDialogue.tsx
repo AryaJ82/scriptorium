@@ -67,7 +67,7 @@ export function SaveTemplateDialogue({
                 throw Error(body.error ?? "An error has occured when creating template");
             }
 
-            router.push(`/templates/${body.id}`);
+            router.push(`/templates/${body.data.id}`);
         }).catch((err) => {
             toast.error(err instanceof Error ? err.message : "Unable to save template.");
         }).finally(() => {

@@ -47,7 +47,7 @@ export default function RegisterPage() {
                 return login({ username: username.trim(), password })
             } else {
                 const { error } = await result?.json();
-                toast.error(error.message ?? "Login Failed");
+                toast.error(error ?? "Login Failed");
             }
         }).then(async (result) => {
             // login successful, redirect to home page
@@ -55,7 +55,7 @@ export default function RegisterPage() {
                 router.push("/");
             } else {
                 const { error } = await result?.json();
-                toast.error(error?.message ?? "Something went wrong. Please login manually.");
+                toast.error(error ?? "Something went wrong. Please login manually.");
             }
         }).catch((submitError) => {
             toast.error(

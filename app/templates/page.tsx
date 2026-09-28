@@ -40,6 +40,8 @@ export default function TemplatesPage() {
     const [loading, setLoading] = useState<boolean>(true);
 
     const [results, setResults] = useState<TemplateResponse[]>([]);
+    const [totalResults, setTotalResults] = useState<number>(0);
+    const [totalPages, setTotalPages] = useState<number>(1);
 
     const beginSearch = useCallback(() => {
         setPage(1);
@@ -121,7 +123,9 @@ export default function TemplatesPage() {
             .then(async (res) => {
                 if (!res.ok) throw new Error('Failed to fetch templates');
                 const data = await res.json();
-                setResults(data.templates);
+                setResults(data.data ?? []);
+                setTotalResults(data.pagination?.totalSize ?? 0);
+                setTotalPages(data.pagination?.totalPages ?? 1);
             })
             .catch((err) => {
                 if (controller.signal.aborted) return;
@@ -134,11 +138,8 @@ export default function TemplatesPage() {
         return () => controller.abort();
     }, [titleQuery, contentQuery, authorQuery, languageQuery, tagsQuery, sortByQuery, orderByQuery, page, pageSize]);
 
-    const totalResults = results.length;
-    const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
     const startIndex = (page - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, totalResults);
-    const paginatedResults = results.slice(startIndex, endIndex);
+    const endIndex = Math.min(startIndex + results.length, totalResults);
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -307,7 +308,7 @@ export default function TemplatesPage() {
 
                     {totalResults > 0 ? (
                         <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {paginatedResults.map((t) => (
+                            {results.map((t) => (
                                 <TemplateCard key={t.id} template={t} />
                             ))}
                         </div>
