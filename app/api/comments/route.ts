@@ -1,11 +1,12 @@
 
 
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { limitedAuthorSelect, CommentGETQuery } from "@/utils/interfaces";
 import { Prisma } from "@/app/generated/prisma/client";
 import { getOptionalUser } from "@/utils/middlewareAuth";
 import { verifyCommentGETParams } from "@/utils/inputValidation/commentValidation";
+import { apiError, apiSuccess, pagination } from "@/utils/apiResponse";
 
 
 
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
         const error = verifyCommentGETParams(queryParams);
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+            return apiError(error.message, error.status ?? 400);
         }
         const { blog_id, parent_comment_id, page, pageSize, sortBy, sortOrder } = queryParams;
 
@@ -63,21 +64,12 @@ export async function GET(request: NextRequest) {
             Object.assign(c, { numReplies: c.replies.length });
             c.replies = [];
         })
-        return NextResponse.json({
-            comments,
-            pagination: {
-                totalSize,
-                totalPages: Math.ceil(totalSize / pageSizeNum),
-                page: pageNum,
-                pageSize: pageSizeNum,
-            }
-        },
-            { status: 200 })
+        return apiSuccess(comments, 200, pagination(totalSize, pageNum, pageSizeNum));
 
 
 
     } catch (error) {
         console.error("Error fetching templates", error);
-        return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
+        return apiError("Internal server error when fetching comments", 500);
     }
 }

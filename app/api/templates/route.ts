@@ -1,6 +1,6 @@
 
 import { AuthenticatedRequest, withAuth, getOptionalUser } from "@/utils/middlewareAuth";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
@@ -8,6 +8,7 @@ import { templateSearch, verifyGETParams } from "@/utils/templateSearch";
 import { normalizeTags, verifyTemplatePOSTBody } from "@/utils/inputValidation/templateValidation";
 import type { TemplateGETQuery, TemplatePOSTBody } from "@/utils/interfaces";
 import { templateGetInclude } from "@/utils/interfaces";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
         const error = verifyGETParams(queryParams);
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+            return apiError(error.message, error.status ?? 400);
         }
         const { template_id, title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
         // Get tags as array of strings from comma separation tags=tag1,tag2,...
@@ -60,11 +61,11 @@ export async function GET(request: NextRequest) {
 
         const currentUser = await getOptionalUser(request);
         const searchResult = await templateSearch(where, orderBy, pageNum, pageSizeNum, currentUser?.id ?? undefined);
-        return NextResponse.json(searchResult, { status: 200 });
+        return apiSuccess(searchResult.templates, 200, searchResult.pagination);
 
     } catch (error) {
         console.error("Error fetching templates", error);
-        return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
+        return apiError("Internal server error when fetching templates", 500);
     }
 }
 
@@ -73,13 +74,13 @@ export async function POST(request: NextRequest) {
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
             
             const body: TemplatePOSTBody = await request.json();
             const postValidationError = await verifyTemplatePOSTBody(body);
             if (postValidationError) {
-                return NextResponse.json({ error: postValidationError.message }, { status: postValidationError.status ?? 400 });
+                return apiError(postValidationError.message, postValidationError.status ?? 400);
             }
             const { title, code, stdin, language, description, tags, forkedSourceId } = body;
 
@@ -110,10 +111,10 @@ export async function POST(request: NextRequest) {
                 },
                 ...templateGetInclude({}),
             });
-            return NextResponse.json(newTemplate, { status: 201 });
+            return apiSuccess(newTemplate, 201);
         } catch (error) {
             console.error("Error when creating code template", error);
-            return NextResponse.json({ error: "Internal server error when creating code template" }, { status: 500 });
+            return apiError("Internal server error when creating code template", 500);
         }
     })(request);
 }

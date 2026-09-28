@@ -1,8 +1,9 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
 import { templateGetInclude } from "@/utils/interfaces";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string; templateId: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
@@ -10,11 +11,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             const { id, templateId } = await params;
             const { user } = request;
             if (!user || id !== user.id) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             if (!isValidCUID(templateId)) {
-                return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
+                return apiError("Template ID is required", 400);
             }
 
             const template = await prisma.template.findUnique({
@@ -29,7 +30,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             });
 
             if (!template) {
-                return NextResponse.json({ error: "Template not found" }, { status: 404 });
+                return apiError("Template not found", 404);
             }
 
             const updatedTemplate = await prisma.template.update({
@@ -38,14 +39,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
                 ...templateGetInclude({ currentUserId: user.id })
             });
 
-            return NextResponse.json({
-                message: "Template unsaved successfully",
-                data: updatedTemplate
-            });
+            return apiSuccess(updatedTemplate);
 
         } catch (error) {
             console.error("Error unsaving template", error);
-            return NextResponse.json({ error: "An error occurred while unsaving the template" }, { status: 500 });
+            return apiError("An error occurred while unsaving the template", 500);
         }
     })(request);
 }

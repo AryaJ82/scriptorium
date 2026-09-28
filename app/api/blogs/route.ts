@@ -1,12 +1,16 @@
 
+    
+  
+
 import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlewareAuth";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client";
 
 import type { BlogPOSTBody, BlogGETQuery } from "@/utils/interfaces";
 import { normalizeTags, verifyGETParams, verifyPOSTBody } from "@/utils/inputValidation/blogValidation";
 import { Prisma } from "@/app/generated/prisma/client";
 import { blogResponseInclude } from "@/utils/interfaces";
+import { apiError, apiSuccess, pagination } from "@/utils/apiResponse";
 
 export async function GET(request: NextRequest) {
     try {
@@ -14,7 +18,7 @@ export async function GET(request: NextRequest) {
 
         const error = verifyGETParams(queryParams);
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: error.status });
+            return apiError(error.message, error.status);
         }
         const { post_id, linked_template_id, title, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
         // Get tags as array of strings from comma separation tags=tag1,tag2,...
@@ -25,6 +29,8 @@ export async function GET(request: NextRequest) {
         const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
 
         const where: Prisma.BlogPostWhereInput = {
+            isHidden: false,
+
             ...(post_id && {
                 id: parseInt(post_id)
             }),
@@ -68,19 +74,11 @@ export async function GET(request: NextRequest) {
             }),
         ]);
 
-        return NextResponse.json({
-            blogs,
-            pagination: {
-                totalSize,
-                totalPages: Math.ceil(totalSize / pageSizeNum),
-                page: pageNum,
-                pageSize: pageSizeNum,
-            },
-        }, { status: 200 });
+    return apiSuccess(blogs, 200, pagination(totalSize, pageNum, pageSizeNum));
 
     } catch (error) {
         console.error("Error fetching templates", error);
-        return NextResponse.json({ error: "Internal server error when fetching templates" }, { status: 500 });
+        return apiError("Internal server error when fetching blogs", 500);
     }
 }
 
@@ -91,11 +89,11 @@ export async function POST(request: NextRequest) {
             const { title, content, tags, linked_template_id } = body;
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
             const postValidationError = await verifyPOSTBody(body);
             if (postValidationError) {
-                return NextResponse.json({ error: postValidationError.message }, { status: postValidationError.status ?? 400 });
+                return apiError(postValidationError.message, postValidationError.status ?? 400);
             }
 
             const uniqueTags = normalizeTags(tags);
@@ -121,12 +119,13 @@ export async function POST(request: NextRequest) {
                 },
                 ...blogResponseInclude({currentUserId: user.id})
             });
-            return NextResponse.json(newBlogPost, { status: 201 });
+            return apiSuccess(newBlogPost, 201);
         } catch (error) {
             console.error("Error when creating blog post", error);
-            return NextResponse.json({ error: "Internal server error when creating blog post" }, { status: 500 });
+            return apiError("Internal server error when creating blog post", 500);
         }
     })(request);
 }
+
 
 

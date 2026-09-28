@@ -1,16 +1,17 @@
 
 import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlewareAuth";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { commentResponseInclude, limitedAuthorSelect } from "@/utils/interfaces";
 import { isPositiveIntegerString, isString, MAX_CONTENT_LENGTH } from "@/utils/inputValidation/generalValidation";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         if (!isPositiveIntegerString(id)) {
-            return NextResponse.json({ error: "Invalid Comment id." }, { status: 400 });
+            return apiError("Invalid Comment id.", 400);
         }
 
         const currentUser = await getOptionalUser(request);
@@ -21,14 +22,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         });
 
         if (!comment) {
-            return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+            return apiError("Comment not found", 404);
         }
 
-        return NextResponse.json({ comment }, { status: 200 });
+        return apiSuccess(comment);
 
     } catch (error) {
         console.error("Error fetching comments at [id] route", error);
-        return NextResponse.json({ error: "Internal server error when fetching comments at [id] route" }, { status: 500 });
+        return apiError("Internal server error when fetching comments at [id] route", 500);
     }
 }
 
@@ -37,25 +38,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
             const { id } = await params;
             if (!isPositiveIntegerString(id)) {
-                return NextResponse.json({ error: "Invalid Comment id." }, { status: 400 });
+                return apiError("Invalid Comment id.", 400);
             }
 
             const { content } = await request.json();
             if (!isString(content) || content.length > MAX_CONTENT_LENGTH) {
-                return NextResponse.json({ error: "Invalid content" }, { status: 400 })
+                return apiError("Invalid content", 400);
             }
 
             const comment = await prisma.comment.findUnique({
                 where: { id: parseInt(id) },
             });
             if (!comment) {
-                return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+                return apiError("Comment not found", 404);
             } else if (comment.authorId !== user.id) {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+                return apiError("Forbidden", 403);
             }
 
             const newComment = await prisma.comment.update({
@@ -69,11 +70,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             }
             )
 
-            return NextResponse.json({ comment: newComment }, { status: 200 });
+            return apiSuccess(newComment);
 
         } catch (error) {
             console.error("Error fetching comments at [id] route", error);
-            return NextResponse.json({ error: "Internal server error when fetching comments at [id] route" }, { status: 500 });
+            return apiError("Internal server error when updating comment", 500);
         }
     })(request)
 }
@@ -85,12 +86,12 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             const { id } = await params;
             if (!isPositiveIntegerString(id)) {
-                return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
+                return apiError("Invalid Comment id.", 400);
             }
 
             const comment = await prisma.comment.findUnique({
@@ -99,19 +100,19 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             });
 
             if (!comment) {
-                return NextResponse.json({ error: "Comment not found." }, { status: 404 });
+                return apiError("Comment not found.", 404);
             }
             if (comment.authorId !== user.id) {
-                return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+                return apiError("Forbidden.", 403);
             }
 
             await prisma.comment.delete({ where: { id: comment.id } });
             
-            return NextResponse.json({ message: "Comment deleted successfully" }, { status: 200 });
+            return apiSuccess({ message: "Comment deleted successfully" });
 
         } catch (error) {
             console.error("Error when deleting comment", error);
-            return NextResponse.json({ error: "Internal server error when deleting comment" }, { status: 500 });
+            return apiError("Internal server error when deleting comment", 500);
         }
     })(request);
 }

@@ -1,20 +1,21 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from '@/utils/client';
 import { hashPassword } from "@/utils/passwordAuth";
 import { verifyUsername, verifyPassword } from "@/utils/inputValidation/userValidation";
 import type { UserRegisterPOSTBody } from "@/utils/interfaces";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 export async function POST(request: NextRequest) {
+    try {
     const body: UserRegisterPOSTBody = await request.json();
     const { username, password } = body;
-    try {
         let error = verifyUsername(username);
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+            return apiError(error.message, error.status ?? 400);
         }
         error = verifyPassword(password);
         if (error) {
-            return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+            return apiError(error.message, error.status ?? 400);
         }
         
         // Check if user already exists
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
             }
         });
         if (existingUser) {
-            return NextResponse.json({ error: "Username already in use." }, { status: 400 });
+            return apiError("Username already in use.", 400);
         }
 
         const newUser = await prisma.user.create({
@@ -40,11 +41,11 @@ export async function POST(request: NextRequest) {
             }
         });
 
-        return NextResponse.json({ user: newUser }, { status: 201 });
+        return apiSuccess(newUser, 201);
 
     } catch (error) {
         console.error("Error during user registration:", error);
-        return NextResponse.json({ error: "An error occurred while processing the request" }, { status: 500 });
+        return apiError("An error occurred while processing the request", 500);
     }
 }
 

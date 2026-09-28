@@ -1,20 +1,21 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { withAuth } from "@/utils/middlewareAuth";
 import prisma from "@/utils/client";
 import type { AuthenticatedRequest } from "@/utils/middlewareAuth";
 import type { UserProfilePATCHBody } from "@/utils/interfaces";
 import { verifyUserProfilePATCHBody } from "@/utils/inputValidation/userValidation";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
             const { id } = await params;
             if (user.id !== id) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             const profile = await prisma.user.findUnique({
@@ -34,13 +35,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             });
 
             if (!profile) {
-                return NextResponse.json({ error: "User not found" }, { status: 404 });
+                return apiError("User not found", 404);
             }
 
-            return NextResponse.json({ user: profile }, { status: 200 });
+            return apiSuccess(profile);
 
         } catch (error) {
-            return NextResponse.json({ error: `Internal server error while fetching user profile: ${error}` }, { status: 500 });
+            return apiError(`Internal server error while fetching user profile: ${error}`, 500);
         }
     })(request);
 }
@@ -50,16 +51,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
             const { id } = await params;
             if (user.id !== id) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
             const body: UserProfilePATCHBody = await request.json();
             const error = verifyUserProfilePATCHBody(body);
             if (error) {
-                return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+                return apiError(error.message, error.status ?? 400);
             }
             const { email, firstName, lastName, avatarUrl, phoneNumber } = body;
 
@@ -82,10 +83,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                     phoneNumber: true,
                 },
             });
-            return NextResponse.json({ user: updatedUser }, { status: 200 });
+            return apiSuccess(updatedUser);
         } catch (error) {
             console.error("Error during profile update:", error);
-            return NextResponse.json({ error: "Invalid request body during profile editing" }, { status: 400 });
+            return apiError("Invalid request body during profile editing", 400);
         }
     })(request);
 }

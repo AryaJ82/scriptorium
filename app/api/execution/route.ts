@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import os from "os";
 import fs from 'fs';
 import path from "path";
@@ -8,6 +8,7 @@ import type { ExecutionRequestPOSTBody } from '@/utils/interfaces'
 import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionValidation";
 
 import { LANG_CONFIG } from "@/utils/interfaces";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 const TIME_LIMIT = !isNaN(Number(process.env.EXECUTION_TIMELIMIT_MS)) ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
 const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT_MB)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
@@ -19,10 +20,15 @@ const MAX_OUTPUT_SIZE = !isNaN(Number(process.env.MAX_OUTPUT_SIZE_KB)) ? Number(
 const docker = new Docker();
 
 export async function POST(request: NextRequest) {
-    const body: ExecutionRequestPOSTBody = await request.json();
+    let body: ExecutionRequestPOSTBody;
+    try {
+        body = await request.json();
+    } catch {
+        return apiError("Invalid JSON request body", 400);
+    }
     const error = validateExecutionPOSTBody(body);
     if (error ){
-        return NextResponse.json({error: error.message}, {status: error.status})
+        return apiError(error.message, error.status);
     }
     const { language, code, stdin } = body;
 
@@ -38,7 +44,7 @@ export async function POST(request: NextRequest) {
             fs.promises.writeFile(path.join(workDir, "stdin.txt"), stdin || '', { mode: 0o444 }) // read-only
         ]);
     } catch (error) {
-        return NextResponse.json({ error: `Failed to create temp directory or write to file: ${error}` }, { status: 500 });
+        return apiError(`Failed to create temp directory or write to file: ${error}`, 500);
     }
 
     let container: Docker.Container | undefined;
@@ -70,7 +76,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!container) {
-            return NextResponse.json({ error: "Failed to create execution container" }, { status: 500 });
+            return apiError("Failed to create execution container", 500);
         }
 
         const stream = await container.attach({
@@ -118,20 +124,20 @@ export async function POST(request: NextRequest) {
         ]);
 
         if (stderr.endsWith("EOFError: EOF when reading a line\n")) {
-            return NextResponse.json({ stdout: stdout, error: "Execution failed due to discrepancy in required argument length. Program requested input after EOF in stdin." }, { status: 400 });
+            return apiError("Execution failed due to discrepancy in required argument length. Program requested input after EOF in stdin.", 400, { stdout });
         }
 
-        return NextResponse.json({ stdout, stderr, exitCode });
+        return apiSuccess({ stdout, stderr, exitCode });
 
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (message === "TIME_OUT") {
-            return NextResponse.json({ stdout: stdout, error: "Execution timed out" }, { status: 408 });
+            return apiError("Execution timed out", 408, { stdout, stderr });
         } else if (message === "OUTPUT_LIMIT_EXCEEDED") {
-            return NextResponse.json({ stdout: stdout, error: "Code output exceeded limit" }, { status: 413 });
+            return apiError("Code output exceeded limit", 413, { stdout, stderr });
         }
 
-        return NextResponse.json({ error: `Internal Error During Execution ${message}` }, { status: 500 });
+        return apiError(`Internal Error During Execution ${message}`, 500, { stdout, stderr });
 
     } finally {
         // Clean up temp directory

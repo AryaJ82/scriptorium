@@ -1,17 +1,18 @@
 
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { limitedAuthorSelect, type ReportPOSTBody } from "@/utils/interfaces";
 import { verifyReportPOSTBody } from "@/utils/inputValidation/reportValidation";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             const { id } = await params;
@@ -19,16 +20,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             const body: ReportPOSTBody = await request.json();
             const error = verifyReportPOSTBody(body);
             if (error) {
-                return NextResponse.json({ error: error.message }, { status: error.status });
+                return apiError(error.message, error.status);
             }
             const { title, content } = body;
 
             if (!isPositiveIntegerString(id)) {
-                return NextResponse.json({ error: "Blog post id is required" }, { status: 400 });
+                return apiError("Blog post id is required", 400);
             }
             const blogPost = await prisma.blogPost.findUnique({ where: { id: parseInt(id) }, });
             if (!blogPost) {
-                return NextResponse.json({ error: "Blog not found" }, { status: 404 });
+                return apiError("Blog not found", 404);
             }
 
             const report = await prisma.blogReport.create({
@@ -44,10 +45,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                 },
             });
 
-            return NextResponse.json({ report }, { status: 200 });
+            return apiSuccess(report);
         } catch (error) {
             console.error("Error reporting blog", error);
-            return NextResponse.json({ error: "Internal server error when reporting blog" }, { status: 500 });
+            return apiError("Internal server error when reporting blog", 500);
         }
     })(request);
 }

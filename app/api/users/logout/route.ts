@@ -1,12 +1,13 @@
 import { withAuth } from "@/utils/middlewareAuth";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 export async function GET(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return withAuth(async (request: NextRequest) => {
         try {
             // Note: JTI not implemented because It's not required and I'm too burnt out to be bothered
-            const response = NextResponse.json({ message: "Logout successful" });
+            const response = apiSuccess({ message: "Logout successful" });
             response.cookies.set("accessToken", "", {
                 httpOnly: true,
                 path: "/",
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
             return response;
         } catch (error) {
             console.error("Error during logout:", error);
-            return NextResponse.json({ error: "An error occurred while processing the request" }, { status: 500 });
+            return apiError("An error occurred while processing the request", 500);
         }
     })(request);
 }

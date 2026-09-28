@@ -1,33 +1,34 @@
 
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client";
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth";
 import { limitedAuthorSelect, type CommentPOSTBody } from "@/utils/interfaces";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { verifyCommentPOSTBody } from "@/utils/inputValidation/commentValidation";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             const { id } = await params;
             const body: CommentPOSTBody = await request.json();
             const error = await verifyCommentPOSTBody(body);
             if (error) {
-                return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+                return apiError(error.message, error.status ?? 400);
             }
             const { content, parent_comment_id } = body;
 
             if (!isPositiveIntegerString(id)) {
-                return NextResponse.json({ error: "Blog post id is required" }, { status: 400 });
+                return apiError("Blog post id is required", 400);
             }
             const blogPost = await prisma.blogPost.findUnique({ where: { id: parseInt(id) }, });
             if (!blogPost) {
-                return NextResponse.json({ error: "Blog not found" }, { status: 404 });
+                return apiError("Blog not found", 404);
             }
 
             const comment = await prisma.comment.create({
@@ -49,10 +50,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                 },
             });
 
-            return NextResponse.json({ comment }, { status: 200 });
+            return apiSuccess(comment);
         } catch (error) {
             console.error("Error posting comment at [id] route", error);
-            return NextResponse.json({ error: "Internal server error when posting comment" }, { status: 500 });
+            return apiError("Internal server error when posting comment", 500);
         }
     })(request);
 }

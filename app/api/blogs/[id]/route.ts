@@ -2,16 +2,17 @@
 import { AuthenticatedRequest, getOptionalUser, withAuth } from "@/utils/middlewareAuth";
 import { normalizeTags, verifyPATCHBody } from "@/utils/inputValidation/blogValidation";
 import type { BlogPATCHBody } from "@/utils/interfaces";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/utils/client"
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { blogResponseInclude } from "@/utils/interfaces";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         if (!isPositiveIntegerString(id)) {
-            return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
+            return apiError("Invalid Blog post id.", 400);
         }
 
 
@@ -24,14 +25,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         });
 
         if (!post) {
-            return NextResponse.json({ error: "Blog Post not found" }, { status: 404 });
+            return apiError("Blog Post not found", 404);
         }
 
-        return NextResponse.json({ post }, { status: 200 });
+        return apiSuccess(post, 200);
 
     } catch (error) {
         console.error("Error fetching blog posts at [id] route", error);
-        return NextResponse.json({ error: "Internal server error when fetching blog posts at [id] route" }, { status: 500 });
+        return apiError("Internal server error when fetching blog posts at [id] route", 500);
     }
 }
 
@@ -41,29 +42,30 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             const { id } = await params;
             if (!isPositiveIntegerString(id)) {
-                return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
+                return apiError("Invalid Blog post id.", 400);
             }
 
             const body: BlogPATCHBody = await request.json();
             const patchValidationError = verifyPATCHBody(body);
             if (patchValidationError) {
-                return NextResponse.json({ error: patchValidationError.message }, { status: patchValidationError.status });
+                return apiError(patchValidationError.message, patchValidationError.status);
             }
             const { title, content, tags } = body;
 
             const post = await prisma.blogPost.findUnique({
-                where: { id: parseInt(id) },
+            where: { id: parseInt(id), isHidden: false },
+
                 select: { id: true, authorId: true }
             });
             if (!post) {
-                return NextResponse.json({ error: "post not found" }, { status: 404 });
+                return apiError("post not found", 404);
             } else if (post.authorId !== user.id) {
-                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+                return apiError("Forbidden", 403);
             }
 
             const tagConnectOrCreate = tags !== undefined ? normalizeTags(tags).map((tag) => ({
@@ -87,10 +89,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 ...blogResponseInclude({currentUserId}),
             });
 
-            return NextResponse.json({ post: updatedPost }, { status: 200 });
+            return apiSuccess(updatedPost);
         } catch (error) {
             console.error("Error when updating blog post:", error);
-            return NextResponse.json({ error: "Internal server error when updating blog post" }, { status: 500 });
+            return apiError("Internal server error when updating blog post", 500);
         }
     })(request);
 }
@@ -101,29 +103,29 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             const { id } = await params;
             if (!isPositiveIntegerString(id)) {
-                return NextResponse.json({ error: "Invalid Blog post id." }, { status: 400 });
+                return apiError("Invalid Blog post id.", 400);
             }
 
             const post = await prisma.blogPost.findUnique({ where: { id: parseInt(id) }, });
 
             if (!post) {
-                return NextResponse.json({ error: "Blog Post not found" }, { status: 404 });
+                return apiError("Blog Post not found", 404);
             }
             if (post.authorId !== user.id) {
-                return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+                return apiError("Forbidden.", 403);
             }
 
             await prisma.blogPost.delete({ where: { id: post.id } });
-            return NextResponse.json({ message: "Deleted successfully" }, { status: 200 });
+            return apiSuccess({ message: "Deleted successfully" });
 
         } catch (error) {
             console.error("Error when deleting blog post", error);
-            return NextResponse.json({ error: "Internal server error when deleting blog post" }, { status: 500 });
+            return apiError("Internal server error when deleting blog post", 500);
         }
     })(request);
 }

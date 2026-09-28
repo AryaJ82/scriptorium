@@ -1,11 +1,12 @@
 import { AuthenticatedRequest, withAuth } from "@/utils/middlewareAuth"
-import { NextResponse, NextRequest } from "next/server"
+import { NextRequest } from "next/server"
 import prisma from "@/utils/client"
 import { Language } from "@/app/generated/prisma/enums";
 import { Prisma } from "@/app/generated/prisma/client";
 import { templateSearch, verifyGETParams, normalizeTags } from "@/utils/templateSearch";
 import { type TemplateGETQuery, type SavedTemplateTogglePOSTBody, templateGetInclude } from "@/utils/interfaces";
 import { isValidCUID } from "@/utils/inputValidation/generalValidation";
+import { apiError, apiSuccess } from "@/utils/apiResponse";
 
 
 
@@ -14,13 +15,13 @@ export async function GET(request: NextRequest) {
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
             const queryParams = Object.fromEntries(request.nextUrl.searchParams) as TemplateGETQuery;
 
             const error = verifyGETParams(queryParams);
             if (error) {
-                return NextResponse.json({ error: error.message }, { status: error.status ?? 400 });
+                return apiError(error.message, error.status ?? 400);
             }
             const { template_id, title, language, content, tags, author, page, pageSize, sortBy, sortOrder } = queryParams;
 
@@ -65,11 +66,11 @@ export async function GET(request: NextRequest) {
             } as Prisma.TemplateOrderByWithRelationInput;
 
             const searchResult = await templateSearch(where, orderBy, pageNum, pageSizeNum, user.id ?? undefined);
-            return NextResponse.json(searchResult, { status: 200 });
+            return apiSuccess(searchResult.templates, 200, searchResult.pagination);
 
         } catch (error) {
             console.error("Error fetching saved templates", error);
-            return NextResponse.json({ error: "An error occurred while fetching the saved templates" }, { status: 500 });
+            return apiError("An error occurred while fetching the saved templates", 500);
         }
     })(request);
 }
@@ -80,14 +81,14 @@ export async function POST(request: NextRequest) {
         try {
             const { user } = request;
             if (!user) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+                return apiError("Unauthorized", 401);
             }
 
             const body: SavedTemplateTogglePOSTBody = await request.json();
             const { template_id } = body;
 
             if (!isValidCUID(template_id)) {
-                return NextResponse.json({ error: "Template ID is required" }, { status: 400 });
+                return apiError("Template ID is required", 400);
             }
 
             const updatedTemplate = await prisma.template.update({
@@ -96,17 +97,14 @@ export async function POST(request: NextRequest) {
                 ...templateGetInclude({ currentUserId: user.id })
             });
             if (!updatedTemplate) {
-                return NextResponse.json({ error: "Template not found" }, { status: 404 });
+                return apiError("Template not found", 404);
             }
 
-            return NextResponse.json({
-                message: "Template saved successfully",
-                data: updatedTemplate
-            });
+            return apiSuccess(updatedTemplate);
 
         } catch (error) {
             console.error("Error saving template", error);
-            return NextResponse.json({ error: "An error occurred while saving the template" }, { status: 500 });
+            return apiError("An error occurred while saving the template", 500);
         }
     })(request);
 }
