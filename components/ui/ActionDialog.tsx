@@ -1,48 +1,49 @@
-'use client';
+'use client'
 
-import { Dialog, DialogContent, DialogClose, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/Dialog";
-import { Button } from "./Button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/Dialog'
+type ActionDialogProps = {
+  title: string
+  description: string
+  isOpen: boolean
+  setIsOpen: (open: boolean) => void
+  confirmAction: () => void | Promise<void>
+  actionLoading: boolean
+  actionLabel?: string
+}
 
-export default function ActionDialogue({
-    title,
-    description,
-    isOpen,
-    setIsOpen,
-    confirmAction,
-    actionLoading,
-}: {
-    title: string,
-    description: string,
-    isOpen: boolean,
-    setIsOpen: (open: boolean) => void,
-    confirmAction: () => void,
-    actionLoading: boolean,
-
-}) {
-    return (
-        <Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle
-                        className="tracking-tight break-all leading-tight"
-                    >
-                        {title}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {description}
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} disabled={actionLoading}>
-                            Cancel
-                        </Button>
-                    </DialogClose>
-                    <Button variant="destructive" size="sm" onClick={confirmAction} disabled={actionLoading}>
-                        {actionLoading ? 'Processing…' : 'Confirm'}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+export default function ActionDialog({
+  title,
+  description,
+  isOpen,
+  setIsOpen,
+  confirmAction,
+  actionLoading,
+  actionLabel = 'Confirm',
+}: ActionDialogProps) {
+  return (
+    <AlertDialog open={isOpen} onOpenChange={(open) => !actionLoading && setIsOpen(open)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmAction} disabled={actionLoading}>
+            {actionLoading ? <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" /> : null}
+            {actionLoading ? 'Processing…' : actionLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
 }

@@ -195,33 +195,30 @@ export default function TemplateHeader({
                 </span>
             </div>
 
-            {isDeleteOpen && (
-                <ActionDialogue
-                    title={`Delete template "${template.title}"?`}
-                    description="Are you sure you want to delete this template? This action cannot be undone."
-                    confirmAction={confirmDelete}
-                    isOpen={isDeleteOpen}
-                    setIsOpen={setIsDeleteOpen}
-                    actionLoading={deleteLoading}
-                />
-            )}
-            {isForkOpen && (
-                <ActionDialogue
-                    title={`Fork template "${template.title}"?`}
-                    description="Are you sure you want to fork this template?"
-                    confirmAction={confirmFork}
-                    isOpen={isForkOpen}
-                    setIsOpen={setIsForkOpen}
-                    actionLoading={forkLoading}
-                />
-            )}
-            
+            <ActionDialogue
+                title={`Delete template "${template.title}"?`}
+                description="Are you sure you want to delete this template? This action cannot be undone."
+                confirmAction={confirmDelete}
+                isOpen={isDeleteOpen}
+                setIsOpen={setIsDeleteOpen}
+                actionLoading={deleteLoading}
+                actionLabel="Delete"
+            />
+            <ActionDialogue
+                title={`Fork template "${template.title}"?`}
+                description="Are you sure you want to fork this template?"
+                confirmAction={confirmFork}
+                isOpen={isForkOpen}
+                setIsOpen={setIsForkOpen}
+                actionLoading={forkLoading}
+                actionLabel="Fork template"
+            />
             <SaveBlogDialogue
-                key={isBlogReplyOpen} // Force remount to reset internal state when reopening
                 linkedTemplateId={template.id}
-                defaultOpen={!!isBlogReplyOpen}
+                open={isBlogReplyOpen > 0}
+                onOpenChange={(open) => !open && setIsBlogReplyOpen(0)}
             >
-                <div></div>
+                <span className="sr-only">Reply with blog post</span>
             </SaveBlogDialogue>
 
 

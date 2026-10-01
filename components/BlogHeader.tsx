@@ -15,8 +15,11 @@ import {
     DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { useTagEdit } from "@/lib/useTagEdit";
+import { useUserSession } from '@/contexts/UserSessionContext';
+import { ReportDialog } from './ReportDialog';
+
 import { useState, useCallback } from 'react';
-import { Menu, Trash, Pencil } from 'lucide-react'
+import { Menu, Trash, Pencil, Flag } from 'lucide-react'
 import Textarea from "./ui/Textarea";
 import ActionDialogue from "./ui/ActionDialog";
 import { VoteButtons } from "./ui/VoteButtons";
@@ -50,6 +53,9 @@ export default function BlogHeader({
 
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [isReportOpen, setIsReportOpen] = useState(false);
+    const { session } = useUserSession();
+
 
 
     // ---------------------------------------------------------------------------
@@ -150,6 +156,11 @@ export default function BlogHeader({
 
                             <DropdownMenuContent align="end">
                                 <DropdownMenuSeparator />
+                                {!isOwner && session.isAuthenticated && (
+                                    <DropdownMenuItem onClick={() => setIsReportOpen(true)}>
+                                        <Flag className="size-3" /> Report
+                                    </DropdownMenuItem>
+                                )}
                                 {isOwner && (
                                     <DropdownMenuItem
                                         variant="destructive"
@@ -209,17 +220,23 @@ export default function BlogHeader({
                         )}
                     </div>
 
+                    <ReportDialog
+                        open={isReportOpen}
+                        onOpenChange={setIsReportOpen}
+                        endpoint={`/api/blogs/${post.id}/reports`}
+                        subjectLabel="blog post"
+                    />
+
                     {/* ── Delete Dialog ── */}
-                    {isDeleteOpen && (
-                        <ActionDialogue
-                            title={`Delete template "${post.title}"?`}
-                            description="Are you sure you want to delete this template? This action cannot be undone."
-                            confirmAction={confirmDelete}
-                            isOpen={isDeleteOpen}
-                            setIsOpen={setIsDeleteOpen}
-                            actionLoading={deleteLoading}
-                        />
-                    )}
+                    <ActionDialogue
+                        title={`Delete blog post "${post.title}"?`}
+                        description="Are you sure you want to delete this blog post? This action cannot be undone."
+                        confirmAction={confirmDelete}
+                        isOpen={isDeleteOpen}
+                        setIsOpen={setIsDeleteOpen}
+                        actionLoading={deleteLoading}
+                        actionLabel="Delete"
+                    />
 
                     {/* ── Tags ── */}
 
