@@ -3,6 +3,7 @@
 import { useUserSession } from "@/contexts/UserSessionContext";
 import { CommentResponse, BlogResponse } from "@/utils/interfaces";
 import { useCallback, useState } from "react";
+import { useCommentList } from "@/lib/useCommentList";
 import { VoteButtons } from "./ui/VoteButtons";
 import { DisplayAvatar } from "./ui/Avatar";
 import { timeAgo } from "@/utils/timeAgo";
@@ -17,6 +18,8 @@ import { Button } from "./ui/Button";
 import { Menu, Trash, MessageCircle, X, SendHorizonal, Flag, Pencil, MoveDownRight } from "lucide-react";
 import Textarea from "./ui/Textarea";
 import ActionDialogue from "./ui/ActionDialog";
+import { ReportDialog } from "./ReportDialog";
+
 
 const pageSize = 10;
 
@@ -30,10 +33,15 @@ export default function CommentCard({
     ancestors?: number;
 }) {
     const { session, authFetch } = useUserSession();
-    const [replies, setReplies] = useState<CommentResponse[]>([]);
-    const [page, setPage] = useState<number>(1);
+    const {
+        comments: replies,
+        loading,
+        error: replyFetchError,
+        hasMore: hasMoreReplies,
+        loadMore: handleFetchReplies,
+        replace: replaceReplies,
+    } = useCommentList({ parentCommentId: comment.id, pageSize, initialLoad: false });
 
-    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const [isReplyOpen, setIsReplyOpen] = useState<boolean>(false);
@@ -50,7 +58,6 @@ export default function CommentCard({
     const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
 
 
-    const hasMoreReplies = comment.numReplies > replies.length;
     const isOwner = comment.authorId === session.id;
 
     const indentClass = ancestors > 0
@@ -69,42 +76,6 @@ export default function CommentCard({
         setIsEditSaving(false);
     }, [comment.content]);
 
-    const handleFetchReplies = useCallback(() => {
-        const queryParams = new URLSearchParams();
-        queryParams.append('parent_comment_id', comment.id.toString());
-        queryParams.append('page', page.toString());
-        queryParams.append('pageSize', pageSize.toString());
-        queryParams.append('sortBy', 'upvoteCount');
-        queryParams.append('orderBy', 'desc');
-
-        setLoading(true);
-        setError(null);
-
-        const controller = new AbortController();
-        fetch(`/api/comments?${queryParams.toString()}`, {
-            method: "GET",
-            signal: controller.signal
-        })
-            .then(async (res) => {
-                const body = await res.json();
-                if (!res.ok) throw new Error(body.error ?? 'Failed to fetch replies');
-
-                setReplies(prev => [...prev, ...(body.data ?? [])]);
-                setPage(p => p + 1);
-                updateComment({
-                    ...comment,
-                    numReplies: body.pagination?.totalSize ?? comment.numReplies,
-                    author: { ...comment.author },
-                });
-            })
-            .catch((err) => {
-                if (err.name === 'AbortError') return;
-                setError(err instanceof Error ? err.message : 'Failed to fetch replies. Please try again later.');
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [page, comment, updateComment]);
 
     const handleReply = useCallback(() => {
         if (!comment || !session.isAuthenticated) {
@@ -133,7 +104,7 @@ export default function CommentCard({
                 throw new Error(body.error ?? 'Unable to post reply.');
             }
 
-            setReplies(prev => [...prev, body.data]);
+            replaceReplies([...replies, body.data]);
 
             updateComment({
                 ...comment,
@@ -148,7 +119,7 @@ export default function CommentCard({
             setReplySubmitting(false);
         });
 
-    }, [session.isAuthenticated, resetReply, comment, authFetch, replyDraft, updateComment]);
+    }, [session.isAuthenticated, resetReply, comment, authFetch, replyDraft, updateComment, replaceReplies, replies]);
 
     const propagateUpdate = useCallback((newComment: CommentResponse) => {
         updateComment({
@@ -193,7 +164,7 @@ export default function CommentCard({
             setError(error instanceof Error ? error.message : 'Unable to edit comment changes.');
             return
         }).finally(() => {
-            setLoading(false);
+            setIsEditSaving(false);
         })
     }, [comment, session, resetCommentEdit, editDraft, authFetch, updateComment])
 
@@ -388,15 +359,13 @@ export default function CommentCard({
 
             {replies.length > 0 && (
                 <div className="mt-3 flex flex-col gap-3">
-                    {replies.map((reply, index) => (
+                    {replies.map((reply) => (
                         <CommentCard
                             key={reply.id}
                             comment={reply}
                             ancestors={ancestors + 1}
                             updateComment={(updated: CommentResponse) => {
-                                setReplies(prev =>
-                                    prev.map((r, i) => (i === index ? updated : r))
-                                );
+                                replaceReplies(replies.map((r) => (r.id === updated.id ? updated : r)));
                                 propagateUpdate(comment);
                             }}
                         />
@@ -410,6 +379,13 @@ export default function CommentCard({
                     Loading replies…
                 </p>
             )}
+
+            <ReportDialog
+                open={isReportOpen}
+                onOpenChange={setIsReportOpen}
+                endpoint={`/api/comments/${comment.id}/reports`}
+                subjectLabel="comment"
+            />
 
             {/* ── Delete Dialog ── */}
             {isDeleteOpen && (

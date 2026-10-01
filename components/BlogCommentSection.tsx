@@ -2,7 +2,9 @@
 
 import { useUserSession } from "@/contexts/UserSessionContext"
 import { BlogResponse, CommentResponse } from "@/utils/interfaces"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
+import { useCommentList } from "@/lib/useCommentList"
+
 import { Button } from "./ui/Button";
 import Textarea from "./ui/Textarea";
 import CommentCard from "./CommentCard";
@@ -16,78 +18,21 @@ export default function BlogCommentSection({
     blog: BlogResponse;
 }) {
     const { session, authFetch } = useUserSession();
-    const [comments, setComments] = useState<CommentResponse[]>([]);
-    const [totalComments, setTotalComments] = useState<number>(0);
-    const [page, setPage] = useState<number>(2); // initial load fetches page 1; next fetch starts at 2
+    const {
+        comments,
+        total: totalComments,
+        loading,
+        error: fetchError,
+        hasMore: hasMoreComments,
+        loadMore: handleFetchMore,
+        prepend,
+        replace,
+    } = useCommentList({ blogId: blog.id, pageSize });
     const [replyDraft, setReplyDraft] = useState<string>('');
     const [replySubmitting, setReplySubmitting] = useState<boolean>(false);
-
-    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    const hasMoreComments = totalComments > comments.length;
-
-    useEffect(() => {
-        const queryParams = new URLSearchParams();
-        queryParams.append('blog_id', blog.id.toString());
-        queryParams.append('page', '1');
-        queryParams.append('pageSize', pageSize.toString());
-        queryParams.append('sortBy', 'upvoteCount');
-        queryParams.append('orderBy', 'desc');
-
-        const controller = new AbortController();
-        fetch(`/api/comments/?${queryParams.toString()}`, {
-            method: "GET",
-            signal: controller.signal
-        })
-            .then(async (res) => {
-                const body = await res.json();
-                if (!res.ok) throw new Error(body.error ?? 'Failed to fetch comments');
-                setComments(body.data ?? []);
-                setTotalComments(body.pagination?.totalSize ?? 0);
-                setPage(p => p + 1);
-            })
-            .catch((err) => {
-                if (controller.signal.aborted) return;
-                setError(err instanceof Error ? err.message : 'Failed to load comments.');
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-
-        return () => controller.abort();
-    }, [blog.id]);
-
-    const handleFetchMore = useCallback(() => {
-        const queryParams = new URLSearchParams();
-        queryParams.append('blog_id', blog.id.toString());
-        queryParams.append('page', page.toString());
-        queryParams.append('pageSize', pageSize.toString());
-        queryParams.append('sortBy', 'upvoteCount');
-        queryParams.append('orderBy', 'desc');
-
-        setLoading(true);
-        setError(null);
-
-        const controller = new AbortController();
-        fetch(`/api/comments/?${queryParams.toString()}`, {
-            method: "GET",
-            signal: controller.signal
-        })
-            .then(async (res) => {
-                const body = await res.json();
-                if (!res.ok) throw new Error(body.error ?? 'Failed to fetch comments');
-                setComments(prev => [...prev, ...(body.data ?? [])]);
-                setPage(p => p + 1);
-            })
-            .catch((err) => {
-                if (err.name === 'AbortError') return;
-                setError(err instanceof Error ? err.message : 'Failed to fetch more comments.');
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [blog.id, page]);
+    const displayedError = error ?? fetchError;
 
     const handleReply = useCallback(() => {
 
@@ -112,8 +57,7 @@ export default function BlogCommentSection({
             if (!response.ok) {
                 throw new Error(body.error ?? 'Unable to post comment.');
             }
-            setComments(prev => [body.data, ...prev]);
-            setTotalComments(prev => prev + 1);
+            prepend(body.data);
             setReplyDraft('');
         }).catch((err) => {
             setError(err instanceof Error ? err.message : 'Unable to post comment.');
@@ -145,8 +89,8 @@ export default function BlogCommentSection({
                         className="resize-none text-sm"
                     />
                     <div className="flex items-center justify-between gap-2">
-                        {error && (
-                            <p className="text-xs text-destructive">{error}</p>
+{displayedError && (
+                            <p className="text-xs text-destructive">{displayedError}</p>
                         )}
                         <Button
                             onClick={handleReply}
@@ -168,15 +112,13 @@ export default function BlogCommentSection({
             {/* ── Comment list ── */}
             {comments.length > 0 && (
                 <div className="flex flex-col gap-3">
-                    {comments.map((comment, index) => (
+                    {comments.map((comment) => (
                         <CommentCard
                             key={comment.id}
                             comment={comment}
                             ancestors={0}
                             updateComment={(updated: CommentResponse) => {
-                                setComments(prev =>
-                                    prev.map((c, i) => (i === index ? updated : c))
-                                );
+                                replace(comments.map((c) => (c.id === updated.id ? updated : c)));
                             }}
                         />
                     ))}
