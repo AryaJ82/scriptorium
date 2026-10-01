@@ -76,7 +76,7 @@ export function SaveBlogDialogue(
 
     if (!session.isAuthenticated) {
         return (
-            <Dialog>
+            <Dialog open={open} onOpenChange={(nextOpen) => !loading && setOpen(nextOpen)}>
                 <DialogTrigger asChild>
                     {children}
                 </DialogTrigger>

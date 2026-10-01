@@ -40,7 +40,7 @@ export function SaveTemplateDialogue({ children, language, code, stdin, forkedPa
     }, [authFetch, code, desc, forkedParent, language, router, stdin, tags, title])
 
     if (!session.isAuthenticated) {
-        return <Dialog>
+        return <Dialog open={open} onOpenChange={(nextOpen) => !loading && setOpen(nextOpen)}>
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
