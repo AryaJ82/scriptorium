@@ -3,55 +3,33 @@
 import { useParams, useRouter } from "next/navigation";
 import { toast } from 'sonner';
 import { useUserSession } from '@/contexts/UserSessionContext';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { BlogResponse, CommentResponse } from '@/utils/interfaces';
 import BlogHeader from '@/components/BlogHeader';
 import { VoteButtons } from "@/components/ui/VoteButtons";
 import BlogContent from "@/components/BlogContent";
 import BlogCommentSection from "@/components/BlogCommentSection";
 import NotFound from "@/components/NotFound";
+import { useApiGet } from '@/lib/useApiGet';
 
 export default function BlogPostPage() {
   const params = useParams();
   const id = params?.id;
   const { session, baseUrl, authFetch } = useUserSession();
 
-  const [post, setPost] = useState<BlogResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
   const router = useRouter();
 
+  const url = id ? `${baseUrl}/api/blogs/${id}` : null;
+  const { data: post, loading, setData: setPost } = useApiGet<{ data?: BlogResponse | null; error?: string | null }, BlogResponse | null>(url, {
+    transform: (raw) => raw.data ?? null,
+    notOkMessage: 'Unable to load post',
+    onSuccess: () => {},
+    onError: (message) => toast.error(message),
+  });
+
+  const [mutating, setMutating] = useState(false);
   const isOwner = !!session && post?.authorId === session.id;
-
-
-
-  useEffect(() => {
-    if (!id) return;
-
-    const controller = new AbortController();
-    fetch(`${baseUrl}/api/blogs/${id}`, {
-      signal: controller.signal
-    }).then(async (res) => {
-      const body = await res.json();
-      if (controller.signal.aborted) return;
-
-      if (!res.ok) throw new Error(body.error ?? 'Unable to load post')
-
-      const p: BlogResponse | undefined = body.post;
-      if (!p) throw new Error('Post not found');
-      setPost(p)
-    })
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        toast.error(err instanceof Error ? err.message : 'Unable to load post');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => { controller.abort() };
-  }, [id, baseUrl])
-
+  const isBusy = loading || mutating;
 
   // ---------------------------------------------------------------------------
   // Actions
@@ -66,7 +44,7 @@ export default function BlogPostPage() {
     if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
       throw new Error("Invalid post or session")
     }
-    setLoading(true);
+    setMutating(true);
 
     authFetch(`/api/blogs/${id}`, {
       method: 'PATCH',
@@ -81,14 +59,14 @@ export default function BlogPostPage() {
         throw new Error(body.error ?? 'Unable to update blog post.');
       }
 
-      setPost(body.post);
+      setPost(body.data);
     }).catch((error) => {
       handleActionError(error instanceof Error ? error.message : 'Unable to update blog post.');
       return
     }).finally(() => {
-      setLoading(false);
+        setMutating(false);
     })
-  }, [id, authFetch, session, post, handleActionError]);
+  }, [id, authFetch, session, post, handleActionError, setPost]);
 
   const deletePost = useCallback(async () => {
     if (!post || !session.isAuthenticated || post.authorId !== session?.id) {
@@ -111,8 +89,7 @@ export default function BlogPostPage() {
     });
   }, [authFetch, baseUrl, post, session, router, handleActionError]);
 
-
-  if (!loading && !post) {
+  if (!isBusy && !post) {
     return <NotFound resource="blog post" title="Blog post not found" description="That blog post does not exist or is no longer available." />;
   }
 
@@ -159,6 +136,7 @@ export default function BlogPostPage() {
       {post && <BlogCommentSection
         blog={post}
       />}
+
     </div>
   );
 }

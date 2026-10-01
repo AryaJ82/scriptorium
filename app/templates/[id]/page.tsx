@@ -2,7 +2,8 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useUserSession } from "@/contexts/UserSessionContext";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useApiGet } from "@/lib/useApiGet";
 
 import type { TemplateResponse } from "@/utils/interfaces";
 import DescriptionSection from "@/components/TemplateDescription";
@@ -35,9 +36,13 @@ export default function TemplatePage() {
     const router = useRouter();
 
     // --- Template state ---
-    const [template, setTemplate] = useState<TemplateResponse | null>(null);
-    const [loadError, setLoadError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { data: template, setData: setTemplate, loading, error: loadError } = useApiGet<{ data?: TemplateResponse | null; error?: string | null }, TemplateResponse | null>(
+        id ? `${baseUrl}/api/templates/${id}` : null,
+        {
+            transform: (body) => body.data ?? null,
+            notOkMessage: "Unable to load template.",
+        },
+    );
 
     // --- Update / Delete / fork state ---
     const [actionError, setActionError] = useState<string | null>(null);
@@ -46,43 +51,8 @@ export default function TemplatePage() {
 
     const isOwner = !!session && template?.authorId === session.id;
 
-    const isSavedByCurrentUser = (!!template && template?.savers && template?.savers.length > 0);
+    const isSavedByCurrentUser = (!!template && template?.savers?.length > 0);
 
-    // ---------------------------------------------------------------------------
-    // Fetch template
-    // ---------------------------------------------------------------------------
-
-
-    useEffect(() => {
-        if (!id) return;
-
-        const controller = new AbortController();
-
-        fetch(`${baseUrl}/api/templates/${id}`, {
-            signal: controller.signal,
-        }).then(async (res) => {
-            const body = await res.json();
-            if (controller.signal.aborted) return;
-
-            if (!res.ok) {
-                throw new Error(body.error ?? "Unable to load template.");
-            }
-
-            const t: TemplateResponse | undefined = body.data;
-            if (!t) throw new Error('Template not found');
-            setTemplate(t);
-        })
-            .catch((err) => {
-                if (controller.signal.aborted) return;
-                if (err instanceof Error && err.name === 'AbortError') return;
-                setLoadError(err instanceof Error ? err.message : "Unable to load template.");
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) setLoading(false);
-            });
-
-        return () => { controller.abort(); };
-    }, [id, baseUrl]);
 
     // ---------------------------------------------------------------------------
     // Actions
@@ -116,7 +86,7 @@ export default function TemplatePage() {
         }).finally(() => {
             setSaveLoading(false);
         })
-    }, [id, authFetch, baseUrl, template, session]);
+    }, [id, authFetch, baseUrl, template, session, setTemplate]);
 
 
     const forkTemplate = useCallback(async () => {
@@ -150,7 +120,6 @@ export default function TemplatePage() {
         });
     }, [authFetch, baseUrl, template, router]);
 
-
     const saveTemplate = useCallback(async () => {
         if (!template || !session.isAuthenticated) {
             throw new Error("Invalid template or session.")
@@ -182,7 +151,7 @@ export default function TemplatePage() {
         }).finally(() => {
             setSaveLoading(false);
         });
-    }, [authFetch, template, session.isAuthenticated, baseUrl, session.id, isSavedByCurrentUser]);
+    }, [authFetch, template, session.isAuthenticated, baseUrl, session.id, isSavedByCurrentUser, setTemplate]);
 
     const deleteTemplate = useCallback(async () => {
         if (!template || !session.isAuthenticated || template.authorId !== session?.id) {
@@ -206,16 +175,13 @@ export default function TemplatePage() {
         });
     }, [authFetch, baseUrl, template, session, router]);
 
-
-
+    if (loading && !template) {
+        return <NotFound resource="template" title="Template not found" description="That template does not exist or is no longer available." />;
+    }
 
     // ---------------------------------------------------------------------------
     // Render
     // ---------------------------------------------------------------------------
-
-    if (!loading && !template) {
-        return <NotFound resource="template" title="Template not found" description="That template does not exist or is no longer available." />;
-    }
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -268,6 +234,7 @@ export default function TemplatePage() {
                     />
                 )}
             </div>
+
         </div>
     );
 }
