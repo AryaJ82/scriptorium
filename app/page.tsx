@@ -71,7 +71,7 @@ export default function HomePage() {
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to fetch templates');
         const data = await res.json();
-        setTemplates(data.templates);
+        setTemplates(data.data ?? []);
       })
       .catch(err => {
         if (controller.signal.aborted) return;
@@ -104,7 +104,7 @@ export default function HomePage() {
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to fetch blogs');
         const data = await res.json();
-        setBlogs(data.blogs);
+        setBlogs(data.data ?? []);
       })
       .catch(err => {
         if (controller.signal.aborted) return;
