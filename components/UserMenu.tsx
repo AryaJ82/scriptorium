@@ -2,7 +2,7 @@
 
 import { useUserSession } from "@/contexts/UserSessionContext";
 import Link from "next/link";
-import { FileCode2, LogOut, PlusCircle, User } from 'lucide-react'
+import { FileCode2, LogOut, PlusCircle, User, Book, BookUser } from 'lucide-react'
 import { Button } from "./ui/Button";
 import {
   DropdownMenu,
@@ -49,10 +49,14 @@ export function UserMenu() {
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />
-
+        <DropdownMenuItem asChild>
+          <Link href={"/users/dashboard"}>
+            <User className="size-4" /> My Dashboard
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={"/profile"}>
-            <User className="size-4" /> Profile
+            <BookUser className="size-4" /> My Profile
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
