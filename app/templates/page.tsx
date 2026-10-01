@@ -10,7 +10,7 @@ import { useListSearch } from '@/lib/useListSearch'
 import { useState } from 'react'
 
 interface TemplateListResponse {
-  templates: TemplateResponse[]
+  data: TemplateResponse[]
   pagination?: {
     totalSize?: number
     totalPages?: number
@@ -28,7 +28,7 @@ export default function TemplatesPage() {
     { notOkMessage: 'Failed to fetch templates' },
   )
 
-  const results = data?.templates ?? []
+  const results = data?.data ?? []
   const totalResults = data?.pagination?.totalSize ?? 0
   const totalPages = data?.pagination?.totalPages ?? 1
 

@@ -9,7 +9,7 @@ import { useApiGet } from '@/lib/useApiGet'
 import { useListSearch } from '@/lib/useListSearch'
 
 interface BlogListResponse {
-  blogs: BlogResponse[]
+  data: BlogResponse[]
   pagination?: {
     totalSize?: number
     totalPages?: number
@@ -24,7 +24,7 @@ export default function BlogPage() {
     { notOkMessage: 'Failed to fetch blog posts' },
   )
 
-  const results = data?.blogs ?? []
+  const results = data?.data ?? []
   const totalResults = data?.pagination?.totalSize ?? 0
   const totalPages = data?.pagination?.totalPages ?? 1
 
@@ -33,7 +33,7 @@ export default function BlogPage() {
       prev
         ? {
             ...prev,
-            blogs: prev.blogs.map((post) =>
+            data: prev.data.map((post) =>
               post.id === updated.id ? updated : post,
             ),
           }
