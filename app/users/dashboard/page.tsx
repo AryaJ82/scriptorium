@@ -48,14 +48,13 @@ type DashboardData = {
   }>
 }
 
-const tabs = ['Overview', 'Templates', 'Blog posts', 'Comments', 'Saved templates'] as const
-
-type Tab = (typeof tabs)[number]
+const tabs = ["Overview", "Templates", "Blog posts", "Comments", "Saved templates"] as const;
+type Tab = typeof tabs[number];
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const { session, authFetch } = useUserSession()
-  const [tab, setTab] = useState<Tab>('Overview')
+  const router = useRouter();
+  const { session, sessionReady, authFetch } = useUserSession();
+  const [tab, setTab] = useState<Tab>("Overview");
 
   const { data, error, loading: isLoading, refetch: mutate } = useApiGet<DashboardData>(
     session.isAuthenticated && session.id ? `/api/users/${session.id}/dashboard` : null,
@@ -63,12 +62,11 @@ export default function DashboardPage() {
   )
 
   useEffect(() => {
-    if (!session.isAuthenticated) {
-      router.replace('/users/login')
-    }
-  }, [session.isAuthenticated, router])
+    if (sessionReady && !session.isAuthenticated) router.replace("/users/login");
+  }, [sessionReady, session.isAuthenticated, router]);
 
-  if (!session.isAuthenticated) return null
+  if (!sessionReady) return <main className="mx-auto max-w-6xl px-4 py-10"><div className="h-40 animate-pulse rounded-2xl bg-muted" /></main>;
+  if (!session.isAuthenticated) return null;
 
   if (isLoading) {
     return (

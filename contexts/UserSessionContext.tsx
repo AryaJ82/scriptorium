@@ -9,6 +9,7 @@ import {
     useMemo,
     useReducer,
     useRef,
+    useState,
 } from "react";
 
 const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "localhost:3000";
@@ -32,6 +33,7 @@ interface UserSessionContextValue {
     login: (credentials: { username: string; password: string }) => Promise<Response>;
     logout: () => Promise<void>;
     authFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+    sessionReady: boolean;
 }
 
 type SessionAction = { type: "LOGOUT" } | { type: "LOGIN"; payload: { id: string; username: string; avatarUrl: string; role: "ADMIN" | "USER" } };
@@ -51,7 +53,11 @@ const UserSessionContext = createContext<UserSessionContextValue | undefined>(un
 export function UserSessionProvider({ children }: { children: React.ReactNode }) {
     const refreshPromiseRef = useRef<Promise<Response> | null>(null); // Ref to prevent multiple simultaneous refreshes
     const [session, dispatch] = useReducer(sessionReducer, initialState);
+    const [sessionReady, setSessionReady] = useState(false);
     const isAuthenticatedRef = useRef(false);
+    const sessionReadyRef = useRef(false);
+    const sessionReadyPromiseRef = useRef<Promise<void> | null>(null);
+
 
     // ------------------- Token Refresh Logic. Note: only refreshes token, does not update session
     const doRefresh = useCallback(async (): Promise<Response> => {
@@ -88,9 +94,10 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     const authFetch = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
             try {
-                if (!isAuthenticatedRef.current) {
-                    return Response.json({ data: null, error: "Not authenticated" }, { status: 401 });
+                if (!sessionReadyRef.current && sessionReadyPromiseRef.current) {
+                    await sessionReadyPromiseRef.current;
                 }
+
                 const headers = new Headers(init?.headers);
                 const requestInit: RequestInit = {
                     ...init,
@@ -197,29 +204,40 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
             login,
             logout,
             authFetch,
+            sessionReady,
         }),
-        [session, login, logout, authFetch],
+        [session, login, logout, authFetch, sessionReady],
     );
 
     useEffect(() => { // Attempt to refresh on initial load to populate session if possible
         let isActive = true;
-        refreshAccessToken().then(async (response) => {
-            if (!response.ok || !isActive) {
-                return;
-            }
-            const { data } = await response.json();
-            dispatch({
-                type: "LOGIN",
-                payload: {
-                    id: data.id,
-                    username: data.username,
-                    avatarUrl: data.avatarUrl ?? null,
-                    role: data.role,
+        const initialization = refreshAccessToken()
+            .then(async (response) => {
+                if (!response.ok || !isActive) return;
+                const { data } = await response.json();
+                dispatch({
+                    type: "LOGIN",
+                    payload: {
+                        id: data.id,
+                        username: data.username,
+                        avatarUrl: data.avatarUrl ?? null,
+                        role: data.role,
+                    }
+                });
+            })
+            .catch(() => undefined)
+            .finally(() => {
+                if (isActive) {
+                    sessionReadyRef.current = true;
+                    setSessionReady(true);
                 }
             });
 
-        });
-        return () => { isActive = false; }
+        sessionReadyPromiseRef.current = initialization;
+        return () => {
+            isActive = false;
+            sessionReadyPromiseRef.current = null;
+        };
     }, [refreshAccessToken]);
 
     useEffect(() => { // Keep ref updated to prevent multiple simultaneous refresh attempts
@@ -242,3 +260,4 @@ export function useUserSession() {
 
     return context;
 }
+
