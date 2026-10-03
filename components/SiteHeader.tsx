@@ -1,3 +1,6 @@
+
+    
+  
 'use client'
 
 import { useUserSession } from "@/contexts/UserSessionContext";
@@ -20,10 +23,9 @@ const NAV = [
 export function SiteHeader() {
     const pathname = usePathname();
     const { session } = useUserSession();
-    // const isAdmin = session.isAuthenticated && session.role === "ADMIN"
 
-    //const links = isAdmin ? [...NAV, { href: '/admin', label: 'Moderation' }] : NAV
-    const links = NAV;
+    const isAdmin = session.isAuthenticated && session.role === 'ADMIN'
+    const links = isAdmin ? [...NAV, { href: '/admin/moderation', label: 'Moderation' }] : NAV;
     return (
         <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
             <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
