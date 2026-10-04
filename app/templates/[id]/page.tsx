@@ -5,7 +5,8 @@ import { useUserSession } from "@/contexts/UserSessionContext";
 import { useCallback, useState } from "react";
 import { useApiGet } from "@/lib/useApiGet";
 
-import type { TemplateResponse } from "@/utils/interfaces";
+import type { BlogResponse, TemplateResponse } from "@/utils/interfaces";
+import BlogCard from "@/components/BlogCard";
 import DescriptionSection from "@/components/TemplateDescription";
 
 import TemplateHeader from "@/components/TemplateHeader";
@@ -42,6 +43,11 @@ export default function TemplatePage() {
             transform: (body) => body.data ?? null,
             notOkMessage: "Unable to load template.",
         },
+    );
+
+    const { data: linkedPosts, loading: linkedPostsLoading, error: linkedPostsError } = useApiGet<{ data?: BlogResponse[] | null; error?: string | null }, BlogResponse[]>(
+        id ? `${baseUrl}/api/blogs?linked_template_id=${encodeURIComponent(String(id))}&page=1&pageSize=20&sortBy=createdAt&sortOrder=desc` : null,
+        { transform: (body) => body.data ?? [], notOkMessage: "Unable to load linked blog posts." },
     );
 
     // --- Update / Delete / fork state ---
@@ -233,8 +239,27 @@ export default function TemplatePage() {
                         onSave={(new_desc: string) => updateTemplate({ description: new_desc })}
                     />
                 )}
+                <section className="mt-6 border-t border-border pt-6" aria-labelledby="linked-posts-heading">
+                    <div className="mb-4 flex items-end justify-between gap-4">
+                        <div>
+                            <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">From the blog</p>
+                            <h2 id="linked-posts-heading" className="mt-1 font-serif text-2xl font-semibold tracking-tight">Posts using this template</h2>
+                        </div>
+                        {!linkedPostsLoading && <span className="text-sm text-muted-foreground">{linkedPosts?.length ?? 0} {linkedPosts?.length === 1 ? "post" : "posts"}</span>}
+                    </div>
+                    {linkedPostsLoading ? (
+                        <div className="grid gap-4" aria-label="Loading linked posts">
+                            {[1, 2].map((item) => <div key={item} className="h-28 animate-pulse rounded-lg border border-border bg-muted/40" />)}
+                        </div>
+                    ) : linkedPostsError ? (
+                        <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">{linkedPostsError}</p>
+                    ) : linkedPosts && linkedPosts.length > 0 ? (
+                        <div className="grid gap-4">{linkedPosts.map((post) => <BlogCard key={post.id} post={post} updatePost={() => { }} />)}</div>
+                    ) : (
+                        <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">No blog posts link to this template yet.</p>
+                    )}
+                </section>
             </div>
-
         </div>
     );
 }
