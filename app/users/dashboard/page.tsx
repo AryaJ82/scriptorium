@@ -55,11 +55,16 @@ export default function DashboardPage() {
   const router = useRouter();
   const { session, sessionReady, authFetch } = useUserSession();
   const [tab, setTab] = useState<Tab>("Overview");
+  const [search, setSearch] = useState("");
+  const dashboardUrl = session.isAuthenticated && session.id
+    ? `/api/users/${session.id}/dashboard${search.trim() ? `?q=${encodeURIComponent(search.trim())}` : ""}`
+    : null;
+  const { data: rawData, error, loading: isLoading, refetch: mutate } = useApiGet<{ data: DashboardData }, { data: DashboardData }>(dashboardUrl, {
+    fetcher: authFetch,
+    notOkMessage: "Unable to load dashboard",
+  });
 
-  const { data, error, loading: isLoading, refetch: mutate } = useApiGet<DashboardData>(
-    session.isAuthenticated && session.id ? `/api/users/${session.id}/dashboard` : null,
-    { fetcher: authFetch, notOkMessage: 'Unable to load dashboard' },
-  )
+  const data = rawData?.data;
 
   useEffect(() => {
     if (sessionReady && !session.isAuthenticated) router.replace("/users/login");
@@ -85,6 +90,7 @@ export default function DashboardPage() {
       </main>
     )
   }
+
 
   const collections =
     tab === 'Templates'
@@ -116,9 +122,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => mutate()}>
-            Refresh
-          </Button>
           <Button asChild>
             <Link href="/profile">Edit profile</Link>
           </Button>
@@ -134,16 +137,37 @@ export default function DashboardPage() {
             key={item}
             type="button"
             onClick={() => setTab(item)}
-            className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium ${
-              tab === item
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
+            className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium ${tab === item
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
           >
             {item}
           </button>
         ))}
       </nav>
+
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <label htmlFor="dashboard-search" className="text-sm font-medium">
+          Search {tab === 'Overview' ? 'your content' : tab.toLowerCase()}
+        </label>
+        <div className="flex w-full gap-2 sm:max-w-md">
+          <input
+            id="dashboard-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by title or description"
+            className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          />
+          {search && (
+            <Button variant="ghost" onClick={() => setSearch('')}>
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
@@ -164,6 +188,8 @@ export default function DashboardPage() {
         ))}
       </section>
 
+      {search && <p className="text-sm text-muted-foreground">Showing matches for “{search}”.</p>}
+
       {tab === 'Overview' ? (
         <section className="grid gap-4 md:grid-cols-2">
           <Collection
@@ -182,7 +208,6 @@ export default function DashboardPage() {
             ))}
             empty="Create your first template to see it here."
           />
-
           <Collection
             title="Recent blog posts"
             items={data.blogs.slice(0, 4).map((item) => (
@@ -192,9 +217,7 @@ export default function DashboardPage() {
                 className="rounded-lg border border-border p-4 hover:bg-muted/50"
               >
                 <p className="font-medium">{item.title}</p>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {item.content}
-                </p>
+                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.content}</p>
               </Link>
             ))}
             empty="Publish your first post to see it here."
@@ -207,13 +230,8 @@ export default function DashboardPage() {
             title=""
             empty={`No ${tab.toLowerCase()} yet.`}
             items={collections.map((item: any) => (
-              <div
-                key={item.id}
-                className="rounded-lg border border-border bg-card p-4"
-              >
-                <p className="font-medium">
-                  {item.title ?? item.blogPost?.title ?? 'Comment'}
-                </p>
+              <div key={item.id} className="rounded-lg border border-border bg-card p-4">
+                <p className="font-medium">{item.title ?? item.blogPost?.title ?? 'Comment'}</p>
                 <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
                   {item.content ?? item.description ?? `By ${item.author?.username ?? 'you'}`}
                 </p>
@@ -225,6 +243,7 @@ export default function DashboardPage() {
     </main>
   )
 }
+
 
 function Collection({
   title,

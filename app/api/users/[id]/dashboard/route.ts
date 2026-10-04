@@ -1,101 +1,110 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/utils/client";
-import { withAuth } from "@/utils/middlewareAuth";
-import type { AuthenticatedRequest } from "@/utils/middlewareAuth";
-import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    return withAuth(async (request: AuthenticatedRequest) => {
-        const { user } = request;
-        const { id } = await params;
+import prisma from '@/utils/client'
+import { withAuth } from '@/utils/middlewareAuth'
+import type { AuthenticatedRequest } from '@/utils/middlewareAuth'
+import { apiError, apiSuccess } from '@/utils/apiResponse'
 
-        if (!user || user.id !== id) {
-            return apiError("Unauthorized", 401)
-        }
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+	return withAuth(async (request: AuthenticatedRequest) => {
+		const { user } = request
+		const { id } = await params
 
-        try {
-            const [profile, templates, blogs, comments, savedTemplates] = await Promise.all([
-                prisma.user.findUnique({
-                    where: { id: user.id },
-                    select: {
-                        id: true,
-                        username: true,
-                        avatarUrl: true,
-                        role: true,
-                        createdAt: true,
-                    },
-                }),
-                prisma.template.findMany({
-                    where: { authorId: user.id },
-                    orderBy: { updatedAt: "desc" },
-                    take: 12,
-                    select: {
-                        id: true,
-                        title: true,
-                        description: true,
-                        language: true,
-                        updatedAt: true,
-                        tags: {
-                            select: { name: true },
-                        },
-                    },
-                }),
-                prisma.blogPost.findMany({
-                    where: { authorId: user.id },
-                    orderBy: { updatedAt: "desc" },
-                    take: 12,
-                    select: {
-                        id: true,
-                        title: true,
-                        content: true,
-                        updatedAt: true,
-                        tags: {
-                            select: { name: true },
-                        },
-                    },
-                }),
-                prisma.comment.findMany({
-                    where: { authorId: user.id },
-                    orderBy: { updatedAt: "desc" },
-                    take: 12,
-                    select: {
-                        id: true,
-                        content: true,
-                        createdAt: true,
-                        updatedAt: true,
-                        blogPost: {
-                            select: { id: true, title: true },
-                        },
-                    },
-                }),
-                prisma.template.findMany({
-                    where: { savers: { some: { id: user.id } } },
-                    orderBy: { updatedAt: "desc" },
-                    take: 12,
-                    select: {
-                        id: true,
-                        title: true,
-                        description: true,
-                        language: true,
-                        updatedAt: true,
-                        author: {
-                            select: { username: true },
-                        },
-                        tags: {
-                            select: { name: true },
-                        },
-                    },
-                }),
-            ]);
+		if (!user || user.id !== id) {
+			return apiError('Unauthorized', 401)
+		}
 
-            return apiSuccess({ profile, templates, blogs, comments, savedTemplates });
-        } catch (error) {
-            console.error("Error fetching user dashboard", error);
-            return apiError("Unable to load dashboard", 500);
-        }
-    })(request);
+		const query = request.nextUrl.searchParams.get('q')?.trim() ?? ''
+		const textFilter = query ? { contains: query } : undefined
+
+		try {
+			const [profile, templates, blogs, comments, savedTemplates] = await Promise.all([
+				prisma.user.findUnique({
+					where: { id: user.id },
+					select: {
+						id: true,
+						username: true,
+						avatarUrl: true,
+						role: true,
+						createdAt: true,
+					},
+				}),
+				prisma.template.findMany({
+					where: {
+						authorId: user.id,
+						...(textFilter && {
+							OR: [{ title: textFilter }, { description: textFilter }],
+						}),
+					},
+					orderBy: { updatedAt: 'desc' },
+					take: 12,
+					select: {
+						id: true,
+						title: true,
+						description: true,
+						language: true,
+						updatedAt: true,
+						tags: { select: { name: true } },
+					},
+				}),
+				prisma.blogPost.findMany({
+					where: {
+						authorId: user.id,
+						...(textFilter && {
+							OR: [{ title: textFilter }, { content: textFilter }],
+						}),
+					},
+					orderBy: { updatedAt: 'desc' },
+					take: 12,
+					select: {
+						id: true,
+						title: true,
+						content: true,
+						updatedAt: true,
+						tags: { select: { name: true } },
+					},
+				}),
+				prisma.comment.findMany({
+					where: {
+						authorId: user.id,
+						...(textFilter && { content: textFilter }),
+					},
+					orderBy: { updatedAt: 'desc' },
+					take: 12,
+					select: {
+						id: true,
+						content: true,
+						createdAt: true,
+						updatedAt: true,
+						blogPost: { select: { id: true, title: true } },
+					},
+				}),
+				prisma.template.findMany({
+					where: {
+						savers: { some: { id: user.id } },
+						...(textFilter && {
+							OR: [{ title: textFilter }, { description: textFilter }],
+						}),
+					},
+					orderBy: { updatedAt: 'desc' },
+					take: 12,
+					select: {
+						id: true,
+						title: true,
+						description: true,
+						language: true,
+						updatedAt: true,
+						author: { select: { username: true } },
+						tags: { select: { name: true } },
+					},
+				}),
+			])
+
+			return apiSuccess({ profile, templates, blogs, comments, savedTemplates })
+		} catch (error) {
+			console.error('Error fetching user dashboard', error)
+			return apiError('Unable to load dashboard', 500)
+		}
+	})(request)
 }
 
