@@ -4,22 +4,14 @@ import { FileSearch, Loader } from 'lucide-react'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/Empty'
 import BlogPostCard from '@/components/BlogCard'
 import { SearchFilters, SearchPagination } from '@/components/SearchFilters'
-import { BlogResponse } from '@/utils/interfaces'
+import { BlogResponse, ApiResponse } from '@/utils/interfaces'
 import { useApiGet } from '@/lib/useApiGet'
 import { useListSearch } from '@/lib/useListSearch'
-
-interface BlogListResponse {
-  data: BlogResponse[]
-  pagination?: {
-    totalSize?: number
-    totalPages?: number
-  }
-}
 
 export default function BlogPage() {
   const search = useListSearch()
 
-  const { data, loading, error, setData } = useApiGet<BlogListResponse>(
+  const { data, loading, error, setData } = useApiGet<ApiResponse<BlogResponse[]>>(
     `/api/blogs?${search.buildParams().toString()}`,
     { notOkMessage: 'Failed to fetch blog posts' },
   )
@@ -33,7 +25,7 @@ export default function BlogPage() {
       prev
         ? {
             ...prev,
-            data: prev.data.map((post) =>
+            data: (prev.data ?? []).map((post) =>
               post.id === updated.id ? updated : post,
             ),
           }

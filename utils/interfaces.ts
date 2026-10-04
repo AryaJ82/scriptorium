@@ -129,7 +129,7 @@ export function commentResponseInclude({ currentUserId, }: { currentUserId?: str
     }
 };
 // ----------------------- Response interfaces
-interface Author {
+export interface Author {
     id: string;
     username: string;
     avatarUrl: string;

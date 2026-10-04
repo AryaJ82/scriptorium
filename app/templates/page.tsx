@@ -4,24 +4,17 @@ import { FileSearch, Loader } from 'lucide-react'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/Empty'
 import { TemplateCard } from '@/components/TemplateCard'
 import { SearchFilters, SearchPagination } from '@/components/SearchFilters'
-import { TemplateResponse } from '@/utils/interfaces'
+import { TemplateResponse, ApiResponse } from '@/utils/interfaces'
 import { useApiGet } from '@/lib/useApiGet'
 import { useListSearch } from '@/lib/useListSearch'
 import { useState } from 'react'
 
-interface TemplateListResponse {
-  data: TemplateResponse[]
-  pagination?: {
-    totalSize?: number
-    totalPages?: number
-  }
-}
 
 export default function TemplatesPage() {
   const search = useListSearch()
   const [language, setLanguage] = useState('all')
 
-  const { data, loading, error } = useApiGet<TemplateListResponse>(
+  const { data, loading, error } = useApiGet<ApiResponse<TemplateResponse[]>>(
     `/api/templates?${search
       .buildParams({ language: language === 'all' ? undefined : language })
       .toString()}`,

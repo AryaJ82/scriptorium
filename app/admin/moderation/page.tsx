@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 
+import type {BlogResponse, CommentResponse} from "@/utils/interfaces";
 import { Button } from "@/components/ui/Button";
 import { useUserSession } from "@/contexts/UserSessionContext";
 
@@ -12,7 +13,7 @@ type BlogReport = {
   title: string;
   content: string;
   author: { username: string };
-  blogPost: { id: number; title: string; isHidden: boolean };
+  blogPost: BlogResponse;
 };
 
 type CommentReport = {
@@ -20,12 +21,7 @@ type CommentReport = {
   title: string;
   content: string;
   author: { username: string };
-  comment: {
-    id: number;
-    content: string;
-    isHidden: boolean;
-    blogPostId: number;
-  };
+  comment: CommentResponse;
 };
 
 type ReportData = {

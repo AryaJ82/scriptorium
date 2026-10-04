@@ -3,49 +3,18 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUserSession } from '@/contexts/UserSessionContext'
+import type { Author, BlogResponse, TemplateResponse, CommentResponse, ApiResponse } from "@/utils/interfaces";
 import { DisplayAvatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
 import { useEffect, useState } from 'react'
 import { useApiGet } from '@/lib/useApiGet'
 
 type DashboardData = {
-  profile: {
-    id: string
-    username: string
-    avatarUrl?: string | null
-    role?: string
-    createdAt: string
-  }
-  templates: Array<{
-    id: string
-    title: string
-    description?: string
-    language: string
-    updatedAt: string
-    tags: Array<{ name: string }>
-  }>
-  blogs: Array<{
-    id: number
-    title: string
-    content: string
-    updatedAt: string
-    tags: Array<{ name: string }>
-  }>
-  comments: Array<{
-    id: number
-    content: string
-    updatedAt: string
-    blogPost: { id: number; title: string }
-  }>
-  savedTemplates: Array<{
-    id: string
-    title: string
-    description?: string
-    language: string
-    updatedAt: string
-    author: { username: string }
-    tags: Array<{ name: string }>
-  }>
+  profile: Author
+  templates: TemplateResponse[]
+  blogs: BlogResponse[]
+  comments: CommentResponse[]
+  savedTemplates: TemplateResponse[]
 }
 
 const tabs = ["Overview", "Templates", "Blog posts", "Comments", "Saved templates"] as const;
@@ -59,7 +28,7 @@ export default function DashboardPage() {
   const dashboardUrl = session.isAuthenticated && session.id
     ? `/api/users/${session.id}/dashboard${search.trim() ? `?q=${encodeURIComponent(search.trim())}` : ""}`
     : null;
-  const { data: rawData, error, loading: isLoading, refetch: mutate } = useApiGet<{ data: DashboardData }, { data: DashboardData }>(dashboardUrl, {
+  const { data: rawData, error, loading: isLoading} = useApiGet<ApiResponse<DashboardData>>(dashboardUrl, {
     fetcher: authFetch,
     notOkMessage: "Unable to load dashboard",
   });
@@ -229,11 +198,17 @@ export default function DashboardPage() {
           <Collection
             title=""
             empty={`No ${tab.toLowerCase()} yet.`}
-            items={collections.map((item: any) => (
+            items={collections.map((item: TemplateResponse | BlogResponse | CommentResponse) => (
               <div key={item.id} className="rounded-lg border border-border bg-card p-4">
-                <p className="font-medium">{item.title ?? item.blogPost?.title ?? 'Comment'}</p>
+                <p className="font-medium">
+                  {('title' in item ? item.title : item.blogPost?.title) ?? 'Comment'}
+                </p>
                 <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
-                  {item.content ?? item.description ?? `By ${item.author?.username ?? 'you'}`}
+                  {'content' in item
+                    ? item.content
+                    : 'description' in item
+                      ? item.description
+                      : `By ${'author' in item ? item.author?.username ?? 'you' : 'you'}`}
                 </p>
               </div>
             ))}
