@@ -64,7 +64,7 @@ export default function BlogCommentSection({
         }).finally(() => {
             setReplySubmitting(false);
         });
-    }, [blog.id, replyDraft, session, authFetch]);
+    }, [blog.id, replyDraft, session, authFetch, prepend]);
 
     return (
         <section className="mt-8 flex flex-col gap-6">
