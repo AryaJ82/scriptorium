@@ -73,7 +73,7 @@ export default function BlogPage() {
             pageSize={search.pageSize}
             totalResults={totalResults}
             resultCount={results.length}
-            noun="post"
+            noun={`post${(results.length === 1 ? '' : 's')}`}
             onPageChange={search.handlePageChange}
             onPageSizeChange={search.handlePageSizeChange}
           />

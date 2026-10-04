@@ -76,7 +76,7 @@ export default function TemplatesPage() {
             pageSize={search.pageSize}
             totalResults={totalResults}
             resultCount={results.length}
-            noun="template"
+            noun={`template${(results.length === 1 ? '' : 's')}`}
             onPageChange={search.handlePageChange}
             onPageSizeChange={search.handlePageSizeChange}
           />
