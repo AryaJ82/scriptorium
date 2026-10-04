@@ -73,7 +73,7 @@ export default function DashboardPage() {
   if (!sessionReady) return <main className="mx-auto max-w-6xl px-4 py-10"><div className="h-40 animate-pulse rounded-2xl bg-muted" /></main>;
   if (!session.isAuthenticated) return null;
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-10">
         <div className="h-40 animate-pulse rounded-2xl bg-muted" />
@@ -81,7 +81,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-10">
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
