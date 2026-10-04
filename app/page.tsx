@@ -13,8 +13,9 @@ import {
 import { Button } from '@/components/ui/Button'
 import { TemplateCard } from '@/components/TemplateCard'
 import BlogCard from '@/components/BlogCard'
-import { useEffect, useState } from 'react'
 import { BlogResponse, TemplateResponse } from '@/utils/interfaces'
+import { useApiGet } from '@/lib/useApiGet'
+import { GettingStarted } from '@/components/GettingStarted'
 
 
 const FEATURES = [
@@ -42,79 +43,16 @@ const FEATURES = [
 
 export default function HomePage() {
 
-  const [templates, setTemplates] = useState<TemplateResponse[]>([]);
-  const [templatesLoading, setTemplatesLoading] = useState<boolean>(true);
-  const [templatesError, setTemplatesError] = useState<string | null>(null);
-
-  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
-  const [blogsLoading, setBlogsLoading] = useState<boolean>(true);
-  const [blogsError, setBlogsError] = useState<string | null>(null);
-
-
-  useEffect(() => {
-
-    // Build query params
-    const params = new URLSearchParams();
-
-    params.append('sortBy', 'createdAt');
-    params.append('sortOrder', 'desc');
-    params.append('page', '1');
-    params.append('pageSize', '4');
-
-    const controller = new AbortController();
-
-    fetch(`/api/templates?${params.toString()}`,
-      {
-        method: 'GET',
-        signal: controller.signal,
-      })
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Failed to fetch templates');
-        const data = await res.json();
-        setTemplates(data.data ?? []);
-      })
-      .catch(err => {
-        if (controller.signal.aborted) return;
-        setTemplatesError(err instanceof Error ? err.message : 'Failed to fetch templates. Please try again later.');
-      }).finally(() => {
-        setTemplatesLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [])
-
-  
-  useEffect(() => {
-
-    // Build query params
-    const params = new URLSearchParams();
-
-    params.append('sortBy', 'createdAt');
-    params.append('sortOrder', 'desc');
-    params.append('page', '1');
-    params.append('pageSize', '3');
-
-    const controller = new AbortController();
-
-    fetch(`/api/blogs?${params.toString()}`,
-      {
-        method: 'GET',
-        signal: controller.signal,
-      })
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Failed to fetch blogs');
-        const data = await res.json();
-        setBlogs(data.data ?? []);
-      })
-      .catch(err => {
-        if (controller.signal.aborted) return;
-        setBlogsError(err instanceof Error ? err.message : 'Failed to fetch blogs. Please try again later.');
-      }).finally(() => {
-        setBlogsLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [])
+  const { data: templatesData, loading: templatesLoading, error: templatesError } = useApiGet<{ data?: TemplateResponse[]; error?: string | null }, TemplateResponse[]>('/api/templates?sortBy=createdAt&sortOrder=desc&page=1&pageSize=4', {
+    transform: (body) => body.data ?? [],
+    notOkMessage: 'Failed to fetch templates',
+  });
+  const { data: blogsData, loading: blogsLoading, error: blogsError } = useApiGet<{ data?: BlogResponse[]; error?: string | null }, BlogResponse[]>('/api/blogs?sortBy=createdAt&sortOrder=desc&page=1&pageSize=3', {
+    transform: (body) => body.data ?? [],
+    notOkMessage: 'Failed to fetch blogs',
+  });
+  const templates = templatesData ?? [];
+  const blogs = blogsData ?? [];
 
 
   return (
@@ -201,6 +139,8 @@ print([fib(i) for i in range(10)])`}
         </div>
       </section>
 
+      <GettingStarted />
+
       {/* Featured templates */}
       <section className="border-t border-border bg-secondary/30">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
@@ -277,3 +217,4 @@ print([fib(i) for i in range(10)])`}
     </>
   )
 }
+
