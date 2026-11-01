@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from "path";
 import Docker from 'dockerode';
 import { PassThrough } from 'stream';
-import type { ExecutionRequestPOSTBody } from '@/utils/interfaces'
 import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionValidation";
 
 import { LANG_CONFIG } from "@/utils/interfaces";
@@ -21,17 +20,17 @@ const EXECUTION_LIMITS = {
 const docker = new Docker();
 
 export async function POST(request: NextRequest) {
-    let body: ExecutionRequestPOSTBody;
+    let body: unknown;
     try {
         body = await request.json();
     } catch {
         return apiError("Invalid JSON request body", 400);
     }
-    const error = validateExecutionPOSTBody(body);
-    if (error ){
-        return apiError(error.message, error.status);
+    const validation = validateExecutionPOSTBody(body);
+    if (!validation.success) {
+        return apiError(validation.error.message, validation.error.status);
     }
-    const { language, code, stdin } = body;
+    const { language, code, stdin } = validation.data;
 
     const { fileName, image, cmd } = LANG_CONFIG[language];
 

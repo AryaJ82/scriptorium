@@ -15,10 +15,10 @@ export function useExecution(baseUrl: string) {
         setStderr('');
         setRunError(null);
 
-        const error = validateExecutionPOSTBody({ code, language, stdin });
-        if (error) {
+        const validation = validateExecutionPOSTBody({ code, language, stdin });
+        if (!validation.success) {
             setStatus('error');
-            setRunError(error.message);
+            setRunError(validation.error.message);
             return;
         }
         try {

@@ -1,19 +1,50 @@
 
-import { ExecutionRequestPOSTBody, LANG_CONFIG, ValidationError } from "../interfaces";
+import type { ExecutionRequestPOSTBody, ValidationError } from "../interfaces";
+import { LANG_CONFIG } from "../interfaces";
 import { createError } from "./generalValidation";
 
 import { MAX_CODE_SIZE, MAX_STDIN_SIZE } from "@/utils/inputValidation/generalValidation";
 
-export function validateExecutionPOSTBody(body: ExecutionRequestPOSTBody): ValidationError | null {
-    const { language, code, stdin } = body;
-    if (!language || !(language in LANG_CONFIG)) {
-        return createError("Unsupported language");
-    } else if (!code) {
-        return createError("Code is required");
-    } else if (Buffer.byteLength(code) > MAX_CODE_SIZE) {
-        return createError("Code exceeds maximum size");
-    } else if (stdin && Buffer.byteLength(stdin) > MAX_STDIN_SIZE) {
-        return createError("Stdin exceeds maximum size");
+export type ExecutionRequestValidationResult =
+    | { success: true; data: ExecutionRequestPOSTBody }
+    | { success: false; error: ValidationError };
+
+function isSupportedLanguage(value: string): value is ExecutionRequestPOSTBody["language"] {
+    return Object.hasOwn(LANG_CONFIG, value);
+}
+
+export function validateExecutionPOSTBody(body: unknown): ExecutionRequestValidationResult {
+    if (typeof body !== "object" || body === null || Array.isArray(body)) {
+        return { success: false, error: createError("Request body must be an object") };
     }
-    return null;
+
+    const candidate = body as Record<string, unknown>;
+    const { language, code, stdin } = candidate;
+    if (typeof language !== "string" || !isSupportedLanguage(language)) {
+        return { success: false, error: createError("Unsupported language") };
+    }
+    if (typeof code !== "string") {
+        return { success: false, error: createError("Code must be a string") };
+    }
+    if (!code) {
+        return { success: false, error: createError("Code is required") };
+    }
+    if (Buffer.byteLength(code) > MAX_CODE_SIZE) {
+        return { success: false, error: createError("Code exceeds maximum size") };
+    }
+    if (stdin !== undefined && typeof stdin !== "string") {
+        return { success: false, error: createError("Stdin must be a string") };
+    }
+    if (typeof stdin === "string" && Buffer.byteLength(stdin) > MAX_STDIN_SIZE) {
+        return { success: false, error: createError("Stdin exceeds maximum size") };
+    }
+
+    return {
+        success: true,
+        data: {
+            language,
+            code,
+            ...(stdin !== undefined ? { stdin } : {}),
+        },
+    };
 }
