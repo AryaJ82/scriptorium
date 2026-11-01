@@ -77,6 +77,7 @@ private; it is ignored by Git.
 | `EXECUTION_TIMELIMIT_MS` | No | Maximum execution time; defaults to `10000` ms. |
 | `MEMORY_LIMIT_MB` | No | Container memory limit; defaults to `128` MB. |
 | `CPU_LIMIT` | No | Container CPU quota; defaults to `0.5` CPU. |
+| `EXECUTION_PIDS_LIMIT` | No | Maximum processes per execution container; defaults to `64`. |
 | `MAX_CODE_SIZE_KB` | No | Maximum submitted code size; defaults to `64` KB. |
 | `MAX_STDIN_SIZE_KB` | No | Maximum submitted stdin size; defaults to `64` KB. |
 | `MAX_OUTPUT_SIZE_KB` | No | Maximum captured stdout size; defaults to `64` KB. |

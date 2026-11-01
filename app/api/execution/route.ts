@@ -9,13 +9,14 @@ import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionVali
 
 import { LANG_CONFIG } from "@/utils/interfaces";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
-
-const TIME_LIMIT = !isNaN(Number(process.env.EXECUTION_TIMELIMIT_MS)) ? Number(process.env.EXECUTION_TIMELIMIT_MS) : 10000; // 10 seconds
-const MEMORY_LIMIT = !isNaN(Number(process.env.MEMORY_LIMIT_MB)) ? Number(process.env.MEMORY_LIMIT_MB) * 1024 * 1024 : 128 * 1024 * 1024; // 128 MB
-const CPU_LIMIT = !isNaN(Number(process.env.CPU_LIMIT)) ? Number(process.env.CPU_LIMIT) : 0.5; // 0.5 CPU
-
-
-const MAX_OUTPUT_SIZE = !isNaN(Number(process.env.MAX_OUTPUT_SIZE_KB)) ? Number(process.env.MAX_OUTPUT_SIZE_KB) * 1024 : 64 * 1024;
+import { positiveFiniteEnv, positiveIntegerEnv } from "@/utils/executionLimits";
+const EXECUTION_LIMITS = {
+    timeMs: positiveFiniteEnv("EXECUTION_TIMELIMIT_MS", 10_000),
+    memoryBytes: positiveFiniteEnv("MEMORY_LIMIT_MB", 128, 1024 * 1024, true),
+    cpuQuota: positiveFiniteEnv("CPU_LIMIT", 0.5, 100_000, true),
+    pids: positiveIntegerEnv("EXECUTION_PIDS_LIMIT", 64),
+    outputBytes: positiveFiniteEnv("MAX_OUTPUT_SIZE_KB", 64, 1024),
+};
 
 const docker = new Docker();
 
@@ -67,9 +68,10 @@ export async function POST(request: NextRequest) {
             User: '1000',
             HostConfig: {
                 Binds: [`${workDir}:/code:ro`],
-                Memory: MEMORY_LIMIT,
-                CpuQuota: CPU_LIMIT * 100_000,   // 1 CPU = 100% of 100ms period
+                Memory: EXECUTION_LIMITS.memoryBytes,
+                CpuQuota: EXECUTION_LIMITS.cpuQuota,   // 1 CPU = 100% of 100ms period
                 CpuPeriod: 100_000,
+                PidsLimit: EXECUTION_LIMITS.pids,
                 SecurityOpt: ['no-new-privileges'],
                 ReadonlyRootfs: true,
                 Tmpfs: { '/tmp': 'size=64m,exec' },
@@ -101,7 +103,7 @@ export async function POST(request: NextRequest) {
         });
 
         const appendOutput = (destination: 'stdout' | 'stderr', chunk: Buffer) => {
-            if (outputBytes + chunk.length > MAX_OUTPUT_SIZE) {
+            if (outputBytes + chunk.length > EXECUTION_LIMITS.outputBytes) {
                 if (!outputLimitExceeded) {
                     outputLimitExceeded = true;
                     container?.kill().catch(() => { });
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
         const exitCode = await Promise.race([
             container.wait().then((res: { StatusCode: number }) => res.StatusCode),
             new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('TIME_OUT')), TIME_LIMIT)
+                setTimeout(() => reject(new Error('TIME_OUT')), EXECUTION_LIMITS.timeMs)
             ),
             outputLimitPromise,
         ]);
