@@ -134,12 +134,12 @@ export async function POST(request: NextRequest) {
             return apiError("Execution failed due to discrepancy in required argument length. Program requested input after EOF in stdin.", 400, { stdout });
         }
 
-        return apiSuccess({ stdout, stderr, exitCode });
+        return apiSuccess({ stdout, stderr, exitCode, timedOut: false });
 
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (message === "TIME_OUT") {
-            return apiError("Execution timed out", 408, { stdout, stderr });
+            return apiSuccess({ stdout, stderr, exitCode: null, timedOut: true });
         } else if (message === "OUTPUT_LIMIT_EXCEEDED") {
             return apiError("Code output exceeded limit", 413, { stdout, stderr });
         }
