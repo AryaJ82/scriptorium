@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
 import prisma from '@/utils/client'
 import { withAuth } from '@/utils/middlewareAuth'
@@ -107,4 +107,3 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		}
 	})(request)
 }
-

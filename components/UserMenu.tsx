@@ -2,7 +2,7 @@
 
 import { useUserSession } from "@/contexts/UserSessionContext";
 import Link from "next/link";
-import { FileCode2, LogOut, PlusCircle, User, Book, BookUser } from 'lucide-react'
+import { FileCode2, LogOut, PlusCircle, User, BookUser } from 'lucide-react'
 import { Button } from "./ui/Button";
 import {
   DropdownMenu,

@@ -12,8 +12,7 @@ import {
     useState,
 } from "react";
 
-const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "localhost:3000";
-const baseUrl = `http://${rawBaseUrl.replace(/\/+$/, "")}`;
+const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
 
 export type UserSessionState =
     | { isAuthenticated: false; username: null; id: null; role: null; avatarUrl: null }
@@ -260,4 +259,3 @@ export function useUserSession() {
 
     return context;
 }
-

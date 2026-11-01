@@ -1,8 +1,20 @@
 import jwt from "jsonwebtoken"
 import { NextResponse } from "next/server";
 
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET ?? "whateverstring";
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET ?? "someotherstring";
+function requiredSecret(name: "JWT_ACCESS_SECRET" | "JWT_REFRESH_SECRET"): string {
+    const secret = process.env[name];
+    if (!secret) {
+        throw new Error(`${name} must be set to a strong, unique secret`);
+    }
+    return secret;
+}
+
+const JWT_REFRESH_SECRET = requiredSecret("JWT_REFRESH_SECRET");
+const JWT_ACCESS_SECRET = requiredSecret("JWT_ACCESS_SECRET");
+
+if (JWT_ACCESS_SECRET === JWT_REFRESH_SECRET) {
+    throw new Error("JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different");
+}
 const REFRESH_TOKEN_EXPIRY = !isNaN(Number(process.env.REFRESH_TOKEN_EXPIRY)) ? Number(process.env.REFRESH_TOKEN_EXPIRY)  *7*24*60*60 : 4*7*24*60*60; // "4 weeks"
 const ACCESS_TOKEN_EXPIRY = !isNaN(Number(process.env.ACCESS_TOKEN_EXPIRY)) ? Number(process.env.ACCESS_TOKEN_EXPIRY) *60*60 : 10*60*60; // "10 h"
 
@@ -44,7 +56,7 @@ export function setRefreshCookie(response: NextResponse, payload: { user_id: str
 export function verifyAccessToken(token: string): jwt.JwtPayload | string {
     try {
         return jwt.verify(token, JWT_ACCESS_SECRET);
-    } catch (error) {
+    } catch {
         return "";
     }
 }
@@ -52,7 +64,7 @@ export function verifyAccessToken(token: string): jwt.JwtPayload | string {
 export function verifyRefreshToken(token: string): jwt.JwtPayload | string {
     try {
         return jwt.verify(token, JWT_REFRESH_SECRET);
-    } catch (error) {
+    } catch {
         return "";
     }
 }
