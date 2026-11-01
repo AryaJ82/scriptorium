@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useUserSession } from '@/contexts/UserSessionContext'
 import { useTagEdit } from '@/lib/useTagEdit'
+import { PLAYGROUND_TEMPLATE_DRAFT_KEY } from '@/lib/playgroundDraft'
 import { Language } from '@/utils/interfaces'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/Dialog'
 import { Button } from './ui/Button'
@@ -14,16 +15,50 @@ import Textarea from './ui/Textarea'
 import Input from './ui/Input'
 import { TagBadge } from './TagBadge'
 
-interface SaveTemplateDialogueParams { children: React.ReactNode; language: Language; code?: string; stdin?: string; forkedParent?: { title: string; id: string } }
+interface SaveTemplateDialogueParams {
+    children: React.ReactNode
+    language: Language
+    code?: string
+    stdin?: string
+    forkedParent?: { title: string; id: string }
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+}
 
-export function SaveTemplateDialogue({ children, language, code, stdin, forkedParent }: SaveTemplateDialogueParams) {
+export function SaveTemplateDialogue({
+    children,
+    language,
+    code,
+    stdin,
+    forkedParent,
+    open: controlledOpen,
+    onOpenChange,
+}: SaveTemplateDialogueParams) {
     const { session, authFetch } = useUserSession()
-    const [open, setOpen] = useState(false)
+    const [internalOpen, setInternalOpen] = useState(false)
+    const isControlled = controlledOpen !== undefined
+    const open = controlledOpen ?? internalOpen
+    const setOpen = useCallback((nextOpen: boolean) => {
+        if (!isControlled) setInternalOpen(nextOpen)
+        onOpenChange?.(nextOpen)
+    }, [isControlled, onOpenChange])
     const [title, setTitle] = useState('')
     const [desc, setDesc] = useState('')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
     const { tagDraft, setTagDraft, tags, addTag, removeTag } = useTagEdit()
+
+    const preserveDraftForSignUp = () => {
+        if (session.isAuthenticated) return
+        try {
+            window.sessionStorage.setItem(
+                PLAYGROUND_TEMPLATE_DRAFT_KEY,
+                JSON.stringify({ code, stdin, language }),
+            )
+        } catch {
+            toast.error('Unable to preserve your code. Copy it before continuing to sign in.')
+        }
+    }
 
     const handleSubmit = useCallback(async (event: SubmitEvent) => {
         event.preventDefault()
@@ -41,20 +76,20 @@ export function SaveTemplateDialogue({ children, language, code, stdin, forkedPa
 
     if (!session.isAuthenticated) {
         return <Dialog open={open} onOpenChange={(nextOpen) => !loading && setOpen(nextOpen)}>
-            <DialogTrigger asChild>
+            <DialogTrigger asChild onClick={preserveDraftForSignUp}>
                 {children}
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Save your work as a template</DialogTitle>
-                    <DialogDescription>Saving templates is available to members. Create a free account to organize and share your code.</DialogDescription>
+                    <DialogDescription>Your code will be kept while you sign in or create a free account, then you can finish saving it.</DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
                     <Button asChild variant="outline">
-                        <Link href="/users/login">Log in</Link>
+                        <Link href="/users/login?returnTo=%2Fplayground%3FsaveTemplate%3D1">Log in</Link>
                     </Button>
                     <Button asChild>
-                        <Link href="/users/register">Sign up</Link>
+                        <Link href="/users/register?returnTo=%2Fplayground%3FsaveTemplate%3D1">Sign up</Link>
                     </Button>
                 </DialogFooter>
             </DialogContent>
