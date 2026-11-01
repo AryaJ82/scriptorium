@@ -92,42 +92,36 @@ export function UserSessionProvider({ children }: { children: React.ReactNode })
     // ---------------- Auth Fetch Wrapper (autocalls refresh on 401 and retries original request)
     const authFetch = useCallback(
         async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-            try {
-                if (!sessionReadyRef.current && sessionReadyPromiseRef.current) {
-                    await sessionReadyPromiseRef.current;
-                }
+            if (!sessionReadyRef.current && sessionReadyPromiseRef.current) {
+                await sessionReadyPromiseRef.current;
+            }
 
-                const headers = new Headers(init?.headers);
-                const requestInit: RequestInit = {
-                    ...init,
-                    headers,
-                    credentials: "include",
-                };
-                const signal = init?.signal;
+            const headers = new Headers(init?.headers);
+            const requestInit: RequestInit = {
+                ...init,
+                headers,
+                credentials: "include",
+            };
+            const signal = init?.signal;
 
-                const response = await fetch(input, requestInit);
+            const response = await fetch(input, requestInit);
 
-                // Request failed, potentially need to refresh token
-                if (isAuthenticatedRef.current && response.status === 401 && !signal?.aborted) {
+            // Request failed, potentially need to refresh token
+            if (isAuthenticatedRef.current && response.status === 401 && !signal?.aborted) {
 
-                    const refreshResponse = await refreshAccessToken();
+                const refreshResponse = await refreshAccessToken();
 
-                    if (isAuthenticatedRef.current && refreshResponse?.ok && !signal?.aborted) {
-                        // Refresh succeeded, re-attempt request
-                        const secondResponse = await fetch(input, requestInit);
-
-                        return secondResponse;
-                    } else {
-                        // Refresh failed, return original response
-                        // Note: since refresh failed, refreshAccessToken has updated session state
-                        return response;
-                    }
+                if (isAuthenticatedRef.current && refreshResponse?.ok && !signal?.aborted) {
+                    // Refresh succeeded, re-attempt request
+                    return fetch(input, requestInit);
                 } else {
-                    // Request succeeded
+                    // Refresh failed, return original response
+                    // Note: since refresh failed, refreshAccessToken has updated session state
                     return response;
                 }
-            } catch (error) {
-                return Response.json({ data: null, error: error instanceof Error ? error.message : "Unknown error" }, { status: 600 });
+            } else {
+                // Request succeeded
+                return response;
             }
         },
         [isAuthenticatedRef, refreshAccessToken],
