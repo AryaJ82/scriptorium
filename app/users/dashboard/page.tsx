@@ -10,10 +10,10 @@ import { useEffect, useState } from 'react'
 import { useApiGet } from '@/lib/useApiGet'
 
 type DashboardData = {
-  profile: Author
+  profile: Author & { createdAt: string }
   templates: TemplateResponse[]
   blogs: BlogResponse[]
-  comments: CommentResponse[]
+  comments: (CommentResponse & { blogPost: { id: number; title: string } })[]
   savedTemplates: TemplateResponse[]
 }
 
@@ -198,17 +198,15 @@ export default function DashboardPage() {
           <Collection
             title=""
             empty={`No ${tab.toLowerCase()} yet.`}
-            items={collections.map((item: TemplateResponse | BlogResponse | CommentResponse) => (
+            items={collections.map((item) => (
               <div key={item.id} className="rounded-lg border border-border bg-card p-4">
                 <p className="font-medium">
-                  {('title' in item ? item.title : item.blogPost?.title) ?? 'Comment'}
+                  {'title' in item ? item.title : item.blogPost.title}
                 </p>
                 <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">
                   {'content' in item
                     ? item.content
-                    : 'description' in item
-                      ? item.description
-                      : `By ${'author' in item ? item.author?.username ?? 'you' : 'you'}`}
+                    : item.description}
                 </p>
               </div>
             ))}

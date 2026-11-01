@@ -56,8 +56,7 @@ export default function TemplateHeader({
     const [isForkOpen, setIsForkOpen] = useState(false);
     const [forkLoading, setForkLoading] = useState(false);
 
-    const [isBlogReplyOpen, setIsBlogReplyOpen] = useState(0);
-    const [isBlogReplyLoading, setIsBlogReplyLoading] = useState(false);
+    const [isBlogReplyOpen, setIsBlogReplyOpen] = useState(false);
 
     const router = useRouter();
     // ---------------------------------------------------------------------------
@@ -173,7 +172,7 @@ export default function TemplateHeader({
                                 <Bookmark className="size-3" /> {isSavedByCurrentUser ? 'Unsave Template' : 'Save Template'}
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem onClick={() => setIsBlogReplyOpen(n => n+1)} disabled={isBlogReplyLoading}>
+                            <DropdownMenuItem onClick={() => setIsBlogReplyOpen(true)}>
                                 <MessageSquare className="size-3" /> Reply with Blog Post
                             </DropdownMenuItem>
 
@@ -215,11 +214,9 @@ export default function TemplateHeader({
             />
             <SaveBlogDialogue
                 linkedTemplateId={template.id}
-                open={isBlogReplyOpen > 0}
-                onOpenChange={(open) => !open && setIsBlogReplyOpen(0)}
-            >
-                <span className="sr-only">Reply with blog post</span>
-            </SaveBlogDialogue>
+                open={isBlogReplyOpen}
+                onOpenChange={setIsBlogReplyOpen}
+            />
 
 
             <div className="flex flex-col items-start w-full">
@@ -355,4 +352,3 @@ export default function TemplateHeader({
         </header>
     );
 }
-

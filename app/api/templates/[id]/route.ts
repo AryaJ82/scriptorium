@@ -70,11 +70,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             const updatedTemplate = await prisma.template.update({
                 where: { id: id },
                 data: {
-                    ...(title && { title: title.trim() }),
-                    ...(code && { code }),
-                    ...(stdin && { stdin }),
-                    ...(language && { language }),
-                    ...(description && { description }),
+                    ...(title !== undefined && { title: title.trim() }),
+                    ...(code !== undefined && { code }),
+                    ...(stdin !== undefined && { stdin }),
+                    ...(language !== undefined && { language }),
+                    ...(description !== undefined && { description }),
                     ...(tagConnectOrCreate !== undefined && {
                         tags: {
                             set: [],
