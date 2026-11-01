@@ -13,7 +13,7 @@ export const LANG_CONFIG: Record<Language, { displayLabel: string, fileName: str
     JAVASCRIPT: { displayLabel: "Javascript", fileName: "main.js", image: 'node:23-alpine', cmd: ['sh', '-c', 'node /code/main.js < /code/stdin.txt'] },
     C: { displayLabel: "C", fileName: "main.c", image: 'gcc:14', cmd: ['sh', '-c', 'gcc /code/main.c -o /tmp/main && /tmp/main < /code/stdin.txt'] },
     CPP: { displayLabel: "C++", fileName: "main.cpp", image: 'gcc:14', cmd: ['sh', '-c', 'g++ /code/main.cpp -o /tmp/main && /tmp/main < /code/stdin.txt'] },
-    JAVA: { displayLabel: "Java", fileName: "Main.java", image: 'eclipse-temurin:24-jdk-alpine', cmd: ['sh', '-c', 'javac -d /tmp /code/main.java && java -cp /tmp main < /code/stdin.txt'] }
+    JAVA: { displayLabel: "Java", fileName: "Main.java", image: 'eclipse-temurin:24-jdk-alpine', cmd: ['sh', '-c', 'javac -d /tmp /code/Main.java && java -cp /tmp Main < /code/stdin.txt'] }
 };
 
 export const LANGUAGES = Object.values(Language) as Language[];

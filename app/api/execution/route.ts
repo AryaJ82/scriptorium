@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
     let container: Docker.Container | undefined;
     let stdout = '';
     let stderr = '';
+    let outputBytes = 0;
 
     // Execute submitted code
     try {
@@ -99,9 +100,8 @@ export async function POST(request: NextRequest) {
             rejectOutputLimit = reject;
         });
 
-        stderrStream.on('data', (d: Buffer) => stderr += d.toString());
-        stdoutStream.on('data', (d: Buffer) => {
-            if (Buffer.byteLength(stdout) + d.length > MAX_OUTPUT_SIZE) {
+        const appendOutput = (destination: 'stdout' | 'stderr', chunk: Buffer) => {
+            if (outputBytes + chunk.length > MAX_OUTPUT_SIZE) {
                 if (!outputLimitExceeded) {
                     outputLimitExceeded = true;
                     container?.kill().catch(() => { });
@@ -109,8 +109,15 @@ export async function POST(request: NextRequest) {
                 }
                 return;
             }
-            stdout += d.toString()
-        });
+            outputBytes += chunk.length;
+            if (destination === 'stdout') {
+                stdout += chunk.toString();
+            } else {
+                stderr += chunk.toString();
+            }
+        };
+        stderrStream.on('data', (chunk: Buffer) => appendOutput('stderr', chunk));
+        stdoutStream.on('data', (chunk: Buffer) => appendOutput('stdout', chunk));
 
         // Begin execution
         await container.start();
