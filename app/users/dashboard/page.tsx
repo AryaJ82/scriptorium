@@ -13,7 +13,7 @@ type DashboardData = {
   profile: Author & { createdAt: string }
   templates: TemplateResponse[]
   blogs: BlogResponse[]
-  comments: (CommentResponse & { blogPost: { id: number; title: string } })[]
+  comments: CommentResponse[]
   savedTemplates: TemplateResponse[]
 }
 
