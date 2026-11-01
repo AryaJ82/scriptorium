@@ -31,6 +31,7 @@ export function useApiGet<TRaw = unknown, TData = TRaw>(
     onError,
     notOkMessage = DEFAULT_ERROR,
     skip = false,
+    keepPreviousData = true,
   } = options
 
   // The key is just the URL, so it is stable and serializable.
@@ -45,7 +46,7 @@ export function useApiGet<TRaw = unknown, TData = TRaw>(
     {
       dedupingInterval: 30_000,
       revalidateOnFocus: false,
-      keepPreviousData: true,
+      keepPreviousData,
       // SWR always invokes the latest versions of these, so no refs are needed.
       onSuccess: (result) => onSuccess?.(result as unknown as TRaw),
       onError: (err) => onError?.(err instanceof Error ? err.message : notOkMessage),

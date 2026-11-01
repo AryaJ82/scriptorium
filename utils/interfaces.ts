@@ -47,6 +47,7 @@ export interface UseApiGetOptions<TRaw, TData> {
     onError?: (message: string) => void;
     notOkMessage?: string;
     skip?: boolean;
+    keepPreviousData?: boolean;
 }
 
 export interface UseApiGetResult<TData> {
