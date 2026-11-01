@@ -379,6 +379,11 @@ export default function CommentCard({
                     Loading replies…
                 </p>
             )}
+            {replyFetchError && (
+                <p className="mt-2 pl-1 text-xs text-destructive">
+                    {replyFetchError}
+                </p>
+            )}
 
             <ReportDialog
                 open={isReportOpen}
