@@ -77,6 +77,10 @@ export default function BlogCommentSection({
                 </h2>
             </div>
 
+            {fetchError && (
+                <p className="text-xs text-destructive">{fetchError}</p>
+            )}
+
             {/* ── Compose box ── */}
             {session.isAuthenticated ? (
                 <div className="flex flex-col gap-2">
@@ -89,8 +93,8 @@ export default function BlogCommentSection({
                         className="resize-none text-sm"
                     />
                     <div className="flex items-center justify-between gap-2">
-{displayedError && (
-                            <p className="text-xs text-destructive">{displayedError}</p>
+                        {error && !replySubmitting && (
+                            <p className="text-xs text-destructive">{error}</p>
                         )}
                         <Button
                             onClick={handleReply}
@@ -125,7 +129,7 @@ export default function BlogCommentSection({
                 </div>
             )}
 
-            {!loading && !error && comments.length === 0 && (
+            {!loading && !displayedError && comments.length === 0 && (
                 <p className="text-center text-sm text-muted-foreground py-8">
                     No comments yet. Be the first!
                 </p>
@@ -136,11 +140,6 @@ export default function BlogCommentSection({
                 <p className="pl-1 text-xs text-muted-foreground animate-pulse">
                     Loading comments…
                 </p>
-            )}
-
-            {/* Error state */}
-            {error && !replySubmitting && (
-                <p className="text-xs text-destructive">{error}</p>
             )}
 
             {hasMoreComments && !loading && (
