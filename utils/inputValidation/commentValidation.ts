@@ -45,7 +45,7 @@ export function verifyCommentGETParams(params: CommentGETQuery) {
     return null;
 }
 
-export async function verifyCommentPOSTBody(params: CommentPOSTBody): Promise<ValidationError | null> {
+export async function verifyCommentPOSTBody(params: CommentPOSTBody, blogPostId: number): Promise<ValidationError | null> {
     const { content, parent_comment_id } = params;
 
     if (content === undefined || !isString(content) || content.trim() === "") {
@@ -58,13 +58,18 @@ export async function verifyCommentPOSTBody(params: CommentPOSTBody): Promise<Va
         if (!isPositiveIntegerString(parent_comment_id)) {
             return createError("Invalid parent comment id");
         } else {
-            const parentComment = await prisma.comment.findUnique({ where: { id: parseInt(parent_comment_id) }, });
+            const parentComment = await prisma.comment.findUnique({
+                where: { id: parseInt(parent_comment_id) },
+                select: { blogPostId: true },
+            });
             if (!parentComment) {
                 return createError("Parent comment does not exist", 404);
+            }
+            if (parentComment.blogPostId !== blogPostId) {
+                return createError("Parent comment must belong to the requested blog post");
             }
         }
     }
 
     return null;
 }
-

@@ -16,17 +16,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             }
 
             const { id } = await params;
+            if (!isPositiveIntegerString(id)) {
+                return apiError("Blog post id is required", 400);
+            }
+            const blogPostId = parseInt(id);
+
             const body: CommentPOSTBody = await request.json();
-            const error = await verifyCommentPOSTBody(body);
+            const error = await verifyCommentPOSTBody(body, blogPostId);
             if (error) {
                 return apiError(error.message, error.status ?? 400);
             }
             const { content, parent_comment_id } = body;
 
-            if (!isPositiveIntegerString(id)) {
-                return apiError("Blog post id is required", 400);
-            }
-            const blogPost = await prisma.blogPost.findUnique({ where: { id: parseInt(id) }, });
+            const blogPost = await prisma.blogPost.findUnique({ where: { id: blogPostId }, });
             if (!blogPost) {
                 return apiError("Blog not found", 404);
             }
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
                     blogPost: { connect: { id: blogPost.id } },
                     content: content,
                     ...(parent_comment_id && {
-                        parentComment: { connect: { id: parseInt(parent_comment_id) } },
+                        parentComment: { connect: { id: parseInt(parent_comment_id, 10) } },
                     }),
                 },
                 include: {
