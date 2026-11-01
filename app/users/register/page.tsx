@@ -11,6 +11,7 @@ import { ScriptoriumLogo } from "@/components/ScriptoriumLogo";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { verifyPassword, verifyUsername } from "@/utils/inputValidation/userValidation";
+import { getPostAuthDestination } from "@/lib/authRedirect";
 
 
 export default function RegisterPage() {
@@ -50,9 +51,9 @@ export default function RegisterPage() {
                 toast.error(error ?? "Login Failed");
             }
         }).then(async (result) => {
-            // login successful, redirect to home page
+            // Return to the requested internal page after account creation.
             if (result?.ok) {
-                router.push("/");
+                router.push(getPostAuthDestination(window.location.search));
             } else {
                 const { error } = await result?.json();
                 toast.error(error ?? "Something went wrong. Please login manually.");

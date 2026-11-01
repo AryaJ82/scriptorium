@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { getPostAuthDestination } from "@/lib/authRedirect";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,7 +12,7 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-grid opacity-20" />
       <div className="relative w-full max-w-md rounded-[1.75rem] border border-border/70 bg-card/80 p-8 shadow-[0_30px_90px_rgba(0,0,0,0.18)] backdrop-blur-xl">
         <LoginForm
-          onSuccess={async () => { router.push("/"); }}
+          onSuccess={() => { router.push(getPostAuthDestination(window.location.search)); }}
           subtitle="Manage templates and collaborate with your team using your account credentials."
           title="Log in to your account"
         />

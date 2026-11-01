@@ -2,7 +2,7 @@
 
 import { useUserSession } from "@/contexts/UserSessionContext";
 import { LANG_CONFIG, Language, LANGUAGES } from "@/utils/interfaces";
-import { useCallback, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { useExecution } from "@/lib/useExecution";
 import { SelectValue, Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/Select";
 import { OutputConsole } from "@/components/OutputConsole";
@@ -11,21 +11,82 @@ import { Play, RotateCcw, Save } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import Textarea from "@/components/ui/Textarea";
 import { Label } from "@/components/Label";
+import { useRouter } from "next/navigation";
 
 import { STARTER_CODE } from "@/lib/mockData";
 import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
 
 
+export const PLAYGROUND_TEMPLATE_DRAFT_KEY = 'scriptorium:template-draft'
+
+export interface PlaygroundTemplateDraft {
+  code: string
+  stdin: string
+  language: Language
+}
+
+export function isPlaygroundTemplateDraft(value: unknown): value is PlaygroundTemplateDraft {
+  if (!value || typeof value !== 'object') return false
+
+  const draft = value as Record<string, unknown>
+  return (
+    typeof draft.code === 'string' &&
+    typeof draft.stdin === 'string' &&
+    typeof draft.language === 'string' &&
+    Object.hasOwn(LANG_CONFIG, draft.language)
+  )
+}
 
 export default function PlaygroundPage() {
 
-    const { baseUrl } = useUserSession();
+    const { baseUrl, sessionReady } = useUserSession();
+    const router = useRouter();
     const { status, stdout, stderr, runError, run, resetExecutionStatus } = useExecution(baseUrl);
 
     // --- Editor state (initialised from template on load) ---
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]);
     const [code, setCode] = useState(STARTER_CODE[language] ?? '');
     const [stdin, setStdin] = useState('');
+    const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+    const [draftRestoreError, setDraftRestoreError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!sessionReady) return;
+
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('saveTemplate') !== '1') return;
+
+        try {
+            const storedDraft = window.sessionStorage.getItem(PLAYGROUND_TEMPLATE_DRAFT_KEY);
+            if (!storedDraft) {
+                throw new Error('No template draft was found for this return link.');
+            }
+
+            const draft: unknown = JSON.parse(storedDraft);
+            if (!isPlaygroundTemplateDraft(draft)) {
+                throw new Error('The saved draft has an invalid format.');
+            }
+
+            startTransition(() => {
+                setLanguage(draft.language);
+                setCode(draft.code);
+                setStdin(draft.stdin);
+                setSaveTemplateOpen(true);
+            });
+        } catch (error) {
+            console.error('Unable to restore the template draft:', error);
+            startTransition(() => {
+                setDraftRestoreError('We could not restore your draft. Return to the playground and try again.');
+            });
+        } finally {
+            try {
+                window.sessionStorage.removeItem(PLAYGROUND_TEMPLATE_DRAFT_KEY);
+            } catch (error) {
+                console.error('Unable to clear the restored template draft:', error);
+            }
+            router.replace('/playground', { scroll: false });
+        }
+    }, [router, sessionReady]);
 
     const resetCode = useCallback(() => {
         setCode(STARTER_CODE[language] ?? '')
@@ -47,8 +108,18 @@ export default function PlaygroundPage() {
                     Write code, provide input, and run it instantly. Save it as a
                     template when you&apos;re happy with it.
                 </p>
+                <ol className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                    <li><span className="font-medium text-foreground">1.</span> Edit the sample or run it as-is.</li>
+                    <li><span className="font-medium text-foreground">2.</span> Add standard input only if your code asks for it.</li>
+                    <li><span className="font-medium text-foreground">3.</span> Save when you are ready; saving requires an account.</li>
+                </ol>
             </div>
 
+            {draftRestoreError && (
+                <p role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                    {draftRestoreError}
+                </p>
+            )}
 
             <div className="flex flex-col gap-3">
 
@@ -75,6 +146,8 @@ export default function PlaygroundPage() {
                         language={language}
                         code={code}
                         stdin={stdin}
+                        open={saveTemplateOpen}
+                        onOpenChange={setSaveTemplateOpen}
                     >
                         <Button variant="outline" size="sm">
                             <Save className="size-4" /> Save as template
