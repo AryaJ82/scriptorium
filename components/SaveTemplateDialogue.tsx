@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useUserSession } from '@/contexts/UserSessionContext'
 import { useTagEdit } from '@/lib/useTagEdit'
-import { PLAYGROUND_TEMPLATE_DRAFT_KEY } from '@/lib/playgroundDraft'
 import { Language } from '@/utils/interfaces'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/Dialog'
 import { Button } from './ui/Button'
@@ -24,6 +23,8 @@ interface SaveTemplateDialogueParams {
     open?: boolean
     onOpenChange?: (open: boolean) => void
 }
+
+export const PLAYGROUND_TEMPLATE_DRAFT_KEY = 'scriptorium:template-draft'
 
 export function SaveTemplateDialogue({
     children,

@@ -14,10 +14,7 @@ import { Label } from "@/components/Label";
 import { useRouter } from "next/navigation";
 
 import { STARTER_CODE } from "@/lib/mockData";
-import { SaveTemplateDialogue } from "@/components/SaveTemplateDialogue";
-
-
-export const PLAYGROUND_TEMPLATE_DRAFT_KEY = 'scriptorium:template-draft'
+import { SaveTemplateDialogue, PLAYGROUND_TEMPLATE_DRAFT_KEY } from "@/components/SaveTemplateDialogue";
 
 export interface PlaygroundTemplateDraft {
   code: string
