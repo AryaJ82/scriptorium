@@ -34,7 +34,7 @@ describe("PATCH empty-string updates", () => {
         update: jest.fn().mockResolvedValue({ id: user.id }),
       },
       blogPost: {
-        findUnique: jest.fn().mockResolvedValue({ id: 8, authorId: user.id }),
+        findFirst: jest.fn().mockResolvedValue({ id: 8, authorId: user.id }),
         update: jest.fn().mockResolvedValue({ id: 8, content: "" }),
       },
     };

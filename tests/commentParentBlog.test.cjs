@@ -32,11 +32,11 @@ describe("comment parent blog validation", () => {
     prisma = {
       user: { findUnique: jest.fn().mockResolvedValue(user) },
       comment: {
-        findUnique: jest.fn(),
+        findFirst: jest.fn(),
         create: jest.fn().mockResolvedValue({ id: 13 }),
       },
       blogPost: {
-        findUnique: jest.fn().mockResolvedValue({ id: 8 }),
+        findFirst: jest.fn().mockResolvedValue({ id: 8 }),
       },
     };
     jest.doMock("@/utils/client", () => ({
@@ -47,19 +47,19 @@ describe("comment parent blog validation", () => {
   });
 
   test("rejects a parent comment from a different blog", async () => {
-    prisma.comment.findUnique.mockResolvedValue({ blogPostId: 7 });
+    prisma.comment.findFirst.mockResolvedValue({ blogPostId: 7 });
 
     const response = await POST(createRequest(), {
       params: Promise.resolve({ id: "8" }),
     });
 
     expect(response.status).toBe(400);
-    expect(prisma.blogPost.findUnique).not.toHaveBeenCalled();
+    expect(prisma.blogPost.findFirst).not.toHaveBeenCalled();
     expect(prisma.comment.create).not.toHaveBeenCalled();
   });
 
   test("allows a parent comment from the requested blog", async () => {
-    prisma.comment.findUnique.mockResolvedValue({ blogPostId: 8 });
+    prisma.comment.findFirst.mockResolvedValue({ blogPostId: 8 });
 
     const response = await POST(createRequest(), {
       params: Promise.resolve({ id: "8" }),
@@ -67,5 +67,26 @@ describe("comment parent blog validation", () => {
 
     expect(response.status).toBe(200);
     expect(prisma.comment.create).toHaveBeenCalled();
+  });
+
+  test("rejects a hidden parent comment", async () => {
+    prisma.comment.findFirst.mockResolvedValue(null);
+
+    const response = await POST(createRequest(), {
+      params: Promise.resolve({ id: "8" }),
+    });
+
+    expect(response.status).toBe(404);
+    expect(prisma.blogPost.findFirst).not.toHaveBeenCalled();
+    expect(prisma.comment.create).not.toHaveBeenCalled();
+    expect(prisma.comment.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 12,
+          isHidden: false,
+          blogPost: { is: { isHidden: false } },
+        },
+      }),
+    );
   });
 });

@@ -4,6 +4,7 @@ import prisma from "@/utils/client"
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { blogResponseInclude } from "@/utils/interfaces";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { publicBlogWhere } from "@/utils/contentVisibility";
 
 // PUT /api/blogs/[id]/vote - Add or confirm an upvote
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -19,8 +20,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
                 return apiError("Invalid blog id.", 400);
             }
 
-            const blog = await prisma.blogPost.findUnique({
-                where: { id: parseInt(id) },
+            const blog = await prisma.blogPost.findFirst({
+                where: { id: parseInt(id), ...publicBlogWhere() },
                 select: {
                     id: true,
                     upvotingUsers: { where: { id: user.id }, select: { id: true } }
@@ -65,8 +66,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
                 return apiError("Invalid blog id.", 400);
             }
 
-            const blog = await prisma.blogPost.findUnique({
-                where: { id: parseInt(id) },
+            const blog = await prisma.blogPost.findFirst({
+                where: { id: parseInt(id), ...publicBlogWhere() },
                 select: {
                     id: true,
                     upvotingUsers: { where: { id: user.id }, select: { id: true } }

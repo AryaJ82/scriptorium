@@ -5,6 +5,7 @@ import prisma from "@/utils/client"
 import { commentResponseInclude, limitedAuthorSelect } from "@/utils/interfaces";
 import { isPositiveIntegerString, isString, MAX_CONTENT_LENGTH } from "@/utils/inputValidation/generalValidation";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { publicCommentWhere } from "@/utils/contentVisibility";
 
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -16,8 +17,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
         const currentUser = await getOptionalUser(request);
         const currentUserId = currentUser?.id;
-        const comment = await prisma.comment.findUnique({
-            where: { id: parseInt(id) },
+        const comment = await prisma.comment.findFirst({
+            where: { id: parseInt(id), ...publicCommentWhere() },
             ...commentResponseInclude({ currentUserId })
         });
 
@@ -50,8 +51,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 return apiError("Invalid content", 400);
             }
 
-            const comment = await prisma.comment.findUnique({
-                where: { id: parseInt(id) },
+            const comment = await prisma.comment.findFirst({
+                where: { id: parseInt(id), ...publicCommentWhere() },
             });
             if (!comment) {
                 return apiError("Comment not found", 404);
@@ -94,8 +95,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
                 return apiError("Invalid Comment id.", 400);
             }
 
-            const comment = await prisma.comment.findUnique({
-                where: { id: parseInt(id) },
+            const comment = await prisma.comment.findFirst({
+                where: { id: parseInt(id), ...publicCommentWhere() },
                 select: { id: true, authorId: true }
             });
 

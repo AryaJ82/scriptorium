@@ -7,6 +7,7 @@ import prisma from "@/utils/client"
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { blogResponseInclude } from "@/utils/interfaces";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { publicBlogWhere } from "@/utils/contentVisibility";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -19,8 +20,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         const currentUser = await getOptionalUser(request);
         const currentUserId = currentUser?.id ?? undefined;
         
-        const post = await prisma.blogPost.findUnique({
-            where: { id: parseInt(id) },
+        const post = await prisma.blogPost.findFirst({
+            where: { id: parseInt(id), ...publicBlogWhere() },
             ...blogResponseInclude({currentUserId}),
         });
 
@@ -57,9 +58,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             }
             const { title, content, tags } = body;
 
-            const post = await prisma.blogPost.findUnique({
-            where: { id: parseInt(id), isHidden: false },
-
+            const post = await prisma.blogPost.findFirst({
+                where: { id: parseInt(id), ...publicBlogWhere() },
                 select: { id: true, authorId: true }
             });
             if (!post) {
@@ -111,7 +111,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
                 return apiError("Invalid Blog post id.", 400);
             }
 
-            const post = await prisma.blogPost.findUnique({ where: { id: parseInt(id) }, });
+            const post = await prisma.blogPost.findFirst({
+                where: { id: parseInt(id), ...publicBlogWhere() },
+            });
 
             if (!post) {
                 return apiError("Blog Post not found", 404);

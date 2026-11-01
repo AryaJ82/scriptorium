@@ -6,6 +6,7 @@ import { limitedAuthorSelect, type ReportPOSTBody } from "@/utils/interfaces";
 import { verifyReportPOSTBody } from "@/utils/inputValidation/reportValidation";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { publicCommentWhere } from "@/utils/contentVisibility";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
@@ -27,7 +28,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             if (!isPositiveIntegerString(id)) {
                 return apiError("Comment id is required", 400);
             }
-            const comment = await prisma.comment.findUnique({ where: { id: parseInt(id) }, });
+            const comment = await prisma.comment.findFirst({
+                where: { id: parseInt(id), ...publicCommentWhere() },
+            });
             if (!comment) {
                 return apiError("Comment not found", 404);
             }

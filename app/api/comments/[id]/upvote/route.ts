@@ -4,6 +4,7 @@ import prisma from "@/utils/client"
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { commentResponseInclude } from "@/utils/interfaces";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { publicCommentWhere } from "@/utils/contentVisibility";
 
 // PUT /api/comments/[id]/vote - Add or confirm an upvote
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -19,8 +20,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
                 return apiError("Invalid comment id.", 400);
             }
 
-            const comment = await prisma.comment.findUnique({
-                where: { id: parseInt(id) },
+            const comment = await prisma.comment.findFirst({
+                where: { id: parseInt(id), ...publicCommentWhere() },
                 select: {
                     id: true,
                     upvotingUsers: { where: { id: user.id }, select: { id: true } }
@@ -65,8 +66,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
                 return apiError("Invalid comment id.", 400);
             }
 
-            const comment = await prisma.comment.findUnique({
-                where: { id: parseInt(id) },
+            const comment = await prisma.comment.findFirst({
+                where: { id: parseInt(id), ...publicCommentWhere() },
                 select: {
                     id: true,
                     upvotingUsers: { where: { id: user.id }, select: { id: true } }

@@ -6,6 +6,7 @@ import { limitedAuthorSelect, type CommentPOSTBody } from "@/utils/interfaces";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { verifyCommentPOSTBody } from "@/utils/inputValidation/commentValidation";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { publicBlogWhere } from "@/utils/contentVisibility";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
@@ -28,7 +29,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             }
             const { content, parent_comment_id } = body;
 
-            const blogPost = await prisma.blogPost.findUnique({ where: { id: blogPostId }, });
+            const blogPost = await prisma.blogPost.findFirst({
+                where: { id: blogPostId, ...publicBlogWhere() },
+            });
             if (!blogPost) {
                 return apiError("Blog not found", 404);
             }

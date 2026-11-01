@@ -6,6 +6,7 @@ import { limitedAuthorSelect, type ReportPOSTBody } from "@/utils/interfaces";
 import { verifyReportPOSTBody } from "@/utils/inputValidation/reportValidation";
 import { isPositiveIntegerString } from "@/utils/inputValidation/generalValidation";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
+import { publicBlogWhere } from "@/utils/contentVisibility";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     return withAuth(async (request: AuthenticatedRequest) => {
@@ -27,7 +28,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             if (!isPositiveIntegerString(id)) {
                 return apiError("Blog post id is required", 400);
             }
-            const blogPost = await prisma.blogPost.findUnique({ where: { id: parseInt(id) }, });
+            const blogPost = await prisma.blogPost.findFirst({
+                where: { id: parseInt(id), ...publicBlogWhere() },
+            });
             if (!blogPost) {
                 return apiError("Blog not found", 404);
             }

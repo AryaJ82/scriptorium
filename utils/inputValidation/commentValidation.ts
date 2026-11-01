@@ -3,6 +3,7 @@ import prisma from "@/utils/client";
 
 import { type ValidationError, type CommentPOSTBody, validBlogSortFields, type CommentGETQuery, validSortOrders } from "../interfaces";
 import { isString, createError, MAX_CONTENT_LENGTH, isPositiveIntegerString, MAX_PAGE_SIZE,  } from "@/utils/inputValidation/generalValidation";
+import { publicCommentWhere } from "@/utils/contentVisibility";
 
 
 
@@ -58,8 +59,8 @@ export async function verifyCommentPOSTBody(params: CommentPOSTBody, blogPostId:
         if (!isPositiveIntegerString(parent_comment_id)) {
             return createError("Invalid parent comment id");
         } else {
-            const parentComment = await prisma.comment.findUnique({
-                where: { id: parseInt(parent_comment_id) },
+            const parentComment = await prisma.comment.findFirst({
+                where: { id: parseInt(parent_comment_id), ...publicCommentWhere() },
                 select: { blogPostId: true },
             });
             if (!parentComment) {

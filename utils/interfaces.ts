@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "./client";
 import type { Dispatch, SetStateAction } from "react";
+import { publicCommentWhere } from "@/utils/contentVisibility";
 
 
 
@@ -121,7 +122,7 @@ export function commentResponseInclude({ currentUserId, }: { currentUserId?: str
     return {
         include: {
             author: limitedAuthorSelect,
-            replies: { select: { id: true } },
+            replies: { where: publicCommentWhere(), select: { id: true } },
             ...(currentUserId && {
                 upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } },
                 downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } }

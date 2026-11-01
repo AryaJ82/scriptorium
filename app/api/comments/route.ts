@@ -7,6 +7,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { getOptionalUser } from "@/utils/middlewareAuth";
 import { verifyCommentGETParams } from "@/utils/inputValidation/commentValidation";
 import { apiError, apiSuccess, pagination } from "@/utils/apiResponse";
+import { publicCommentWhere } from "@/utils/contentVisibility";
 
 
 
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
             } : {
                 parentCommentId: null
             }),
-            isHidden: false
+            ...publicCommentWhere()
         }
 
         const orderBy = {
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
                 take: pageSizeNum,
                 include: {
                     author: limitedAuthorSelect,
-                    replies: { select: { id: true } },
+                    replies: { where: publicCommentWhere(), select: { id: true } },
                     ...(currentUserId && {
                         upvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } },
                         downvotingUsers: { where: { id: { equals: currentUserId } }, select: { id: true } }

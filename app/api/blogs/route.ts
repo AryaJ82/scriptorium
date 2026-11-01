@@ -11,6 +11,7 @@ import { normalizeTags, verifyGETParams, verifyPOSTBody } from "@/utils/inputVal
 import { Prisma } from "@/app/generated/prisma/client";
 import { blogResponseInclude } from "@/utils/interfaces";
 import { apiError, apiSuccess, pagination } from "@/utils/apiResponse";
+import { publicBlogWhere } from "@/utils/contentVisibility";
 
 export async function GET(request: NextRequest) {
     try {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
         const pageSizeNum = pageSize ? parseInt(pageSize) : 10;
 
         const where: Prisma.BlogPostWhereInput = {
-            isHidden: false,
+            ...publicBlogWhere(),
 
             ...(post_id && {
                 id: parseInt(post_id)
@@ -126,6 +127,5 @@ export async function POST(request: NextRequest) {
         }
     })(request);
 }
-
 
 
