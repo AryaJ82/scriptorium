@@ -11,7 +11,14 @@ Credits to Professor [Kianoosh Abbasi](https://www.cs.toronto.edu/~kianoosh/) at
 
 ![The Scriptorium code playground, with a language-aware editor, standard input, and output panel](public/screenshots/playground.png)
 
-From **Playground**, choose a language, edit the starter code, optionally enter stdin, and select **Run**. Execution output and errors appear beside the editor. Select **Save as template** to preserve an experiment; saved templates can be browsed, searched, and forked from the templates area.
+From **Playground**, edit the starter code and select **Run**. The default Python sample prints `Hello, world!` without requiring input or an account. When you choose **Save as template**, sign in or create a free account; your code is restored when you return, and the newly created template opens automatically.
+
+### Try the complete flow
+
+1. Start the app using the local setup below, then open `/playground` or choose **Playground** from the navigation.
+2. Click **Run** to see `Hello, world!` in the output panel. You can edit the sample first; standard input is optional.
+3. Choose **Save as template**, enter a title, then create an account or log in if prompted. Your code and input are restored when you return.
+4. Create the template. Scriptorium opens its page, where you can run it again; the template is also listed in the public library.
 
 ## What it does
 
@@ -35,14 +42,16 @@ From **Playground**, choose a language, edit the starter code, optionally enter 
 ### Prerequisites
 
 - Node.js 20.9 or newer and npm
-- Docker Desktop (or a Docker Engine) running locally; the runner downloads its language images on first use
+- Docker Desktop (or a Docker Engine) running locally; the runner downloads the selected language image on first use, which can make the first run take longer
 
 ### Install and configure
 
 ```powershell
 npm ci
-Copy-Item .env.example .env
+cp .env.example .env
 ```
+
+On Windows PowerShell, use `Copy-Item .env.example .env` if `cp` is unavailable.
 
 Set unique, random values for `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` in
 `.env` before using authentication. For example, generate each value with:
