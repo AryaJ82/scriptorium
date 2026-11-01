@@ -67,11 +67,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             const updatedUser = await prisma.user.update({
                 where: { id: user.id },
                 data: {
-                    ...(email && { email }),
-                    ...(firstName && { firstName }),
-                    ...(lastName && { lastName }),
-                    ...(avatarUrl && { avatarUrl }),
-                    ...(phoneNumber && { phoneNumber }),
+                    ...(email !== undefined && { email }),
+                    ...(firstName !== undefined && { firstName }),
+                    ...(lastName !== undefined && { lastName }),
+                    ...(avatarUrl !== undefined && { avatarUrl }),
+                    ...(phoneNumber !== undefined && { phoneNumber }),
                 },
                 select: {
                     id: true,

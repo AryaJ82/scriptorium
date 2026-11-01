@@ -78,7 +78,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
                 where: { id: post.id },
                 data: {
                     ...(title && { title: title.trim() }),
-                    ...(content && { content }),
+                    ...(content !== undefined && { content }),
                     ...(tagConnectOrCreate !== undefined && {
                         tags: {
                             set: [],
