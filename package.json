@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
-    "db:promote-admin": "tsx scripts/promote-admin.ts"
+    "db:promote-admin": "tsx scripts/promote-admin.ts",
+    "db:seed:demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
