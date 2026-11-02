@@ -30,23 +30,15 @@ export function useExecution(baseUrl: string) {
             const body = await res.json();
             const result = body.data;
 
-            if (res.ok && result?.timedOut) {
-                setStatus("timeout");
-                setStdout(result.stdout ?? '');
-                setStderr(result.stderr ?? '');
-            } else if (res.ok) {
-                setStatus("success");
+            if (res.ok) {
+                setStatus(result.runStatus);
                 setStdout(result.stdout);
                 setStderr(result.stderr);
-            } else if (res.status === 413) {
-                setStatus("error");
-                setStdout(result?.stdout ?? '');
-                setStderr(body.error);
             } else {
                 setStatus("error");
                 setStdout(result?.stdout ?? '');
                 setStderr(result?.stderr ?? '');
-                setRunError(body.error ?? "An error has occurred.");
+                setRunError(body.error ?? "An error has occured.");
             }
         } catch {
             setStatus("error");

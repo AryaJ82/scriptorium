@@ -8,7 +8,8 @@ import { validateExecutionPOSTBody } from "@/utils/inputValidation/executionVali
 
 import { LANG_CONFIG } from "@/utils/interfaces";
 import { apiError, apiSuccess } from "@/utils/apiResponse";
-import { positiveFiniteEnv, positiveIntegerEnv } from "@/utils/executionLimits";
+import { positiveFiniteEnv, positiveIntegerEnv } from "@/utils/inputValidation/executionValidation";
+
 const EXECUTION_LIMITS = {
     timeMs: positiveFiniteEnv("EXECUTION_TIMELIMIT_MS", 10_000),
     memoryBytes: positiveFiniteEnv("MEMORY_LIMIT_MB", 128, 1024 * 1024, true),
@@ -177,17 +178,35 @@ export async function POST(request: NextRequest) {
         ]);
 
         if (stderr.endsWith("EOFError: EOF when reading a line\n")) {
-            return apiError("Execution failed due to discrepancy in required argument length. Program requested input after EOF in stdin.", 400, { stdout });
+            stderr = "Program requested input after the provided standard input ended.";
+            return apiSuccess({
+                runStatus: "error",
+                stdout,
+                stderr,
+                exitCode,
+                timedOut: false,
+            });
         }
-
-        return apiSuccess({ stdout, stderr, exitCode, timedOut: false });
 
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (message === "TIME_OUT") {
-            return apiSuccess({ stdout, stderr, exitCode: null, timedOut: true });
+            return apiSuccess({
+                runStatus: "timeout",
+                stdout,
+                stderr,
+                exitCode: null,
+                timedOut: true,
+            });
         } else if (message === "OUTPUT_LIMIT_EXCEEDED") {
-            return apiError("Code output exceeded limit", 413, { stdout, stderr });
+            const error = "Code output exceeded limit";
+            return apiError(error, 413, {
+                runStatus: "error",
+                stdout,
+                stderr: stderr || error,
+                exitCode: null,
+                timedOut: false,
+            });
         }
 
         return apiError(`Internal Error During Execution ${message}`, 500, { stdout, stderr });

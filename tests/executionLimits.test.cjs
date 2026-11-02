@@ -21,7 +21,14 @@ describe("code execution request limits", () => {
         code: "x".repeat(1024),
         stdin: "y".repeat(1024),
       }),
-    ).toBeNull();
+    ).toMatchObject({
+      success: true,
+      data: {
+        language: "PYTHON",
+        code: "x".repeat(1024),
+        stdin: "y".repeat(1024),
+      },
+    });
   });
 
   test("rejects code one byte over its configured limit", () => {
@@ -31,8 +38,11 @@ describe("code execution request limits", () => {
     });
 
     expect(error).toMatchObject({
-      message: "Code exceeds maximum size",
-      status: 400,
+      success: false,
+      error: {
+        message: "Code exceeds maximum size",
+        status: 400,
+      },
     });
   });
 
@@ -44,8 +54,11 @@ describe("code execution request limits", () => {
     });
 
     expect(error).toMatchObject({
-      message: "Stdin exceeds maximum size",
-      status: 400,
+      success: false,
+      error: {
+        message: "Stdin exceeds maximum size",
+        status: 400,
+      },
     });
   });
 });
