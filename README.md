@@ -13,6 +13,34 @@ Credits to Professor [Kianoosh Abbasi](https://www.cs.toronto.edu/~kianoosh/) at
 
 From **Playground**, edit the starter code and select **Run**. The default Python sample prints `Hello, world!` without requiring input or an account. When you choose **Save as template**, sign in or create a free account; your code is restored when you return, and the newly created template opens automatically.
 
+### Playground: code, input, output, and errors
+
+<table>
+  <tr>
+    <td width="50%"><strong>Before running</strong><br><img src="public/screenshots/playground-input.png" alt="Playground with a Python greeting program and Ada Lovelace entered as standard input" width="100%"></td>
+    <td width="50%"><strong>Successful execution</strong><br><img src="public/screenshots/playground-output.png" alt="Playground showing the greeting program output and a successful exit status" width="100%"></td>
+  </tr>
+</table>
+
+The playground keeps standard input beside the editor and shows the program's
+output and execution status. The success and unavailable-Docker screenshots
+illustrate those UI states; real code execution requires Docker.
+
+![Playground showing a Docker execution error while preserving the code and input](public/screenshots/playground-error.png)
+
+### Save and discover templates
+
+<table>
+  <tr>
+    <td width="50%"><strong>Creating a template</strong><br><img src="public/screenshots/template-create.png" alt="Save as template dialog with a title, description, and tags filled in" width="100%"></td>
+    <td width="50%"><strong>Searching the library</strong><br><img src="public/screenshots/template-search.png" alt="Template library filtered by the word word, showing the matching Python template" width="100%"></td>
+  </tr>
+</table>
+
+### Join the discussion
+
+![Blog discussion showing user avatars, nested replies, and comment upvote counts](public/screenshots/blog-comments.png)
+
 ### Try the complete flow
 
 1. Start the app using the local setup below, then open `/playground` or choose **Playground** from the navigation.
@@ -70,7 +98,7 @@ file is created locally by the migrations and is not included in Git. Keep
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | Prisma database URL. The example uses a local SQLite file. |
 | `JWT_ACCESS_SECRET` | Yes | Signs access tokens. Use a unique random value. |
-| `JWT_REFRESH_SECRET` | Yes | Signs refresh tokens; must differ from the access secret. |
+| `JWT_REFRESH_SECRET` | Yes | Signs refresh tokens. |
 | `NEXT_PUBLIC_API_URL` | No | API origin for a separate API host. Empty by default, so browser requests use the app's origin. |
 | `SALT_ROUNDS` | No | bcrypt work factor; defaults to `10`. |
 | `ACCESS_TOKEN_EXPIRY` | No | Access-token lifetime in hours; defaults to `10`. |
@@ -83,8 +111,7 @@ file is created locally by the migrations and is not included in Git. Keep
 | `MAX_STDIN_SIZE_KB` | No | Maximum submitted stdin size; defaults to `64` KB. |
 | `MAX_OUTPUT_SIZE_KB` | No | Maximum captured stdout size; defaults to `64` KB. |
 
-The server fails during initialization if either JWT secret is missing or if
-the two secrets are identical. Configure both in local `.env` and in any
+The server fails during initialization if either JWT secret is missing. Configure both in local `.env` and in any
 deployment environment; never use the example placeholders as production
 secrets. `NEXT_PUBLIC_API_URL` should be an HTTPS origin when using a separate
 API host. Cross-origin cookie authentication requires corresponding CORS and
@@ -117,7 +144,24 @@ Sign out and back in so the new admin role is reflected in the session. This
 command updates only the local database and does not add an unauthenticated
 admin-creation endpoint.
 
-Useful project scripts:
+
+### Seed sample community content
+
+To replace the local database's users and sample content with the curated demo
+community, run:
+
+```powershell
+npm run db:seed:demo
+```
+
+This destructive, repeatable seed replaces all users, templates, posts,
+comments, tags, reports, and votes in the configured database. It creates five
+sample users, each with a random-avatar image URL, and gives every account the
+demo-only password `Scriptorium-Demo1!`. The `ada.codes` account has the admin
+role. Do not use these credentials or run this seed against a database
+containing data you need to keep.
+
+### Useful project scripts:
 
 | Command | Purpose |
 | --- | --- |
