@@ -40,7 +40,12 @@ export default function CommentCard({
         hasMore: hasMoreReplies,
         loadMore: handleFetchReplies,
         replace: replaceReplies,
-    } = useCommentList({ parentCommentId: comment.id, pageSize, initialLoad: false });
+    } = useCommentList({
+        blogId: comment.blogPostId,
+        parentCommentId: comment.id,
+        pageSize,
+        initialLoad: comment.numReplies > 0,
+    });
 
     const [error, setError] = useState<string | null>(null);
 
