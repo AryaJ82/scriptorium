@@ -18,6 +18,50 @@ const EXECUTION_LIMITS = {
 };
 
 const docker = new Docker();
+const imagePulls = new Map<string, Promise<void>>();
+
+function isDockerNotFound(error: unknown): boolean {
+    return typeof error === "object"
+        && error !== null
+        && "statusCode" in error
+        && error.statusCode === 404;
+}
+
+async function ensureImageAvailable(image: string): Promise<void> {
+    try {
+        await docker.getImage(image).inspect();
+        return;
+    } catch (error) {
+        if (!isDockerNotFound(error)) {
+            throw error;
+        }
+    }
+
+    let pull = imagePulls.get(image);
+    if (!pull) {
+        pull = (async () => {
+            const stream = await docker.pull(image);
+            await new Promise<void>((resolve, reject) => {
+                docker.modem.followProgress(stream, (error: Error | null) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve();
+                });
+            });
+        })();
+        imagePulls.set(image, pull);
+    }
+
+    try {
+        await pull;
+    } finally {
+        if (imagePulls.get(image) === pull) {
+            imagePulls.delete(image);
+        }
+    }
+}
 
 export async function POST(request: NextRequest) {
     let body: unknown;
@@ -54,6 +98,7 @@ export async function POST(request: NextRequest) {
 
     // Execute submitted code
     try {
+        await ensureImageAvailable(image);
         container = await docker.createContainer({
             Image: image,
             Cmd: cmd,

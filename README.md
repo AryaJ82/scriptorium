@@ -41,8 +41,8 @@ From **Playground**, edit the starter code and select **Run**. The default Pytho
 
 ### Prerequisites
 
-- Node.js 20.9 or newer and npm
-- Docker Desktop (or a Docker Engine) running locally; the runner downloads the selected language image on first use, which can make the first run take longer
+- Node.js 22.18 or newer and npm
+- Docker Desktop (or a Docker Engine) running locally; the runner automatically pulls a language image the first time that language is used, so Docker and an internet connection are needed for that first run
 
 ### Install and configure
 
@@ -60,8 +60,9 @@ Set unique, random values for `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` in
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-The example environment file points SQLite at `prisma/dev.db`. Keep `.env`
-private; it is ignored by Git.
+The example environment file points SQLite at `prisma/dev.db`. The database
+file is created locally by the migrations and is not included in Git. Keep
+`.env` private; it is ignored by Git.
 
 ### Environment variables
 
@@ -100,7 +101,21 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). You can try the playground
 without an account; create an account to save templates and use other
 authenticated features. Docker must be available to the Next.js server for the
-execution endpoint.
+execution endpoint. The runner automatically pulls each language image when it
+is first needed.
+
+### Enable local moderation
+
+To try the moderation page, first register a user through the app, then promote
+that account from the project directory:
+
+```powershell
+npm run db:promote-admin -- your-username
+```
+
+Sign out and back in so the new admin role is reflected in the session. This
+command updates only the local database and does not add an unauthenticated
+admin-creation endpoint.
 
 Useful project scripts:
 
