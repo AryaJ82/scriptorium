@@ -29,6 +29,12 @@ Credits to Professor [Kianoosh Abbasi](https://www.cs.toronto.edu/~kianoosh/) at
 
 ## See it in action
 
+### Landing page
+
+The landing page introduces the project with a focused value proposition and a quick path into the playground.
+
+![The Scriptorium landing page with a dark theme, hero headline, feature callouts, and example code preview](public/screenshots/landing-page.png)
+
 ### Playground: code, execution, input, output, and errors
 
 
