@@ -177,16 +177,13 @@ export async function POST(request: NextRequest) {
             outputLimitPromise,
         ]);
 
-        if (stderr.endsWith("EOFError: EOF when reading a line\n")) {
-            stderr = "Program requested input after the provided standard input ended.";
-            return apiSuccess({
-                runStatus: "error",
-                stdout,
-                stderr,
-                exitCode,
-                timedOut: false,
-            });
-        }
+        return apiSuccess({
+            runStatus: exitCode === 0 ? "success" : "error",
+            stdout,
+            stderr,
+            exitCode,
+            timedOut: false,
+        });
 
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
